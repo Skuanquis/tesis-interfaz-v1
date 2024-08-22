@@ -2,26 +2,42 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
+import { getInfoHistoria } from '@/services/historiaService';
 
 const display = ref(false);
 const router = useRouter();
+const toast = useToast();
+const paciente = ref(null);
+
+const fetchPacienteData = async () => {
+    const id_historia_clinica = localStorage.getItem('id_historia_clinica');
+    if (!id_historia_clinica) {
+        toast.error('ID de historia clínica no encontrado en el localStorage');
+        return;
+    }
+    try {
+        const response = await getInfoHistoria(id_historia_clinica);
+        paciente.value = response.data[0];
+        display.value = true;
+    } catch (error) {
+        toast.error('Error al cargar los datos del paciente');
+        console.error(error);
+    }
+};
 
 onMounted(() => {
-    openDialog();
+    fetchPacienteData();
 });
-
-function openDialog() {
-    display.value = true;
-}
 
 function closeDialog() {
     display.value = false;
-    router.push('/');
+    router.push('/app');
 }
 
 function onDialogHide() {
     if (!display.value) {
-        router.push('/');
+        router.push('/app');
     }
 }
 </script>
@@ -29,80 +45,90 @@ function onDialogHide() {
 <template>
     <Dialog header="Paciente" v-model:visible="display" :style="{ width: '45vw' }" :modal="true" @hide="onDialogHide"
         class="p-fluid">
-        <h5 class="text-center datos-paciente">Datos del Paciente</h5>
-        <div class="data-wrapper">
-            <div class="data-section">
-                <div class="grid">
-                    <div class="col md:col-6">
-                        <h5 class="info-data-dialog">Nombre: Sandra Ximena</h5>
-                        <h5 class="info-data-dialog">Apellido Paterno: Ramos</h5>
-                        <h5 class="info-data-dialog">Apellido Materno: Mamani</h5>
-                    </div>
-                    <div class="col md:col-6">
-                        <h5 class="info-data-dialog">CI: 8427813</h5>
-                        <h5 class="info-data-dialog">HC: 200963</h5>
-                    </div>
-                </div>
-            </div>
-            <div class="data-section">
-                <p class="text-lg">Paciente de 28 años de edad, estado civil unión estable, ocupación estudiantem nivel
-                    socioeconomico
-                    medio residente de Sub-Yungas Chulumani, procendente de la ciudad de La Paz</p>
-            </div>
-            <div class="data-section">
-                <h5 class="info-data-dialog">Antecedentes Gineco Obstetricos</h5>
-                <div class="grid">
-                    <div class="col md:col-6">
-                        <h5 class="case-data"><strong>Menarca:</strong> 15 años</h5>
-                        <h5 class="case-data"><strong>FUM: </strong>15.12.22</h5>
-                        <h5 class="case-data"><strong>FPP: </strong>21.04.22</h5>
-                        <h5 class="case-data"><strong>CPN: </strong>Realizo 8 controles prenatales en el Hospital de
-                            Chulumani</h5>
-                    </div>
-                    <div class="col md:col-6">
-                        <h5 class="case-data"><strong>G: </strong>0</h5>
-                        <h5 class="case-data"><strong>P: </strong>0</h5>
-                        <h5 class="case-data"><strong>AB: </strong>0</h5>
-                        <h5 class="case-data"><strong>C: </strong>0</h5>
+        <template v-if="paciente">
+            <h5 class="text-center datos-paciente">Datos del Paciente</h5>
+            <div class="data-wrapper">
+                <div class="data-section">
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Nombre: </strong>{{ paciente.nombre.toUpperCase() }}
+                            </h5>
+                            <h5 class="case-data text-lg"><strong>Apellido Paterno: </strong>{{
+                                paciente.paterno.toUpperCase() }}
+                            </h5>
+                            <h5 class="case-data text-lg"><strong>Apellido Materno: </strong>{{
+                                paciente.materno.toUpperCase() }}
+                            </h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>CI: </strong>{{ paciente.ci }}</h5>
+                            <h5 class="case-data text-lg"><strong>Edad: </strong>{{ paciente.edad }} años</h5>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="data-section">
-                <h5 class="info-data-dialog">Antecedentes Patológicos</h5>
-                <div class="grid">
-                    <div class="col md:col-6">
-                        <h5 class="case-data"><strong>APP:</strong> No refiere</h5>
-                        <h5 class="case-data"><strong>AFP:</strong> No refiere</h5>
-                    </div>
-                    <div class="col md:col-6">
-                        <h5 class="case-data"><strong>Alergias:</strong> Refiere alergias a productos lacteos</h5>
-                        <h5 class="case-data"><strong>Cirugias:</strong> No refiere</h5>
+                <div class="data-section">
+                    <p class="text-lg text-justify">{{ paciente.descripcion }}</p>
+                </div>
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes Gineco Obstetricos</h5>
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Menarca:</strong> {{ paciente.menarca }}</h5>
+                            <h5 class="case-data text-lg"><strong>FUM: </strong>{{ new
+                                Date(paciente.fum).toLocaleDateString() }}</h5>
+                            <h5 class="case-data text-lg"><strong>FPP: </strong>{{ new
+                                Date(paciente.fpp).toLocaleDateString() }}</h5>
+                            <h5 class="case-data text-lg"><strong>CPN: </strong>{{ paciente.cpn }}</h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>G: </strong>{{ paciente.gestaciones }}</h5>
+                            <h5 class="case-data text-lg"><strong>P: </strong>{{ paciente.partos }}</h5>
+                            <h5 class="case-data text-lg"><strong>AB: </strong>{{ paciente.abortos }}</h5>
+                            <h5 class="case-data text-lg"><strong>C: </strong>{{ paciente.cesarias }}</h5>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="data-section">
-                <h5 class="info-data-dialog">Examen Físico General</h5>
-                <div class="grid">
-                    <div class="col md:col-6">
-                        <h5 class="case-data"><strong>PA:</strong> 120/80mmhg</h5>
-                        <h5 class="case-data"><strong>FC:</strong> 751pm</h5>
-                        <h5 class="case-data"><strong>FR:</strong> 20rpm</h5>
-                        <h5 class="case-data"><strong>T:</strong> 36.5°C</h5>
-                    </div>
-                    <div class="col md:col-6">
-                        <h5 class="case-data"><strong>SatO2:</strong> 90%</h5>
-                        <h5 class="case-data"><strong>Peso:</strong> 82.5kg</h5>
-                        <h5 class="case-data"><strong>Talla:</strong> 1.60mts</h5>
-                        <h5 class="case-data"><strong>IMC:</strong> 32.1kg/m2</h5>
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes Patológicos</h5>
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>APP:</strong> {{ paciente.app }}</h5>
+                            <h5 class="case-data text-lg"><strong>AFP:</strong> {{ paciente.afp }}</h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Alergias:</strong> {{ paciente.alergias }}</h5>
+                            <h5 class="case-data text-lg"><strong>Cirugias:</strong> {{ paciente.cirugias }}</h5>
+                        </div>
                     </div>
                 </div>
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Motivo de Consulta</h5>
+                    <div class="grid">
+                        <div class="col md:col-12">
+                            <h5 class="case-data text-lg">{{ paciente.motivo }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Historia de la enfermedad actual</h5>
+                    <p class="text-lg text-justify">{{ paciente.historia_enfermedad_actual }}</p>
+                </div>
             </div>
-        </div>
-        <template #footer>
-            <Button label="Ok" @click="closeDialog" icon="pi pi-check" />
+            <div class="grid ">
+                <div class="col md:col-3"></div>
+                <div class="col md:col-3"></div>
+                <div class="col md:col-3"></div>
+                <div class="col md:col-3">
+                    <Button label="Ok" @click="closeDialog" icon="pi pi-check" />
+                </div>
+            </div>
+        </template>
+        <template v-else>
+            <h4 class="text-center">No hay datos disponibles de la histria clínica.</h4>
         </template>
     </Dialog>
 </template>
+
 
 <style scoped>
 .gestion-title {

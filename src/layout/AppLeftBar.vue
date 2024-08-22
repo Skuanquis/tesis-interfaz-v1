@@ -22,7 +22,8 @@ const itemsIz = ref([
     },
     {
         label: 'EXAMEN',
-        icon: '/layout/images/examen.png'
+        icon: '/layout/images/examen.png',
+        routeName: 'examenes'
     },
     {
         label: 'ESTABILIZAR',
@@ -30,7 +31,8 @@ const itemsIz = ref([
     },
     {
         label: 'INVESTIGAR',
-        icon: '/layout/images/diferencial.png'
+        icon: '/layout/images/diferencial.png',
+        routeName: 'investigar'
     }
 ]);
 
