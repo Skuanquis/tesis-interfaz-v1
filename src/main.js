@@ -31,6 +31,9 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import FloatLabel from 'primevue/floatlabel'
+import ConfirmDialog from 'primevue/confirmdialog'
+import ConfirmationService from 'primevue/confirmationservice'
+import Image from 'primevue/image'
 
 const app = createApp(App)
 
@@ -57,7 +60,9 @@ app.component('DataTable', DataTable)
 app.component('Column', Column)
 app.component('Tag', Tag)
 app.component('FloatLabel', FloatLabel)
-
+app.component('ConfirmDialog', ConfirmDialog)
+app.component('Image', Image)
+app.use(ConfirmationService)
 app.use(ToastService)
 
 app.mount('#app')

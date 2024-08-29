@@ -35,9 +35,9 @@ const loadUserInfo = async () => {
 const actualizarInformacion = async () => {
     try {
         await updateUserProfile({
-            nombre: nombre.value,
-            paterno: paterno.value,
-            materno: materno.value,
+            nombre: nombre.value.toLowerCase(),
+            paterno: paterno.value.toLocaleLowerCase(),
+            materno: materno.value.toLowerCase(),
             fecha_nacimiento: fecha_nacimiento.value
         })
         toast.add({ severity: 'success', summary: 'Éxito', detail: "Información personal actualizada correctamente", life: 3000 });

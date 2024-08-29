@@ -9,6 +9,7 @@ const display = ref(false);
 const router = useRouter();
 const toast = useToast();
 const paciente = ref(null);
+const position = ref('left');
 
 const fetchPacienteData = async () => {
     const id_historia_clinica = localStorage.getItem('id_historia_clinica');
@@ -43,8 +44,8 @@ function onDialogHide() {
 </script>
 
 <template>
-    <Dialog header="Paciente" v-model:visible="display" :style="{ width: '45vw' }" :modal="true" @hide="onDialogHide"
-        class="p-fluid">
+    <Dialog header="Paciente" v-model:visible="display" :style="{ width: '40rem', height: '100%' }" :modal="true"
+        @hide="onDialogHide" class="p-fluid" :position="position" :draggable="false">
         <template v-if="paciente">
             <h5 class="text-center datos-paciente">Datos del Paciente</h5>
             <div class="data-wrapper">
@@ -134,24 +135,24 @@ function onDialogHide() {
 .gestion-title {
     font-size: 2em;
     font-weight: bold;
-    color: #3f51b5;
+    color: #bb86fc;
 }
 
 .total-casos {
     font-size: 1.3em;
     font-weight: bold;
-    color: #333;
+    color: #e0e0e0;
 }
 
 .info-data,
 .case-data {
     font-size: 1em;
-    color: #666;
+    color: #fff9e3;
 }
 
 .info-data-dialog {
     font-size: 1.2em;
-    color: #666;
+    color: #cfcfcf;
 }
 
 .case-data {
@@ -167,20 +168,20 @@ function onDialogHide() {
 .month-name {
     font-size: 1.1em;
     font-weight: bold;
-    color: #3f51b5;
+    color: #bb86fc;
     margin-bottom: 0.3em;
 }
 
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #3f51b5;
+    color: #bb86fc;
     margin-bottom: 0.3em;
 }
 
 .data-section {
     padding: 2px 0;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #444;
     margin: 0 10px;
 }
 
@@ -195,12 +196,12 @@ h5 {
 
 .data-text {
     font-size: 0.85em;
-    color: #555;
+    color: #b0b0b0;
 }
 
 .card-mes:hover {
-    background-color: #f8f9fa;
+    background-color: #333;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 </style>

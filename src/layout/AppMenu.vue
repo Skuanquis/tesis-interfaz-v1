@@ -36,11 +36,12 @@ const modelAdminitrador = [
     {
         label: 'Acciones',
         items: [
-            { label: 'Reportes', icon: 'pi pi-fw pi-file', to: '/dashboard/reportes' },
+            //{ label: 'Reportes', icon: 'pi pi-fw pi-file', to: '/dashboard/reportes' },
             { label: 'Ver Usuarios', icon: 'pi pi-fw pi-users', to: '/dashboard/ver-usuarios' },
             { label: 'Registrar Usuario', icon: 'pi pi-fw pi-user-plus', to: '/dashboard/registrar-usuario' },
-            { label: 'Asignar Actividad', icon: 'pi pi-fw pi-plus', to: '/dashboard/actividades' },
-            { label: 'OVT en Números', icon: 'pi pi-fw pi-database', to: '/dashboard/numeros' },
+            //{ label: 'Asignar Actividad', icon: 'pi pi-fw pi-plus', to: '/dashboard/actividades' },
+            //{ label: 'OVT en Números', icon: 'pi pi-fw pi-database', to: '/dashboard/numeros' },
+            { label: 'Iniciar Simulación', icon: 'pi pi-fs pi-play', to: '/elegir-caso' },
             { label: 'Cerrar Sesión', icon: 'pi pi-fw pi-sign-out', command: () => cerrarSesion() }
         ]
     }
@@ -73,7 +74,7 @@ const store = useStore();
 
 const cerrarSesion = () => {
     localStorage.removeItem('token');
-    store.commit('clearUser');
+    store.commit('user/clearUser');
     router.push('/');
 };
 
@@ -81,7 +82,7 @@ const loadUserInfo = async () => {
     try {
         const response = await getUserInfo();
         const user = response.data;
-        store.commit('setUser', user);
+        store.commit('user/setUser', user);
         updateMenu(user);
     } catch (error) {
         console.error('Error fetching user info:', error);

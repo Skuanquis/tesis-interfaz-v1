@@ -90,7 +90,7 @@ const infoUsuario = async (infoUsuario) => {
         editarUsuario.value = true;
     } catch (error) {
         console.error('Error fetching pasante:', error);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar la información del pasante', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar la información del usuario', life: 3000 });
     }
 };
 
@@ -117,7 +117,7 @@ const guardarCambios = async () => {
     try {
 
         await updateUsuario(usuario.value.id_usuario, dataToSend);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Pasante actualizado con éxito', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario actualizado con éxito', life: 3000 });
         hideDialog();
         loadUsuarios();
     } catch (error) {

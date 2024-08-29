@@ -12,6 +12,39 @@ export const getExamenFisicoGeneral = (id_historia_clinica) => {
   return api.get(`/examen-fisico/${id_historia_clinica}`)
 }
 
+export const getExamenFisicoSegmentarioCabeza = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-cabeza/${id_historia_clinica}`)
+}
+
+export const getExamenFisicoSegmentarioCuello = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-cuello/${id_historia_clinica}`)
+}
+
+export const getExamenFisicoSegmentarioTorax = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-torax/${id_historia_clinica}`)
+}
+export const getExamenFisicoSegmentarioCorazon = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-corazon/${id_historia_clinica}`)
+}
+
+export const getExamenFisicoSegmentarioMamas = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-mamas/${id_historia_clinica}`)
+}
+
+export const getExamenFisicoSegmentarioAbdomen = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-abdomen/${id_historia_clinica}`)
+}
+export const getExamenFisicoSegmentarioGenitourinario = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-genitourinario/${id_historia_clinica}`)
+}
+
+export const getExamenFisicoSegmentarioExtremidades = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-extremidades/${id_historia_clinica}`)
+}
+
+export const getExamenFisicoSegmentarioNeurologico = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-neurologico/${id_historia_clinica}`)
+}
 export const getExamenFisicoSegmentario = (id_historia_clinica) => {
   return api.get(`/examen-fisico-segmentario/${id_historia_clinica}`)
 }
@@ -32,6 +65,38 @@ export const getExamenQuimicoUrinario = (id_historia_clinica) => {
   return api.get(`/laboratorio-quimico-urinario/${id_historia_clinica}`)
 }
 
-export const getExamenesEspecialesOrina = (id_historia_clinica) => {
+export const getExamenEspecialOrina = (id_historia_clinica) => {
   return api.get(`/laboratorio-especial-urinario/${id_historia_clinica}`)
+}
+
+export const getExamenBiometriaHematica = (id_historia_clinica) => {
+  return api.get(`/laboratorio-biometria-hematica/${id_historia_clinica}`)
+}
+
+export const getExamenRecuentoDiferencialHematico = (id_historia_clinica) => {
+  return api.get(`/laboratorio-recuento-diferencial-hematico/${id_historia_clinica}`)
+}
+
+export const getExamenIndiceEritrocitario = (id_historia_clinica) => {
+  return api.get(`/laboratorio-indice-eritrocitario/${id_historia_clinica}`)
+}
+
+export const getExamenQuimicoSanguineo = (id_historia_clinica) => {
+  return api.get(`/laboratorio-quimico-sanguineo/${id_historia_clinica}`)
+}
+
+export const getExamenHemostaseaSanguinea = (id_historia_clinica) => {
+  return api.get(`/laboratorio-hemostasea-sanguinea/${id_historia_clinica}`)
+}
+
+export const getExamenSerologiaSanguinea = (id_historia_clinica) => {
+  return api.get(`/laboratorio-serologia-sanguinea/${id_historia_clinica}`)
+}
+
+export const getExamenElectrolitosSanquineos = (id_historia_clinica) => {
+  return api.get(`/laboratorio-electrolitos-sanguineos/${id_historia_clinica}`)
+}
+
+export const getExamenImagenPrueba = () => {
+  return api.get(`/imagen`)
 }

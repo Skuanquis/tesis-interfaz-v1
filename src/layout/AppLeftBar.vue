@@ -27,12 +27,13 @@ const itemsIz = ref([
     },
     {
         label: 'ESTABILIZAR',
-        icon: '/layout/images/estabilizar.png'
+        icon: '/layout/images/estabilizar.png',
+        routeName: 'estabilizar'
     },
     {
-        label: 'INVESTIGAR',
-        icon: '/layout/images/diferencial.png',
-        routeName: 'investigar'
+        label: 'DIAGNOSTICO DIFERENCIAL',
+        icon: '/layout/images/investigar.png',
+        routeName: 'diferencial'
     }
 ]);
 

@@ -1,19 +1,29 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { getListaPacientes } from '@/services/pacienteService';
 import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
+
+const isActive = computed(() => store.state.timer.isActive);
+const store = useStore();
 
 const pacientes = ref([]);
 const toast = useToast();
 const router = useRouter();
+
+function start() {
+    if (!isActive.value) {
+        store.dispatch('timer/startTimer');
+    }
+}
 
 const fetchPacientes = async () => {
     try {
         const response = await getListaPacientes();
         pacientes.value = response.data;
     } catch (error) {
-        toast.error('Error al cargar operadores');
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar la informacion del paciente.', life: 3000 });
     }
 }
 
@@ -21,6 +31,7 @@ const iniciar = (id_paciente, id_historia_clinica) => {
     localStorage.setItem('id_paciente', JSON.stringify(id_paciente));
     localStorage.setItem('id_historia_clinica', JSON.stringify(id_historia_clinica));
     router.replace('/app');
+    start()
 }
 
 onMounted(() => {
@@ -48,7 +59,7 @@ onMounted(() => {
                             <div class="col md:col-4"><strong>Edad: </strong>{{ paciente.edad }} años</div>
                             <div class="col md:col-4"><strong>CI: </strong>{{ paciente.ci }}</div>
                         </div>
-                        <p class="m-0">
+                        <p class="m-0 text-justify">
                             {{ paciente.descripcion }}
                         </p>
                         <br>
