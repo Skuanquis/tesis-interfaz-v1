@@ -77,6 +77,12 @@ const router = createRouter({
           name: 'resultados',
           component: () => import('@/views/Resultados.vue'),
           meta: { requiresAuth: true, roles: ['administrador', 'medico', 'estudiante'] }
+        },
+        {
+          path: 'ayuda',
+          name: 'ayuda',
+          component: () => import('@/views/Ayuda.vue'),
+          meta: { requiresAuth: true, roles: ['administrador', 'medico', 'estudiante'] }
         }
       ]
     },
@@ -101,6 +107,24 @@ const router = createRouter({
           path: 'ver-usuarios',
           name: 'ver-usuarios',
           component: () => import('@/views/VerUsuarios.vue'),
+          meta: { requiresAuth: true, roles: ['administrador', 'medico'] }
+        },
+        {
+          path: 'crear-caso',
+          name: 'crear-caso',
+          component: () => import('@/views/CrearCaso.vue'),
+          meta: { requiresAuth: true, roles: ['administrador', 'medico'] }
+        },
+        {
+          path: 'ver-casos',
+          name: 'ver-casos',
+          component: () => import('@/views/VerCasos.vue'),
+          meta: { requiresAuth: true, roles: ['administrador', 'medico'] }
+        },
+        {
+          path: 'test',
+          name: 'test',
+          component: () => import('@/views/Test.vue'),
           meta: { requiresAuth: true, roles: ['administrador', 'medico'] }
         }
       ]

@@ -17,7 +17,7 @@ import Dock from 'primevue/dock';
 const itemsDer = ref([
     {
         label: 'INVESTIGAR',
-        icon: '/layout/images/diferencial.png',
+        icon: '/layout/images/investigar.png',
         routeName: 'investigar'
     },
     {

@@ -20,13 +20,45 @@ function onDialogHide() {
         router.push('/app');
     }
 }
-
+const dagnostico = ref('');
 </script>
 
 <template>
     <Dialog header="Traspaso" v-model:visible="display" :style="{ width: '45vw', height: '100%' }" :modal="true"
         class="p-fluid" @hide="onDialogHide" :position="position" :draggable="false">
-        <h5 class="text-center datos-paciente">Ultimos Pasos</h5>
+
+        <div class="grid p-fluid">
+            <div class="col md:col-12">
+                <h5 class="examen-titulo">¿Cuál es el siguiente paso para el paciente?</h5>
+                <div class="data-section-main"></div>
+                <div></div>
+            </div>
+            <div class="flex-wrap gap-3">
+                <div class="flex items-center pt-3">
+                    <RadioButton v-model="dagnostico" inputId="dagnostico1" name="pizza" value="Cheese" />
+                    <label for="dagnostico1" class="ml-2 pl-2 text-lg">Ingresar al paciente a la Unidad de Terapia
+                        Intensiva</label>
+                </div>
+                <div class="flex items-center pt-3">
+                    <RadioButton v-model="dagnostico" inputId="dagnostico2" name="pizza" value="Mushroom" />
+                    <label for="dagnostico2" class="ml-2 pl-2 text-lg">Ingresar al paciente a una habitación de
+                        hospitalización
+                        general </label>
+                </div>
+                <div class="flex items-center pt-3">
+                    <RadioButton v-model="dagnostico" inputId="dagnostico3" name="pizza" value="Pepper" />
+                    <label for="dagnostico3" class="ml-2 pl-2 text-lg">Preparar al paciente para una cirugía</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid p-fluid">
+            <div class="col md:col-12">
+                <h5 class="examen-titulo pt-3">¿Cual es tu diagnostico final?</h5>
+                <div class="data-section-main"></div>
+                <div></div>
+            </div>
+        </div>
 
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
@@ -111,5 +143,14 @@ h5 {
     background-color: #333;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.examen-titulo {
+    color: #bb86fc;
+}
+
+.data-section-main {
+    padding: 2px 0;
+    border-bottom: 1px solid #444;
 }
 </style>

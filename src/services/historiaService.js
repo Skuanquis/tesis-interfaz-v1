@@ -100,3 +100,47 @@ export const getExamenElectrolitosSanquineos = (id_historia_clinica) => {
 export const getExamenImagenPrueba = () => {
   return api.get(`/imagen`)
 }
+
+export const getAnamnesisTegumentario = (id_historia_clinica) => {
+  return api.get(`/anamnesis-tegumentario/${id_historia_clinica}`)
+}
+
+export const getAnamnesisCardiovascular = (id_historia_clinica) => {
+  return api.get(`/anamnesis-cardiovascular/${id_historia_clinica}`)
+}
+
+export const getAnamnesisEndocrino = (id_historia_clinica) => {
+  return api.get(`/anamnesis-endocrino/${id_historia_clinica}`)
+}
+
+export const getAnamnesisGastrointestinal = (id_historia_clinica) => {
+  return api.get(`/anamnesis-gastrointestinal/${id_historia_clinica}`)
+}
+
+export const getAnamnesisGenitourinario = (id_historia_clinica) => {
+  return api.get(`/anamnesis-genitourinario/${id_historia_clinica}`)
+}
+
+export const getAnamnesisHematico = (id_historia_clinica) => {
+  return api.get(`/anamnesis-hematico/${id_historia_clinica}`)
+}
+
+export const getAnamnesisLocomotor = (id_historia_clinica) => {
+  return api.get(`/anamnesis-locomotor/${id_historia_clinica}`)
+}
+
+export const getAnamnesisNeurologico = (id_historia_clinica) => {
+  return api.get(`/anamnesis-neurologico/${id_historia_clinica}`)
+}
+
+export const getAnamnesisPsiquiatrico = (id_historia_clinica) => {
+  return api.get(`/anamnesis-psiquiatrico/${id_historia_clinica}`)
+}
+
+export const getAnamnesisRespiratorio = (id_historia_clinica) => {
+  return api.get(`/anamnesis-respiratorio/${id_historia_clinica}`)
+}
+
+export const getDiagnosticosDiferenciales = (id_historia_clinica) => {
+  return api.get(`/diferencial/diagnosticos/${id_historia_clinica}`)
+}

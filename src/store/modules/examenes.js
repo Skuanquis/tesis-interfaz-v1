@@ -46,6 +46,20 @@ export default {
     },
     setExamenObstetrico(state, data) {
       state.examenObstetrico = data
+    },
+    // Nueva mutación para limpiar el estado
+    limpiarExamenes(state) {
+      state.examenFisico = null
+      state.examenSegmentarioCabeza = null
+      state.examenSegmentarioCuello = null
+      state.examenSegmentarioTorax = null
+      state.examenSegmentarioCorazon = null
+      state.examenSegmentarioMamas = null
+      state.examenSegmentarioAbdomen = null
+      state.examenSegmentarioGenitourinario = null
+      state.examenSegmentarioExtremidades = null
+      state.examenSegmentarioNeurologico = null
+      state.examenObstetrico = null
     }
   },
   actions: {
@@ -81,6 +95,10 @@ export default {
     },
     saveExamenObstetrico({ commit }, data) {
       commit('setExamenObstetrico', data)
+    },
+    // Nueva acción para limpiar los exámenes
+    limpiarExamenes({ commit }) {
+      commit('limpiarExamenes')
     }
   },
   getters: {

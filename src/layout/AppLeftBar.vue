@@ -32,7 +32,7 @@ const itemsIz = ref([
     },
     {
         label: 'DIAGNOSTICO DIFERENCIAL',
-        icon: '/layout/images/investigar.png',
+        icon: '/layout/images/diferencial.png',
         routeName: 'diferencial'
     }
 ]);

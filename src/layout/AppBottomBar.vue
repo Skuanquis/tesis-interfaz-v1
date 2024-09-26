@@ -16,6 +16,7 @@ import Dock from 'primevue/dock';
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { useStore } from 'vuex';
+import { finalizarSimulacion } from '@/services/simulacionService';
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -40,6 +41,11 @@ const itemsBot = ref([
         label: 'SALIR',
         icon: '/layout/images/salir.png',
         routeName: 'salir'
+    },
+    {
+        label: 'AYUDA',
+        icon: '/layout/images/ayuda.png',
+        routeName: 'ayuda'
     }
 ]);
 
@@ -54,11 +60,25 @@ function onDockItemClick(item) {
             rejectLabel: 'No',
             rejectIcon: 'pi pi-times',
 
-            accept: () => {
+            accept: async () => {
+
+                const id_simulacion = localStorage.getItem('id_simulacion');
+                const minutos = localStorage.getItem('minutos');
+                const segundos = localStorage.getItem('segundos');
+                const tiempo_empleado = `${minutos}:${segundos}`;
+                console.log(tiempo_empleado)
+                try {
+                    await finalizarSimulacion(id_simulacion, tiempo_empleado);
+                    toast.add({ severity: 'info', summary: 'Simulación Finalizada', detail: 'Has finalizado la simulación', life: 3000 });
+                    router.push('/app/resultados');
+                } catch (error) {
+                    toast.add({ severity: 'error', summary: 'Error', detail: 'Error al finalizar la simulación', life: 3000 });
+                }
                 stop();
-                //store.dispatch('navigation/confirmNavigation');
-                router.push('/app/resultados');
-                toast.add({ severity: 'info', summary: 'Confirmaste', detail: 'Terminaste la simulación', life: 3000 });
+                store.dispatch('examenes/limpiarExamenes');
+                store.dispatch('anamnesis/limpiarAnamnesis');
+                store.dispatch('diferencial/limpiarDiferencial');
+
             },
             reject: () => {
                 toast.add({ severity: 'warn', summary: 'Cancelado', detail: 'Has cancelado la acción', life: 3000 });

@@ -10,6 +10,7 @@ import {
     getExamenHemostaseaSanguinea, getExamenSerologiaSanguinea, getExamenEspecialOrina,
     getExamenElectrolitosSanquineos, getExamenImagenPrueba
 } from '@/services/historiaService';
+import { registrarAccion } from '@/services/simulacionService';
 
 const display = ref(true);
 const router = useRouter();
@@ -49,6 +50,24 @@ const loadingStates = ref({
     imagen_prueba: false
 });
 
+const id_simulacion = localStorage.getItem('id_simulacion');
+
+const registrarAccionSimulacion = async (descripcion, tipo_accion) => {
+    try {
+        const accionData = {
+            id_simulacion: id_simulacion,
+            id_categoria_decision: 1,
+            descripcion: descripcion,
+            tipo_accion: tipo_accion
+        };
+        await registrarAccion(accionData);
+        toast.add({ severity: 'success', summary: 'Acción registrada', detail: 'La acción ha sido registrada con éxito', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al registrar la acción', life: 3000 });
+        console.error('Error al registrar la acción:', error);
+    }
+};
+
 // Function to fetch exam data
 const fetchExamenData = async (type) => {
     const id_historia_clinica = localStorage.getItem('id_historia_clinica');
@@ -61,18 +80,23 @@ const fetchExamenData = async (type) => {
         loadingStates.value[type] = true;
         switch (type) {
             case 'orina':
+                await registrarAccionSimulacion('Se  realizo el laboratorio de orina', 'Innecesaria');
                 response = await getExamenFisicoOrina(id_historia_clinica);
                 break;
             case 'sedimento':
+                await registrarAccionSimulacion('Se  realizo el laboratorio de sedimento urinario', 'Innecesaria');
                 response = await getExamenSedimentoUrinario(id_historia_clinica);
                 break;
             case 'quimico_urinario':
+                await registrarAccionSimulacion('Se  realizo el laboratorio quimico urinario', 'Innecesaria');
                 response = await getExamenQuimicoUrinario(id_historia_clinica);
                 break;
             case 'especial_orina':
+                await registrarAccionSimulacion('Se  realizo el laboratorio especial de orina', 'Innecesaria');
                 response = await getExamenEspecialOrina(id_historia_clinica);
                 break;
             case 'biometria_hematica':
+                await registrarAccionSimulacion('Se  realizo el laboratorio de miometria hematica', 'Innecesaria');
                 response = await getExamenBiometriaHematica(id_historia_clinica);
                 break;
             case 'recuento_diferencial':
@@ -94,6 +118,7 @@ const fetchExamenData = async (type) => {
                 response = await getExamenElectrolitosSanquineos(id_historia_clinica);
                 break;
             case 'imagen_prueba':
+                await registrarAccionSimulacion('Se  solicito la imagen de pueba', 'Critico');
                 response = await getExamenImagenPrueba(id_historia_clinica);
                 break;
             default:
@@ -131,14 +156,14 @@ function onDialogHide() {
 <template>
     <Dialog header="Investigar" v-model:visible="display" :style="{ width: '45vw', height: '100%' }" :modal="true"
         @hide="onDialogHide" class="p-fluid" :position="position" :draggable="false">
-        <h5 class="text-center datos-paciente">Laboratorio Clínico de Orina</h5>
         <Accordion>
-            <AccordionTab header="Laboratorio Análisis de Orina">
+            <AccordionTab header="Examenes de Cabecera">
+            </AccordionTab>
+            <AccordionTab header="Laboratorios Disponibles">
                 <div class="grid">
-                    <div class="col md:col-4"></div>
+                    <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio de orina</strong></div>
                     <div class="col md:col-4"> <Button v-if="!examenOrina && !loadingStates.orina" label="Realizar"
                             @click="() => fetchExamenData('orina')" /></div>
-                    <div class="col md:col-4"></div>
                 </div>
                 <div v-if="loadingStates.orina">Obteniendo...</div>
                 <template v-if="examenOrina">
@@ -158,13 +183,11 @@ function onDialogHide() {
                         </div>
                     </div>
                 </template>
-            </AccordionTab>
-            <AccordionTab header="Laboratorio Sedimento Urinario">
+
                 <div class="grid">
-                    <div class="col md:col-4"></div>
+                    <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio de Sedimento Urinario</strong></div>
                     <div class="col md:col-4"> <Button v-if="!examenSedimento && !loadingStates.sedimento"
                             label="Realizar" @click="() => fetchExamenData('sedimento')" /></div>
-                    <div class="col md:col-4"></div>
                 </div>
                 <div v-if="loadingStates.sedimento">Obteniendo...</div>
                 <template v-if="examenSedimento">
@@ -250,13 +273,11 @@ function onDialogHide() {
                         </div>
                     </div>
                 </template>
-            </AccordionTab>
-            <AccordionTab header="Laboratorio Químico Urinario">
+
                 <div class="grid">
-                    <div class="col md:col-4"></div>
+                    <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio Químico Urinario</strong></div>
                     <div class="col md:col-4"> <Button v-if="!examenQuimicoUrinario && !loadingStates.quimico_urinario"
                             label="Realizar" @click="() => fetchExamenData('quimico_urinario')" /></div>
-                    <div class="col md:col-4"></div>
                 </div>
                 <div v-if="loadingStates.quimico_urinario">Obteniendo...</div>
                 <template v-if="examenQuimicoUrinario">
@@ -321,13 +342,11 @@ function onDialogHide() {
                         </div>
                     </div>
                 </template>
-            </AccordionTab>
-            <AccordionTab header="Laboratorio Especial de Orina">
+
                 <div class="grid">
-                    <div class="col md:col-4"></div>
+                    <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio Especial de Orina</strong></div>
                     <div class="col md:col-4"> <Button v-if="!examenEspecialOrina && !loadingStates.especial_orina"
                             label="Realizar" @click="() => fetchExamenData('especial_orina')" /></div>
-                    <div class="col md:col-4"></div>
                 </div>
                 <div v-if="loadingStates.especial_orina">Obteniendo...</div>
                 <template v-if="examenEspecialOrina">
@@ -361,15 +380,10 @@ function onDialogHide() {
                             </div>
                         </div>
                     </div>
-
                 </template>
-            </AccordionTab>
-        </Accordion>
-        <h5 class="text-center datos-paciente">Laboratorio Análisis Hemático</h5>
-        <Accordion>
-            <AccordionTab header="Laboratorio Biometria Hemática">
+
                 <div class="grid">
-                    <div class="col md:col-4"></div>
+                    <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio de Biometria Hemática</strong></div>
                     <div class="col md:col-4"> <Button
                             v-if="!examenBiometriaHematica && !loadingStates.biometria_hematica" label="Realizar"
                             @click="() => fetchExamenData('biometria_hematica')" /></div>
@@ -409,10 +423,7 @@ function onDialogHide() {
                     </div>
                 </template>
             </AccordionTab>
-        </Accordion>
-        <h5 class="text-center datos-paciente">Imagen de prueba</h5>
-        <Accordion>
-            <AccordionTab header="Imagen de prueba">
+            <AccordionTab header="Imagenologia">
                 <div class="grid">
                     <div class="col md:col-4"></div>
                     <div class="col md:col-4">
@@ -429,6 +440,7 @@ function onDialogHide() {
                 </template>
             </AccordionTab>
         </Accordion>
+
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
@@ -512,5 +524,14 @@ h5 {
     background-color: #333;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.data-section-main {
+    padding: 2px 0;
+    border-bottom: 1px solid #444;
+}
+
+.examen-titulo {
+    color: #bb86fc;
 }
 </style>

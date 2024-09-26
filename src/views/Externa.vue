@@ -26,8 +26,34 @@ function onDialogHide() {
 <template>
     <Dialog header="Consulta Externa" v-model:visible="display" :style="{ width: '45vw', height: '100%' }" :modal="true"
         class="p-fluid" @hide="onDialogHide" :position="position" :draggable="false">
-        <h5 class="text-center datos-paciente">Especialidades Disponibles</h5>
+        <h5 class="text-center datos-paciente">Subespecialidades Disponibles</h5>
+        <div class="grid">
+            <div class="col md:col-8 text-lg pt-3">
+                <strong>Subespecialidad 1</strong>
+            </div>
+            <div class="col md:col-4 pt-2">
+                <Button type="button" icon="pi pi-search" />
+            </div>
+            <div class="col md:col-8 text-lg pt-3">
+                <strong>Subespecialidad 2</strong>
+            </div>
+            <div class="col md:col-4 pt-2">
+                <Button type="button" icon="pi pi-search" />
+            </div>
+            <div class="col md:col-8 text-lg pt-3">
+                <strong>Subespecialidad 3</strong>
+            </div>
+            <div class="col md:col-4 pt-2">
+                <Button type="button" icon="pi pi-search" />
+            </div>
+            <div class="col md:col-8 text-lg pt-3">
+                <strong>Subespecialidad 4</strong>
+            </div>
+            <div class="col md:col-4 pt-2">
+                <Button type="button" icon="pi pi-search" />
+            </div>
 
+        </div>
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
@@ -111,5 +137,14 @@ h5 {
     background-color: #333;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.data-section-main {
+    padding: 2px 0;
+    border-bottom: 1px solid #444;
+}
+
+.examen-titulo {
+    color: #bb86fc;
 }
 </style>

@@ -34,6 +34,16 @@ import FloatLabel from 'primevue/floatlabel'
 import ConfirmDialog from 'primevue/confirmdialog'
 import ConfirmationService from 'primevue/confirmationservice'
 import Image from 'primevue/image'
+import Checkbox from 'primevue/checkbox'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
+import Stepper from 'primevue/stepper'
+import StepperPanel from 'primevue/stepperpanel'
+import InputNumber from 'primevue/inputnumber'
+import Textarea from 'primevue/textarea'
+import SelectButton from 'primevue/selectbutton'
+import FileUpload from 'primevue/fileupload'
+import InputMask from 'primevue/inputmask'
 
 const app = createApp(App)
 
@@ -62,6 +72,17 @@ app.component('Tag', Tag)
 app.component('FloatLabel', FloatLabel)
 app.component('ConfirmDialog', ConfirmDialog)
 app.component('Image', Image)
+app.component('Checkbox', Checkbox)
+app.component('TabView', TabView)
+app.component('TabPanel', TabPanel)
+app.component('Stepper', Stepper)
+app.component('StepperPanel', StepperPanel)
+app.component('InputNumber', InputNumber)
+app.component('Textarea', Textarea)
+app.component('SelectButton', SelectButton)
+app.component('FileUpload', FileUpload)
+app.component('InputMask', InputMask)
+
 app.use(ConfirmationService)
 app.use(ToastService)
 

@@ -5,7 +5,7 @@ import RightBar from './AppRightBar.vue';
 import BottomBar from './AppBottomBar.vue';
 import { useStore } from 'vuex';
 import { useToast } from 'primevue/usetoast';
-import ThreeScene from './ThreeScene.vue';
+//import ThreeScene from './ThreeScene.vue';
 
 const store = useStore();
 const containerClass = computed(() => {
@@ -43,7 +43,7 @@ function checkTimeForNotification() {
     if (minutos === 3 && segundos === 0) {
         toast.add({
             severity: 'error',
-            summary: 'Ya KAGASTE',
+            summary: 'Ya termino',
             detail: `Has alcanzado los 3 minutos.`,
             life: 8000,
         });

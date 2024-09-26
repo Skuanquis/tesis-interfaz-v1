@@ -1,25 +1,44 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-//import { useToast } from 'primevue/usetoast';
+import { useStore } from 'vuex';
+import { getDiagnosticosDiferenciales } from '@/services/historiaService'; // Importa el servicio
 
 const display = ref(true);
 const router = useRouter();
 const position = ref('left');
-//const toast = useToast();
-
+const store = useStore();
+const selectedCategories = ref([]);
+const diagnosticosData = ref({});
 
 function closeDialog() {
+    store.dispatch('diferencial/saveSelectedCategories', selectedCategories.value);
     display.value = false;
     router.push('/app');
 }
 
 function onDialogHide() {
     if (!display.value) {
+        store.dispatch('diferencial/saveSelectedCategories', selectedCategories.value);
         router.push('/app');
     }
 }
+
+async function loadDiagnosticos(id_historia_clinica) {
+    try {
+        const response = await getDiagnosticosDiferenciales(id_historia_clinica);
+        diagnosticosData.value = response.data;
+    } catch (error) {
+        console.error("Error al cargar los diagnósticos diferenciales:", error);
+    }
+}
+
+onMounted(() => {
+    selectedCategories.value = store.getters['diferencial/selectedCategories'] || [];
+    const id_historia_clinica = localStorage.getItem('id_historia_clinica');
+    loadDiagnosticos(id_historia_clinica);
+});
 
 </script>
 
@@ -27,6 +46,31 @@ function onDialogHide() {
     <Dialog header="Diagnostico diferencial" v-model:visible="display" :style="{ width: '45vw', height: '100%' }"
         :modal="true" class="p-fluid" @hide="onDialogHide" :position="position" :draggable="false">
         <h5 class="text-center datos-paciente">Posibles Diagnosticos</h5>
+        <Accordion>
+            <AccordionTab v-for="(category, categoryName) in diagnosticosData" :key="categoryName"
+                :header="categoryName">
+                <div class="flex-col gap-4">
+                    <div v-for="diagnostico in category.diagnosticos" :key="diagnostico" class="flex items-center pt-3">
+                        <Checkbox v-model="selectedCategories" :inputId="diagnostico" :value="diagnostico" />
+                        <label class="pl-3 text-lg" :for="diagnostico">{{ diagnostico }}</label>
+                    </div>
+                </div>
+            </AccordionTab>
+        </Accordion>
+        <Divider />
+
+        <h5>Diagnosticos Seleccionados</h5>
+        <div class="grid">
+            <div v-if="selectedCategories.length > 0" class="col-12">
+                <div v-for="category in selectedCategories" :key="category" class="flex items-center pt-3">
+                    <Checkbox v-model="selectedCategories" :inputId="category" :value="category" />
+                    <label class="pl-3 text-lg" :for="category">{{ category }}</label>
+                </div>
+            </div>
+            <div v-else class="col-12">
+                <p>No hay diagnósticos seleccionados.</p>
+            </div>
+        </div>
 
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
@@ -36,8 +80,6 @@ function onDialogHide() {
         </div>
     </Dialog>
 </template>
-
-
 
 <style scoped>
 .gestion-title {

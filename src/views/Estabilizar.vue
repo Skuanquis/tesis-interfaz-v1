@@ -27,7 +27,12 @@ function onDialogHide() {
     <Dialog header="Estabilizar" v-model:visible="display" :style="{ width: '45vw', height: '100%' }" :modal="true"
         class="p-fluid" @hide="onDialogHide" :position="position" :draggable="false">
         <h5 class="text-center datos-paciente">Procedimientos Disponibles</h5>
-
+        <div class="grid pt-2">
+            <div class="col md:col-8 pt-1">
+                <h5>Monitor de Signos Vitales</h5>
+            </div>
+            <div class="col md:col-4"><Button label="Habilitar"></Button></div>
+        </div>
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">

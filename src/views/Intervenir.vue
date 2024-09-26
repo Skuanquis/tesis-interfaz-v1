@@ -26,7 +26,50 @@ function onDialogHide() {
 <template>
     <Dialog header="Intervenir" v-model:visible="display" :style="{ width: '45vw', height: '100%' }" :modal="true"
         class="p-fluid" @hide="onDialogHide" :position="position" :draggable="false">
-        <h5 class="text-center datos-paciente">Intervenciones Disponibles</h5>
+
+        <div class="grid p-fluid">
+            <div class="col md:col-12">
+                <h5 class="examen-titulo">Procedimientos</h5>
+                <div class="data-section-main"></div>
+                <div></div>
+            </div>
+        </div>
+
+        <div class="grid p-fluid">
+            <div class="col md:col-12">
+                <h5 class="examen-titulo">Suministrar Medicamentos</h5>
+                <div class="data-section-main"></div>
+                <div></div>
+            </div>
+        </div>
+
+        <Accordion>
+            <AccordionTab header="Analgesicos">
+
+            </AccordionTab>
+            <AccordionTab header="Antibioticos">
+
+            </AccordionTab>
+            <AccordionTab header="Medicamentos Cardiacos">
+
+            </AccordionTab>
+            <AccordionTab header="Medicamentos Respiratorio">
+
+            </AccordionTab>
+            <AccordionTab header="Medicamentos Gastrointestinal">
+
+            </AccordionTab>
+            <AccordionTab header="Medicamentos Gineco-Obstetricos">
+
+            </AccordionTab>
+            <AccordionTab header="Medicamentos Psquiatricos">
+
+            </AccordionTab>
+            <AccordionTab header="Medicamentos Miscelaneos">
+
+            </AccordionTab>
+
+        </Accordion>
 
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
@@ -111,5 +154,15 @@ h5 {
     background-color: #333;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+
+.examen-titulo {
+    color: #bb86fc;
+}
+
+.data-section-main {
+    padding: 2px 0;
+    border-bottom: 1px solid #444;
 }
 </style>

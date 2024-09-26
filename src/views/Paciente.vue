@@ -2,8 +2,18 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
 import { getInfoHistoria } from '@/services/historiaService';
+import { useToast } from 'primevue/usetoast';
+import { useStore } from 'vuex';
+import {
+    getAnamnesisCardiovascular, getAnamnesisEndocrino,
+    getAnamnesisGastrointestinal, getAnamnesisGenitourinario, getAnamnesisHematico,
+    getAnamnesisLocomotor, getAnamnesisNeurologico, getAnamnesisPsiquiatrico,
+    getAnamnesisRespiratorio, getAnamnesisTegumentario
+} from '@/services/historiaService';
+
+import { registrarAccion } from '@/services/simulacionService';
+const store = useStore();
 
 const display = ref(false);
 const router = useRouter();
@@ -11,7 +21,49 @@ const toast = useToast();
 const paciente = ref(null);
 const position = ref('left');
 
-const fetchPacienteData = async () => {
+const loadingGeneral = ref(false);
+
+const loadingCardiovascular = ref(false);
+const loadingEndocrino = ref(false);
+const loadingGastrointestinal = ref(false);
+const loadingGenitourinario = ref(false);
+const loadingHematico = ref(false);
+const loadingLocomotor = ref(false);
+const loadingNeurologico = ref(false);
+const loadingPsiquiatrico = ref(false);
+const loadingRespiratorio = ref(false);
+const loadingTegumentario = ref(false);
+
+const anamnesisCardiovascular = ref(store.getters['anamnesis/anamnesisCardiovascular']);
+const anamnesisEndocrino = ref(store.getters['anamnesis/anamnesisEndocrino']);
+const anamnesisGastrointestinal = ref(store.getters['anamnesis/anamnesisGastrointestinal']);
+const anamnesisGenitourinario = ref(store.getters['anamnesis/anamnesisGenitourinario']);
+const anamnesisHematico = ref(store.getters['anamnesis/anamnesisHematico']);
+const anamnesisLocomotor = ref(store.getters['anamnesis/anamnesisLocomotor']);
+const anamnesisNeurologico = ref(store.getters['anamnesis/anamnesisNeurologico']);
+const anamnesisPsiquiatrico = ref(store.getters['anamnesis/anamnesisPsiquiatrico']);
+const anamnesisRespiratorio = ref(store.getters['anamnesis/anamnesisRespiratorio']);
+const anamnesisTegumentario = ref(store.getters['anamnesis/anamnesisTegumentario']);
+
+const id_simulacion = localStorage.getItem('id_simulacion');
+
+const registrarAccionSimulacion = async (descripcion, tipo_accion) => {
+    try {
+        const accionData = {
+            id_simulacion: id_simulacion,
+            id_categoria_decision: 1,
+            descripcion: descripcion,
+            tipo_accion: tipo_accion
+        };
+        await registrarAccion(accionData);
+        toast.add({ severity: 'success', summary: 'Acción registrada', detail: 'La acción ha sido registrada con éxito', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al registrar la acción', life: 3000 });
+        console.error('Error al registrar la acción:', error);
+    }
+};
+
+const fetchPacienteData = async (type, section = null) => {
     const id_historia_clinica = localStorage.getItem('id_historia_clinica');
     if (!id_historia_clinica) {
         toast.error('ID de historia clínica no encontrado en el localStorage');
@@ -21,9 +73,95 @@ const fetchPacienteData = async () => {
         const response = await getInfoHistoria(id_historia_clinica);
         paciente.value = response.data[0];
         display.value = true;
+
+        let responseAnamnesis;
+        console.log(`Fetching data for type: ${type}, section: ${section}`);
+
+        if (type === 'anamnesis' && section) {
+            let loadingRef;
+            let anamnesisRef;
+            switch (section) {
+                case 'cardiovascular':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de cardiovascular', 'Innecesaria');
+                    loadingRef = loadingCardiovascular;
+                    anamnesisRef = anamnesisCardiovascular;
+                    responseAnamnesis = await getAnamnesisCardiovascular(id_historia_clinica);
+                    break;
+                case 'endocrino':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de endocrino', 'Innecesaria');
+                    loadingRef = loadingEndocrino;
+                    anamnesisRef = anamnesisEndocrino;
+                    responseAnamnesis = await getAnamnesisEndocrino(id_historia_clinica);
+                    break;
+                case 'gastrointestinal':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de gastrointestinal', 'Util');
+                    loadingRef = loadingGastrointestinal;
+                    anamnesisRef = anamnesisGastrointestinal;
+                    responseAnamnesis = await getAnamnesisGastrointestinal(id_historia_clinica);
+                    break;
+                case 'genitourinario':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de genitourinario', 'Innecesaria');
+                    loadingRef = loadingGenitourinario;
+                    anamnesisRef = anamnesisGenitourinario;
+                    responseAnamnesis = await getAnamnesisGenitourinario(id_historia_clinica);
+                    break;
+                case 'hematico':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de hematico', 'Util');
+                    loadingRef = loadingHematico;
+                    anamnesisRef = anamnesisHematico;
+                    responseAnamnesis = await getAnamnesisHematico(id_historia_clinica);
+                    break;
+                case 'locomotor':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de locomotor', 'Util');
+                    loadingRef = loadingLocomotor;
+                    anamnesisRef = anamnesisLocomotor;
+                    responseAnamnesis = await getAnamnesisLocomotor(id_historia_clinica);
+                    break;
+                case 'neurologico':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario neurologico', 'Critico');
+                    loadingRef = loadingNeurologico;
+                    anamnesisRef = anamnesisNeurologico;
+                    responseAnamnesis = await getAnamnesisNeurologico(id_historia_clinica);
+                    break;
+                case 'psiquiatrico':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de psiquiatrico', 'Inutil');
+                    loadingRef = loadingPsiquiatrico;
+                    anamnesisRef = anamnesisPsiquiatrico;
+                    responseAnamnesis = await getAnamnesisPsiquiatrico(id_historia_clinica);
+                    break;
+                case 'respiratorio':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario respiratorio', 'Innecesaria');
+                    loadingRef = loadingRespiratorio;
+                    anamnesisRef = anamnesisRespiratorio;
+                    responseAnamnesis = await getAnamnesisRespiratorio(id_historia_clinica);
+                    break;
+                case 'tegumentario':
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario tegumentario', 'Innecesaria');
+                    loadingRef = loadingTegumentario;
+                    anamnesisRef = anamnesisTegumentario;
+                    responseAnamnesis = await getAnamnesisTegumentario(id_historia_clinica);
+                    break;
+                default:
+                    throw new Error('Sección no válida');
+            }
+
+            loadingRef.value = true;
+            setTimeout(() => {
+                anamnesisRef.value = responseAnamnesis.data[0];
+                store.dispatch(`anamnesis/saveAnamnesis${section.charAt(0).toUpperCase() + section.slice(1)}`, anamnesisRef.value);
+                loadingRef.value = false;
+                console.log(`${section} segmentario data:`, anamnesisRef.value);
+            }, 2000);
+
+        }
+
     } catch (error) {
         toast.error('Error al cargar los datos del paciente');
         console.error(error);
+        loadingGeneral.value = loadingCardiovascular.value = loadingEndocrino.value =
+            loadingGastrointestinal.value = loadingGenitourinario.value = loadingHematico.value =
+            loadingLocomotor.value = loadingNeurologico.value = loadingPsiquiatrico.value =
+            loadingPsiquiatrico.value = loadingTegumentario.value = false;
     }
 };
 
@@ -62,45 +200,14 @@ function onDialogHide() {
                             </h5>
                         </div>
                         <div class="col md:col-6">
-                            <h5 class="case-data text-lg"><strong>CI: </strong>{{ paciente.ci }}</h5>
                             <h5 class="case-data text-lg"><strong>Edad: </strong>{{ paciente.edad }} años</h5>
+                            <h5 class="case-data text-lg"><strong>Peso: </strong>{{ paciente.peso }} Kg.</h5>
+                            <h5 class="case-data text-lg"><strong>Talla: </strong>{{ paciente.talla }} m.</h5>
                         </div>
                     </div>
                 </div>
                 <div class="data-section">
                     <p class="text-lg text-justify">{{ paciente.descripcion }}</p>
-                </div>
-                <div class="data-section">
-                    <h5 class="info-data-dialog text-lg">Antecedentes Gineco Obstetricos</h5>
-                    <div class="grid">
-                        <div class="col md:col-6">
-                            <h5 class="case-data text-lg"><strong>Menarca:</strong> {{ paciente.menarca }}</h5>
-                            <h5 class="case-data text-lg"><strong>FUM: </strong>{{ new
-                                Date(paciente.fum).toLocaleDateString() }}</h5>
-                            <h5 class="case-data text-lg"><strong>FPP: </strong>{{ new
-                                Date(paciente.fpp).toLocaleDateString() }}</h5>
-                            <h5 class="case-data text-lg"><strong>CPN: </strong>{{ paciente.cpn }}</h5>
-                        </div>
-                        <div class="col md:col-6">
-                            <h5 class="case-data text-lg"><strong>G: </strong>{{ paciente.gestaciones }}</h5>
-                            <h5 class="case-data text-lg"><strong>P: </strong>{{ paciente.partos }}</h5>
-                            <h5 class="case-data text-lg"><strong>AB: </strong>{{ paciente.abortos }}</h5>
-                            <h5 class="case-data text-lg"><strong>C: </strong>{{ paciente.cesarias }}</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="data-section">
-                    <h5 class="info-data-dialog text-lg">Antecedentes Patológicos</h5>
-                    <div class="grid">
-                        <div class="col md:col-6">
-                            <h5 class="case-data text-lg"><strong>APP:</strong> {{ paciente.app }}</h5>
-                            <h5 class="case-data text-lg"><strong>AFP:</strong> {{ paciente.afp }}</h5>
-                        </div>
-                        <div class="col md:col-6">
-                            <h5 class="case-data text-lg"><strong>Alergias:</strong> {{ paciente.alergias }}</h5>
-                            <h5 class="case-data text-lg"><strong>Cirugias:</strong> {{ paciente.cirugias }}</h5>
-                        </div>
-                    </div>
                 </div>
                 <div class="data-section">
                     <h5 class="info-data-dialog text-lg">Motivo de Consulta</h5>
@@ -113,6 +220,199 @@ function onDialogHide() {
                 <div class="data-section">
                     <h5 class="info-data-dialog text-lg">Historia de la enfermedad actual</h5>
                     <p class="text-lg text-justify">{{ paciente.historia_enfermedad_actual }}</p>
+                </div>
+                <div v-if="paciente.sexo === 'femenino'" class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes Gineco Obstetricos</h5>
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Menarca:</strong> {{ paciente.menarca }}</h5>
+                            <h5 class="case-data text-lg"><strong>FUM:</strong> {{ new
+                                Date(paciente.fum).toLocaleDateString() }}</h5>
+                            <h5 class="case-data text-lg"><strong>FPP:</strong> {{ new
+                                Date(paciente.fpp).toLocaleDateString() }}</h5>
+                            <h5 class="case-data text-lg"><strong>CPN:</strong> {{ paciente.cpn }}</h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>G:</strong> {{ paciente.gestaciones }}</h5>
+                            <h5 class="case-data text-lg"><strong>P:</strong> {{ paciente.partos }}</h5>
+                            <h5 class="case-data text-lg"><strong>AB:</strong> {{ paciente.abortos }}</h5>
+                            <h5 class="case-data text-lg"><strong>C:</strong> {{ paciente.cesarias }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes Patológicos</h5>
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Alergias:</strong> {{ paciente.alergias }}</h5>
+                            <h5 class="case-data text-lg"><strong>Cirugias:</strong> {{ paciente.cirugias }}</h5>
+                            <h5 class="case-data text-lg"><strong>Traumatismos:</strong> {{ paciente.traumas }}</h5>
+                            <h5 class="case-data text-lg"><strong>Intoxicaciones:</strong> {{ paciente.intoxicaciones }}
+                            </h5>
+                            <h5 class="case-data text-lg"><strong>Hospitalizaciones:</strong> {{
+                                paciente.hospitalizaciones }}</h5>
+                            <h5 class="case-data text-lg"><strong>Enfermedades:</strong> {{ paciente.enfermedades }}
+                            </h5>
+                            <h5 class="case-data text-lg"><strong>Patologia Asociada:</strong> {{
+                                paciente.patologia_asociada }}</h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Enfermedades Congenitas:</strong> {{
+                                paciente.enfermedades_congenitas }}</h5>
+                            <h5 class="case-data text-lg"><strong>Enfermedades de Infancia:</strong> {{
+                                paciente.enfermedades_infancia }}</h5>
+                            <h5 class="case-data text-lg"><strong>Enfermedades de Adolescencia:</strong> {{
+                                paciente.enfermedades_adolescencia }}</h5>
+                            <h5 class="case-data text-lg"><strong>Enfermedades de Adulto:</strong> {{
+                                paciente.enfermedades_adulto }}</h5>
+                            <h5 class="case-data text-lg"><strong>Transfusiones:</strong> {{ paciente.trasfusiones }}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes No Patológicos</h5>
+                    <div class="grid">
+                        <div class="col md:col-12">
+                            <h5 class="case-data text-lg text-justify"><strong>Antecedentes de Nacimiento:</strong> {{
+                                paciente.antecedentes_nacimiento }}</h5>
+                            <h5 class="case-data text-lg text-justify"><strong>Habitos:</strong> {{ paciente.habitos }}
+                            </h5>
+                            <h5 class="case-data text-lg text-justify"><strong>Factores de Riesgo:</strong> {{
+                                paciente.factores_de_riesgo }}</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes Familiares</h5>
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Padre:</strong> {{
+                                paciente.padre }}</h5>
+                            <h5 class="case-data text-lg"><strong>Madre:</strong> {{ paciente.madre }}</h5>
+                            <h5 class="case-data text-lg"><strong>Hermanos:</strong> {{ paciente.hermanos }}</h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Hijos:</strong> {{
+                                paciente.hijos }}</h5>
+                            <h5 class="case-data text-lg"><strong>Conyugue:</strong> {{
+                                paciente.conyugue }}</h5>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h5>Anamnesis por Sistemas</h5>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Cardiovascular:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisCardiovascular && !loadingCardiovascular" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'cardiovascular')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingCardiovascular">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisCardiovascular?.cardiovascular || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Endocrino:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisEndocrino && !loadingEndocrino" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'endocrino')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingEndocrino">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisEndocrino?.endocrino || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Gastrointestinal:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisGastrointestinal && !loadingGastrointestinal" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'gastrointestinal')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingGastrointestinal">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisGastrointestinal?.gastrointestinal || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Genitourinario:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisGenitourinario && !loadingGenitourinario" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'genitourinario')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingGenitourinario">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisGenitourinario?.genitourinario || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Respiratorio:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisRespiratorio && !loadingRespiratorio" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'respiratorio')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingRespiratorio">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisRespiratorio?.respiratorio || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Neurologico:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisNeurologico && !loadingNeurologico" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'neurologico')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingNeurologico">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisNeurologico?.neurologico || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Locomotor:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisLocomotor && !loadingLocomotor" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'locomotor')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingLocomotor">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisLocomotor?.locomotor || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Hematico:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisHematico && !loadingHematico" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'hematico')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingHematico">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisHematico?.hematico || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Psiquiatrico:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisPsiquiatrico && !loadingPsiquiatrico" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'psquiatrico')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingPsiquiatrico">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisPsiquiatrico?.psquiatrico || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Tegumentario:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisTegumentario && !loadingTegumentario" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'tegumentario')" />
+                </div>
+                <div class="col">
+                    <p v-if="loadingTegumentario">Cargando...</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisTegumentario?.tegumentario || '' }}</p>
                 </div>
             </div>
             <div class="grid ">

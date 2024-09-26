@@ -71,7 +71,7 @@ const handleSubmit = async () => {
                         </InputText>
                     </div>
                 </div>
-                <div class="grid p-flujid">
+                <div class="grid p-fluid">
                     <div class="col-6">
                         <h5>Paterno</h5>
                         <InputText v-model="paterno" placeholder="Apellido Paterno"></InputText>
@@ -81,7 +81,7 @@ const handleSubmit = async () => {
                         <InputText v-model="materno" placeholder="Apellido Materno"></InputText>
                     </div>
                 </div>
-                <div class="grid p-flujid">
+                <div class="grid p-fluid">
                     <div class="col-6">
                         <h5>Fecha de nacimiento</h5>
                         <Calendar inputId="calendar" v-model="fecha_nacimiento" dateFormat="dd/mm/yy"></Calendar>

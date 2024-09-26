@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import { getListaPacientes } from '@/services/pacienteService';
+import { comenzarSimulacion } from '@/services/simulacionService';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 
@@ -11,6 +12,23 @@ const store = useStore();
 const pacientes = ref([]);
 const toast = useToast();
 const router = useRouter();
+
+async function iniciarSimulacion(id_paciente) {
+    try {
+        const simulacionData = {
+            id_paciente: id_paciente,
+            estado: 'activo'
+        };
+        const response = await comenzarSimulacion(simulacionData);
+        const id_simulacion = response.data.id_simulacion;
+        localStorage.setItem('id_simulacion', id_simulacion);
+        toast.add({ severity: 'success', summary: 'Concentrate!', detail: 'Comenzaste la simulación', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al iniciar la simulación', life: 3000 });
+    }
+}
+
+
 
 function start() {
     if (!isActive.value) {
@@ -30,6 +48,7 @@ const fetchPacientes = async () => {
 const iniciar = (id_paciente, id_historia_clinica) => {
     localStorage.setItem('id_paciente', JSON.stringify(id_paciente));
     localStorage.setItem('id_historia_clinica', JSON.stringify(id_historia_clinica));
+    iniciarSimulacion(id_paciente);
     router.replace('/app');
     start()
 }
@@ -48,19 +67,23 @@ onMounted(() => {
                     <template #title>Caso N° {{ index + 1 }}</template>
                     <template #content>
                         <div class="grid">
-                            <div class="col md:col-4"><strong>Paterno: </strong>{{ paciente.paterno.toUpperCase() }}
+                            <div class="col md:col-4 text-lg"><strong>Paterno: </strong>{{
+                                paciente.paterno.toUpperCase() }}
                             </div>
-                            <div class="col md:col-4"><strong>Materno: </strong>{{ paciente.materno.toUpperCase() }}
+                            <div class="col md:col-4 text-lg"><strong>Materno: </strong>{{
+                                paciente.materno.toUpperCase() }}
                             </div>
-                            <div class="col md:col-4"><strong>Nombre: </strong>{{ paciente.nombre.toUpperCase() }}
+                            <div class="col md:col-4 text-lg"><strong>Nombre: </strong>{{ paciente.nombre.toUpperCase()
+                                }}
                             </div>
                         </div>
                         <div class="grid">
-                            <div class="col md:col-4"><strong>Edad: </strong>{{ paciente.edad }} años</div>
-                            <div class="col md:col-4"><strong>CI: </strong>{{ paciente.ci }}</div>
+                            <div class="col md:col-4 text-lg"><strong>Edad: </strong>{{ paciente.edad }} años</div>
+                            <div class="col md:col-4 text-lg"><strong>Peso: </strong>{{ paciente.peso }} Kg.</div>
+                            <div class="col md:col-4 text-lg"><strong>Talla: </strong>{{ paciente.talla }} m.</div>
                         </div>
-                        <p class="m-0 text-justify">
-                            {{ paciente.descripcion }}
+                        <p class="m-0 text-justify text-lg">
+                            {{ paciente.descripcion }}.
                         </p>
                         <br>
                         <div class="grid text-right">

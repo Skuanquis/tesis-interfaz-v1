@@ -3,11 +3,15 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import { obtenerAccionesSimulacion } from '@/services/simulacionService';
 
 const store = useStore();
 
 const minutos = computed(() => store.state.timer.minutos);
 const segundos = computed(() => store.state.timer.segundos);
+const acciones = ref([]);
+const id_simulacion = localStorage.getItem('id_simulacion');
+//const noAcciones = ref(false);
 //const isActive = computed(() => store.state.timer.isActive);
 
 const formattedTime = computed(() => {
@@ -40,17 +44,40 @@ const router = useRouter();
 
 const position = ref('bottom');
 
-const fetchPacienteData = async () => {
-    try {
-        display.value = true;
-    } catch (error) {
-
-        console.error(error);
+const getSeverity = (status) => {
+    switch (status) {
+        case 'Inutil':
+            return 'danger';
+        case 'Util':
+            return 'success';
+        case 'Critico':
+            return 'info';
+        case 'Innecesaria':
+            return 'secondary';
+        default:
+            return 'secondary';
     }
 };
 
+
+const fetchAcciones = async () => {
+    try {
+        const response = await obtenerAccionesSimulacion(id_simulacion);
+        if (response.data.message === 'No hay acciones registradas para esta simulación') {
+            acciones.value = [];// No hay acciones
+        } else {
+            acciones.value = response.data; // Guardar las acciones en el estado
+        }
+        display.value = true;
+    } catch (error) {
+        console.error('Error al obtener las acciones:', error);
+    }
+};
+
+
+
 onMounted(() => {
-    fetchPacienteData();
+    fetchAcciones();
 });
 
 function closeDialog() {
@@ -78,6 +105,22 @@ function onDialogHide() {
         <button @click="start">Start</button>
         <button @click="stop">Stop</button>
         <button @click="reset">Reset</button>-->
+        <div>
+            <h4 class="text-center"> Historial de eventos </h4>
+        </div>
+        <DataTable :value="acciones" paginator :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]"
+            tableStyle="min-width: 30rem"
+            paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+            currentPageReportTemplate="{first} al {last} de {totalRecords}">
+            <Column field="descripcion" header="Descripción" style="width: 50%"></Column>
+            <Column field="tipo_accion" header="Tipo de Acción" style="width: 25%" class="text-center">
+                <template #body="slotProps">
+                    <Tag :severity="getSeverity(slotProps.data.tipo_accion)" :value="slotProps.data.tipo_accion"
+                        class="text-sm" />
+                </template>
+            </Column>
+            <Column field="hora_accion" header="Hora" style="width: 25%"></Column>
+        </DataTable>
         <div class="grid ">
             <div class="col md:col-3"></div>
             <div class="col md:col-3"></div>

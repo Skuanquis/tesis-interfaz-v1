@@ -3,31 +3,64 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-
+import { obtenerSimulacion } from '@/services/simulacionService';
+import { obtenerAccionesSimulacion } from '@/services/simulacionService';
 const store = useStore();
-
-
-
-const display = ref(false);
 const router = useRouter();
-
+const display = ref(false);
+const tiempoEmpleado = ref('');
 const position = ref('top');
-
-const fetchPacienteData = async () => {
+const acciones = ref([]);
+const id_simulacion = localStorage.getItem('id_simulacion');
+const fetchSimulacionData = async () => {
     try {
+        const id_simulacion = localStorage.getItem('id_simulacion');
+        if (id_simulacion) {
+            const response = await obtenerSimulacion(id_simulacion);
+            tiempoEmpleado.value = response.data.tiempo_empleado;
+        }
         display.value = true;
     } catch (error) {
+        console.error('Error al obtener los datos de la simulación:', error);
+    }
+};
 
-        console.error(error);
+const getSeverity = (status) => {
+    switch (status) {
+        case 'Inutil':
+            return 'danger';
+        case 'Util':
+            return 'success';
+        case 'Critico':
+            return 'info';
+        case 'Innecesaria':
+            return 'secondary';
+        default:
+            return 'secondary';
+    }
+};
+
+
+const fetchAcciones = async () => {
+    try {
+        const response = await obtenerAccionesSimulacion(id_simulacion);
+        if (response.data.message === 'No hay acciones registradas para esta simulación') {
+            acciones.value = [];// No hay acciones
+        } else {
+            acciones.value = response.data; // Guardar las acciones en el estado
+        }
+        display.value = true;
+    } catch (error) {
+        console.error('Error al obtener las acciones:', error);
     }
 };
 
 onMounted(() => {
-    fetchPacienteData();
+    fetchSimulacionData();
+    fetchAcciones();
 });
-//se añadio la limpieza del localstorage despues de terminar la simulacion
-//si no se quiere persistencia comentar la funcion de abajo
 
+// Función para eliminar los datos del localStorage al finalizar la simulación
 function eliminarLocalStorage() {
     localStorage.removeItem('examenSegmentario');
     localStorage.removeItem('examenFisico');
@@ -37,6 +70,7 @@ function eliminarLocalStorage() {
     localStorage.removeItem('minutos');
     localStorage.removeItem('segundos');
     localStorage.removeItem('isActive');
+    localStorage.removeItem('id_simulacion');
 }
 
 function closeDialog() {
@@ -60,11 +94,28 @@ function onDialogHide() {
         :modal="true" @hide="onDialogHide" class="p-fluid" :position="position" :draggable="false">
         <div>
             <h4 class="text-center"> Tiempo Transcurrido </h4>
+            <h4 class="text-center"> {{ tiempoEmpleado }}</h4>
         </div>
         <!--
         <button @click="start">Start</button>
         <button @click="stop">Stop</button>
         <button @click="reset">Reset</button>-->
+        <div>
+            <h4 class="text-center"> Historial de eventos </h4>
+        </div>  
+        <DataTable :value="acciones" paginator :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]"
+            tableStyle="min-width: 30rem"
+            paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+            currentPageReportTemplate="{first} al {last} de {totalRecords}">
+            <Column field="descripcion" header="Descripción" style="width: 50%"></Column>
+            <Column field="tipo_accion" header="Tipo de Acción" style="width: 25%" class="text-center">
+                <template #body="slotProps">
+                    <Tag :severity="getSeverity(slotProps.data.tipo_accion)" :value="slotProps.data.tipo_accion"
+                        class="text-sm" />
+                </template>
+            </Column>
+            <Column field="hora_accion" header="Hora" style="width: 25%"></Column>
+        </DataTable>
         <div class="grid ">
             <div class="col md:col-4"></div>
             <div class="col md:col-4"><Button label="Finalizar" @click="closeDialog" icon="pi pi-check" /></div>
