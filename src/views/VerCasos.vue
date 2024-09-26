@@ -5,11 +5,12 @@ import {
     obtenerCasoClinicoPorId, obtenerPuntajes, obtenerMensajes,
     actualizarPuntaje, actualizarMensaje, actualizarCasoClinico,
     agregarNuevoPuntaje, agregarNuevoMensaje, eliminarPuntajes, eliminarMensajes,
-    obtenerPaciente, actualizarPaciente, obtenerAntecedentesPatologicos,
-    actualizarAntecedentesPatologicos, obtenerAntecedentesNoPatologicos, actualizarAntecedentesNoPatologicos,
-    obtenerAntecedentesFamiliares, actualizarAntecedentesFamiliares, obtenerAnamnesisSistemas,
-    actualizarAnamnesisSistemas, obtenerMotivosConsulta, agregarMotivoConsulta,
-    eliminarMotivoConsulta
+    obtenerPaciente, actualizarPaciente, obtenerAntecedentesPatologicos, actualizarAntecedentesPatologicos,
+    obtenerAntecedentesNoPatologicos, actualizarAntecedentesNoPatologicos,
+    obtenerAntecedentesFamiliares, actualizarAntecedentesFamiliares,
+    obtenerAnamnesisSistemas, actualizarAnamnesisSistemas,
+    obtenerMotivosConsulta, agregarMotivoConsulta, eliminarMotivoConsulta,
+    obtenerPuntaje, actualizarMotivoConsulta
 } from '../services/casoService';
 import { useToast } from 'primevue/usetoast';
 
@@ -26,11 +27,13 @@ const visible = ref(false);
 const casoSeleccionado = ref(null);
 
 const paciente = ref({});
-const antecedentesPatologicos = ref([]);
+const antecedentesPatologicos = ref({});
 const antecedentesNoPatologicos = ref({});
 const antecedentesFamiliares = ref({});
 const anamnesisSistemas = ref({});
 const motivosConsulta = ref([]);
+const scoreAnamnesis = ref([]);
+const sexoOpciones = ref([{ name: 'Masculino', value: 'masculino' }, { name: 'Femenino', value: 'femenino' }]);
 
 const cerrarDialogo = () => {
     visible.value = false;
@@ -128,6 +131,7 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarAntecedentesFamiliares(casoSeleccionado.value.id_historia_clinica);
         await cargarAnamnesisSistemas(casoSeleccionado.value.id_historia_clinica);
         await cargarMotivosConsulta(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntaje(casoSeleccionado.value.id_historia_clinica);
 
         visible.value = true;
     } catch (error) {
@@ -234,8 +238,16 @@ const guardarCambios = async () => {
 const cargarDatosPaciente = async (id_historia_clinica) => {
     try {
         const response = await obtenerPaciente(id_historia_clinica);
-        paciente.value = response.data[0];
-        console.log("funcion: ", paciente.value)
+        const data = response.data[0];
+        if (data.fecha_nacimiento) {
+            const fecha = new Date(data.fecha_nacimiento);
+            data.fecha_nacimiento = fecha.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+        paciente.value = data;
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener datos del paciente', life: 3000 });
     }
@@ -272,54 +284,8 @@ const cargarAnamnesisSistemas = async (id_historia_clinica) => {
     try {
         const response = await obtenerAnamnesisSistemas(id_historia_clinica);
         anamnesisSistemas.value = response.data[0];
-        console.log("script", anamnesisSistemas.value)
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener anamnesis por sistemas', life: 3000 });
-    }
-};
-
-const guardarCambiosPaciente = async () => {
-    try {
-        await actualizarPaciente(paciente.value.id_paciente, paciente.value);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Paciente actualizado correctamente', life: 3000 });
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar el paciente', life: 3000 });
-    }
-};
-
-const guardarCambiosAntecedentesPatologicos = async () => {
-    try {
-        await actualizarAntecedentesPatologicos(antecedentesPatologicos.value.id_antecedente_patologico, antecedentesPatologicos.value);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Antecedentes patológicos actualizados correctamente', life: 3000 });
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar antecedentes patológicos', life: 3000 });
-    }
-};
-
-const guardarCambiosAntecedentesNoPatologicos = async () => {
-    try {
-        await actualizarAntecedentesNoPatologicos(antecedentesNoPatologicos.value.id_antecedentes_no_patologicos, antecedentesNoPatologicos.value);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Antecedentes no patológicos actualizados correctamente', life: 3000 });
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar antecedentes no patológicos', life: 3000 });
-    }
-};
-
-const guardarCambiosAntecedentesFamiliares = async () => {
-    try {
-        await actualizarAntecedentesFamiliares(antecedentesFamiliares.value.id_antecedentes_familiares, antecedentesFamiliares.value);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Antecedentes familiares actualizados correctamente', life: 3000 });
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar antecedentes familiares', life: 3000 });
-    }
-};
-
-const guardarCambiosAnamnesisSistemas = async () => {
-    try {
-        await actualizarAnamnesisSistemas(anamnesisSistemas.value.id_anamnesis_sistemas, anamnesisSistemas.value);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Anamnesis por sistemas actualizada correctamente', life: 3000 });
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar anamnesis por sistemas', life: 3000 });
     }
 };
 
@@ -332,16 +298,24 @@ const cargarMotivosConsulta = async (id_historia_clinica) => {
     }
 };
 
-const agregarNuevoMotivoConsulta = async () => {
-    const nuevoMotivo = { id_motivo_consulta: null, motivo: '' };
-    motivosConsulta.value.push(nuevoMotivo);
-    console.log(nuevoMotivo)
+const cargarPuntaje = async (id_historia_clinica) => {
     try {
-        const response = await agregarMotivoConsulta({
-            motivo: nuevoMotivo.motivo,
-            id_historia_clinica: paciente.value.id_historia_clinica
-        });
-        nuevoMotivo.id_motivo_consulta = response.data.id_motivo_consulta;
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreAnamnesis.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        //console.log(error)
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
+const agregarNuevoMotivoConsulta = async () => {
+    const nuevoMotivo = { id_motivo_consulta: null, motivo: '', id_historia_clinica: paciente.value.id_historia_clinica };
+    try {
+        const response = await agregarMotivoConsulta(nuevoMotivo);
+        nuevoMotivo.id_motivo_consulta = response.data.id_motivo_consulta; // Asegúrate de obtener el ID generado
+        motivosConsulta.value.push(nuevoMotivo);
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Motivo de consulta agregado', life: 3000 });
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al agregar motivo de consulta', life: 3000 });
@@ -360,6 +334,38 @@ const eliminarMotivo = async (index) => {
     }
     motivosConsulta.value.splice(index, 1);
 };
+
+const guardarTodosLosCambiosPaciente = async () => {
+    try {
+
+        await actualizarPaciente(paciente.value.id_paciente, paciente.value);
+
+        await actualizarAntecedentesPatologicos(paciente.value.id_historia_clinica, antecedentesPatologicos.value);
+
+        await actualizarAntecedentesNoPatologicos(paciente.value.id_historia_clinica, antecedentesNoPatologicos.value);
+
+        await actualizarAntecedentesFamiliares(paciente.value.id_historia_clinica, antecedentesFamiliares.value);
+
+        console.log(anamnesisSistemas.value)
+        await actualizarAnamnesisSistemas(paciente.value.id_historia_clinica, anamnesisSistemas.value);
+
+
+        for (const motivo of motivosConsulta.value) {
+            if (motivo.id_motivo_consulta) {
+
+                await actualizarMotivoConsulta(motivo.id_motivo_consulta, motivo);
+            } else {
+
+                const response = await agregarMotivoConsulta(motivo);
+                motivo.id_motivo_consulta = response.data.id_motivo_consulta;
+            }
+        }
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Todos los cambios se han guardado correctamente', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar los cambios', life: 3000 });
+    }
+};
+
 onMounted(() => {
     cargarCasosClinicos();
     cargarCategoriasSimulacion();
@@ -583,7 +589,8 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <Dropdown v-model="paciente.sexo" :options="sexoOpciones"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
+                                                    optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark
                                                     class="w-full md:w-14rem" />
                                                 <label for="sexo">Sexo</label>
                                             </FloatLabel>
@@ -626,6 +633,7 @@ onMounted(() => {
                                     </div>
                                 </div>
                             </div>
+
 
                             <h5>Información relevante para la historia clínica</h5>
                             <div class="grid p-fluid">
@@ -682,14 +690,14 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Textarea v-model="antecedentesPatologicos.patologiaAsociada" autoResize
-                                                    rows="3" cols="30" />
+                                                <Textarea v-model="antecedentesPatologicos.patologia_asociada"
+                                                    autoResize rows="3" cols="30" />
                                                 <label for="patologiaAsociada">Patologias Asociadas</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Textarea v-model="antecedentesPatologicos.enfermedadesCongenitas"
+                                                <Textarea v-model="antecedentesPatologicos.enfermedades_congenitas"
                                                     autoResize rows="3" cols="30" />
                                                 <label for="enfermedadesCongenitas">Enfermedades Congenitas</label>
                                             </FloatLabel>
@@ -698,14 +706,14 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Textarea v-model="antecedentesPatologicos.enfermedadesInfancia"
+                                                <Textarea v-model="antecedentesPatologicos.enfermedades_infancia"
                                                     autoResize rows="3" cols="30" />
                                                 <label for="enfermedadesInfancia">Enfermedades de la Infancia</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Textarea v-model="antecedentesPatologicos.enfermedadesAdolescencia"
+                                                <Textarea v-model="antecedentesPatologicos.enfermedades_adolescencia"
                                                     autoResize rows="3" cols="30" />
                                                 <label for="enfermedadesAdolescencia">Enfermedades de la
                                                     Adolescencia</label>
@@ -715,7 +723,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Textarea v-model="antecedentesPatologicos.enfermedadesAdulto"
+                                                <Textarea v-model="antecedentesPatologicos.enfermedades_adulto"
                                                     autoResize rows="3" cols="30" />
                                                 <label for="enfermedadesAdulto">Enfermedades de Adulto</label>
                                             </FloatLabel>
@@ -736,7 +744,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Textarea v-model="antecedentesNoPatologicos.antecedentesNacimiento"
+                                                <Textarea v-model="antecedentesNoPatologicos.antecedentes_nacimiento"
                                                     autoResize rows="3" cols="30" />
                                                 <label for="antecedentesNacimiento">Antecedentes de Nacimiento</label>
                                             </FloatLabel>
@@ -750,10 +758,10 @@ onMounted(() => {
                                         </div>
                                     </div>
                                     <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
+                                        <div class="col md:col-12">
                                             <FloatLabel>
-                                                <Textarea v-model="antecedentesNoPatologicos.factoresRiesgo" autoResize
-                                                    rows="3" cols="30" />
+                                                <Textarea v-model="antecedentesNoPatologicos.factores_de_riesgo"
+                                                    autoResize rows="3" cols="30" />
                                                 <label for="factoresRiesgo">Factores de Riesgo</label>
                                             </FloatLabel>
                                         </div>
@@ -832,9 +840,10 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_cardiovascular" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_cardiovascular"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_cardiovascular">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -851,15 +860,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_endocrino" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_endocrino" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="feed_endocrino">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_endocrino" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_endocrino"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_endocrino">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -876,16 +887,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_gastrointestinal" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_gastrointestinal" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feed_gastrointestinal">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_gastrointestinal" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_gastrointestinal"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_gastrointestinal">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -902,15 +914,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_genitourinario" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_genitourinario" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feed_genitourinario">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_genitourinario" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_genitourinario"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_genitourinario">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -927,15 +941,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_respiratorio" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_respiratorio" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feed_respiratorio">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_repiratorio" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_respiratorio"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_repiratorio">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -952,15 +968,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_neurologico" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_neurologico" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feed_neurologico">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_neurologico" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_neurologico"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_neurologico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -977,15 +995,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_locomotor" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_locomotor" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="feed_locomotor">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_locomotor" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_locomotor"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_locomotor">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1002,15 +1022,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_hematico" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_hematico" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="feed_Hematico">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_hematico" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_hematico"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_hematico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1027,15 +1049,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_psiquiatrico" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_psiquiatrico" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feed_Psiquiatrico">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_psiquiatrico" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_psiquiatrico"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_psiquiatrico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1052,15 +1076,17 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feed_tegumentario" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="anamnesisSistemas.feed_tegumentario" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feed_tegumentario">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntaje_tegumentario" :options="scoreAnamnesis"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_tegumentario"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntaje_tegumentario">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1072,7 +1098,7 @@ onMounted(() => {
                                 <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
                                 <Button label="Guardar" severity="success" icon="pi pi-save"
-                                    @click="guardarCambiosPaciente" />
+                                    @click="guardarTodosLosCambiosPaciente" />
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
                                     @click="nextCallback" />
                             </div>
