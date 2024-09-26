@@ -10,7 +10,15 @@ import {
     obtenerAntecedentesFamiliares, actualizarAntecedentesFamiliares,
     obtenerAnamnesisSistemas, actualizarAnamnesisSistemas,
     obtenerMotivosConsulta, agregarMotivoConsulta, eliminarMotivoConsulta,
-    obtenerPuntaje, actualizarMotivoConsulta
+    obtenerPuntaje, actualizarMotivoConsulta,
+    obtenerExamenFisicoGeneral, actualizarExamenFisicoGeneral,
+    obtenerExamenFisicoSegmentario, actualizarExamenFisicoSegmentario,
+    obtenerExamenObstetrico, actualizarExamenObstetrico,
+    obtenerExamenViaAerea, obtenerExamenRespiratorio,
+    obtenerExamenCirculatorio, obtenerExamenPiel,
+    obtenerExamenPsicologico, actualizarExamenViaAerea,
+    actualizarExamenRespiratorio, actualizarExamenCirculatorio,
+    actualizarExamenPiel, actualizarExamenPsicologico
 } from '../services/casoService';
 import { useToast } from 'primevue/usetoast';
 
@@ -34,6 +42,16 @@ const anamnesisSistemas = ref({});
 const motivosConsulta = ref([]);
 const scoreAnamnesis = ref([]);
 const sexoOpciones = ref([{ name: 'Masculino', value: 'masculino' }, { name: 'Femenino', value: 'femenino' }]);
+
+const examenFisico = ref({});
+const examenObstetrico = ref({});
+const examenFisicoSegmentario = ref({});
+const scoreExamenFisico = ref([]);
+const examenViaAerea = ref({})
+const examenRespiratorio = ref({})
+const examenCirculatorio = ref({})
+const examenDePiel = ref({})
+const examenPsicologico = ref({})
 
 const cerrarDialogo = () => {
     visible.value = false;
@@ -131,7 +149,16 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarAntecedentesFamiliares(casoSeleccionado.value.id_historia_clinica);
         await cargarAnamnesisSistemas(casoSeleccionado.value.id_historia_clinica);
         await cargarMotivosConsulta(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeExamen(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenFisicoGeneral(casoSeleccionado.value.id_historia_clinica);
         await cargarPuntaje(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenFisicoSegmentario(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenObstetrico(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenViaAerea(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenRespiratorio(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenCirculatorio(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenPiel(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenPsicologico(casoSeleccionado.value.id_historia_clinica);
 
         visible.value = true;
     } catch (error) {
@@ -305,7 +332,6 @@ const cargarPuntaje = async (id_historia_clinica) => {
             name: `${item.codigo}: ${item.valor}`, value: item.codigo
         }));
     } catch (error) {
-        //console.log(error)
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
     }
 };
@@ -335,20 +361,93 @@ const eliminarMotivo = async (index) => {
     motivosConsulta.value.splice(index, 1);
 };
 
+const cargarExamenFisicoGeneral = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenFisicoGeneral(id_historia_clinica);
+        examenFisico.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+
+const cargarExamenFisicoSegmentario = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenFisicoSegmentario(id_historia_clinica);
+        examenFisicoSegmentario.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico segmentario', life: 3000 });
+    }
+};
+
+const cargarExamenObstetrico = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenObstetrico(id_historia_clinica);
+        examenObstetrico.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico obstetrico', life: 3000 });
+    }
+};
+
+const cargarExamenViaAerea = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenViaAerea(id_historia_clinica);
+        examenViaAerea.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico obstetrico', life: 3000 });
+    }
+};
+
+const cargarExamenRespiratorio = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenRespiratorio(id_historia_clinica);
+        examenRespiratorio.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico obstetrico', life: 3000 });
+    }
+};
+const cargarExamenCirculatorio = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenCirculatorio(id_historia_clinica);
+        examenCirculatorio.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico obstetrico', life: 3000 });
+    }
+};
+const cargarExamenPiel = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenPiel(id_historia_clinica);
+        examenDePiel.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico obstetrico', life: 3000 });
+    }
+};
+const cargarExamenPsicologico = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenPsicologico(id_historia_clinica);
+        examenPsicologico.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico obstetrico', life: 3000 });
+    }
+};
+
+const cargarPuntajeExamen = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreExamenFisico.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
 const guardarTodosLosCambiosPaciente = async () => {
     try {
 
         await actualizarPaciente(paciente.value.id_paciente, paciente.value);
-
         await actualizarAntecedentesPatologicos(paciente.value.id_historia_clinica, antecedentesPatologicos.value);
-
         await actualizarAntecedentesNoPatologicos(paciente.value.id_historia_clinica, antecedentesNoPatologicos.value);
-
         await actualizarAntecedentesFamiliares(paciente.value.id_historia_clinica, antecedentesFamiliares.value);
-
-        console.log(anamnesisSistemas.value)
         await actualizarAnamnesisSistemas(paciente.value.id_historia_clinica, anamnesisSistemas.value);
-
 
         for (const motivo of motivosConsulta.value) {
             if (motivo.id_motivo_consulta) {
@@ -360,6 +459,24 @@ const guardarTodosLosCambiosPaciente = async () => {
                 motivo.id_motivo_consulta = response.data.id_motivo_consulta;
             }
         }
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Todos los cambios se han guardado correctamente', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar los cambios', life: 3000 });
+    }
+};
+
+const guardarTodosLosCambiosExamen = async () => {
+    try {
+
+        await actualizarExamenFisicoGeneral(paciente.value.id_historia_clinica, examenFisico.value);
+        await actualizarExamenFisicoSegmentario(paciente.value.id_historia_clinica, examenFisicoSegmentario.value);
+        await actualizarExamenObstetrico(paciente.value.id_historia_clinica, examenObstetrico.value);
+        await actualizarExamenViaAerea(paciente.value.id_historia_clinica, examenViaAerea.value);
+        await actualizarExamenRespiratorio(paciente.value.id_historia_clinica, examenRespiratorio.value);
+        await actualizarExamenCirculatorio(paciente.value.id_historia_clinica, examenCirculatorio.value);
+        await actualizarExamenPiel(paciente.value.id_historia_clinica, examenDePiel.value);
+        await actualizarExamenPsicologico(paciente.value.id_historia_clinica, examenPsicologico.value);
+
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Todos los cambios se han guardado correctamente', life: 3000 });
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar los cambios', life: 3000 });
@@ -1105,7 +1222,6 @@ onMounted(() => {
                         </template>
                     </StepperPanel>
 
-
                     <StepperPanel header="Examen">
                         <template #content="{ prevCallback, nextCallback }">
                             <h5>Información del examen físico general</h5>
@@ -1114,22 +1230,22 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-2">
                                         <div class="col md:col-12">
                                             <FloatLabel>
-                                                <Textarea v-model="descripcionExamenFisico" autoResize rows="5"
+                                                <Textarea v-model="examenFisico.descripcion" autoResize rows="5"
                                                     cols="30" />
                                                 <label for="descripcionExamenFisico">Descripción</label>
                                             </FloatLabel>
                                         </div>
                                     </div>
-                                    <div class="grid p-fluid pt-2">
+                                    <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="examenPA" v-model="examenPA" />
+                                                <InputText id="examenPA" v-model="examenFisico.pa" />
                                                 <label for="examenPA">PA [mmhg.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenTemperatura" v-model="temperatura"
+                                                <InputNumber id="examenTemperatura" v-model="examenFisico.temperatura"
                                                     inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenTemperatura">Temperatura [°C.]</label>
                                             </FloatLabel>
@@ -1140,15 +1256,15 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-2">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenTalla" v-model="examenTalla"
+                                                <InputNumber id="examenTalla" v-model="examenFisico.talla"
                                                     inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenTalla">Talla [m.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenFC" v-model="examenFC" inputId="locale-user"
-                                                    :minFractionDigits="2" />
+                                                <InputNumber id="examenFC" v-model="examenFisico.fc"
+                                                    inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenFC">FC [pm.]</label>
                                             </FloatLabel>
                                         </div>
@@ -1156,29 +1272,29 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenSaturacion" v-model="examenSaturacion"
+                                                <InputNumber id="examenSaturacion" v-model="examenFisico.saturacion"
                                                     inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenSaturacion">Saturacion [%.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenIMC" v-model="examenIMC" inputId="locale-user"
-                                                    :minFractionDigits="2" />
+                                                <InputNumber id="examenIMC" v-model="examenFisico.imc"
+                                                    inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenIMC">IMC [kg/m2.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputNumber id="examenFR" v-model="examenFR" inputId="locale-user"
-                                                    :minFractionDigits="2" />
+                                                <InputNumber id="examenFR" v-model="examenFisico.fr"
+                                                    inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenFR">FR [rpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputNumber id="examenPeso" v-model="examenPeso" inputId="locale-user"
-                                                    :minFractionDigits="2" />
+                                                <InputNumber id="examenPeso" v-model="examenFisico.peso"
+                                                    inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenPeso">Peso [kg.]</label>
                                             </FloatLabel>
                                         </div>
@@ -1194,17 +1310,18 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-6 pt-1">
                                             <FloatLabel>
-                                                <Textarea v-model="examenFisicoGeneralRetroalimentacion" autoResize
-                                                    rows="3" cols="30" />
+                                                <Textarea v-model="examenFisico.feed_examen_fisico" autoResize rows="3"
+                                                    cols="30" />
                                                 <label
                                                     for="examenFisicoGeneralRetroalimentacion">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-1">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisico.puntaje_examen_fisico"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1227,23 +1344,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioCabeza" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.cabeza" autoResize rows="3"
                                                     cols="30" />
                                                 <label for="examenSegmentarioCabeza">Cabeza</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioCabeza" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_cabeza" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedSegmentarioCabeza">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_cabeza"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1253,23 +1371,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioCuello" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.cuello" autoResize rows="3"
                                                     cols="30" />
                                                 <label for="examenSegmentarioCuello">Cuello</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioCuello" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_cuello" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedSegmentarioCuello">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_cuello"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1279,23 +1398,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioTorax" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.torax" autoResize rows="3"
                                                     cols="30" />
                                                 <label for="examenSegmentarioTorax">Torax</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioTorax" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_torax" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedSegmentarioTorax">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_torax"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1305,23 +1425,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioCorazon" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.corazon" autoResize rows="3"
                                                     cols="30" />
                                                 <label for="examenSegmentarioCorazon">Corazón</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioCorazon" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_corazon" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedSegmentarioCorazon">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_corazon"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1331,23 +1452,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioMamas" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.mamas" autoResize rows="3"
                                                     cols="30" />
                                                 <label for="examenSegmentarioMamas">Mamas</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioMamas" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_mamas" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedSegmentarioMamas">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_mamas"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1357,23 +1479,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioAbdomen" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.abdomen" autoResize rows="3"
                                                     cols="30" />
                                                 <label for="examenSegmentarioAbdomen">Abdomen</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioAbdomen" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_abdomen" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedSegmentarioAbdomen">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_abdomen"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1383,23 +1506,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioGenitourinario" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.genitourinario" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="examenSegmentarioGenitourinario">Genitourinario</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioGenitoUrinario" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_genitourinario"
+                                                    autoResize rows="3" cols="30" />
                                                 <label for="feedSegmentarioGenitoUrinario">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_genitourinario"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1409,23 +1533,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioExtremidades" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.extremidades" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="examenSegmentarioExtremidades">Extremidades</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioExtremidades" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_extremidades" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedSegmentarioExtremidades">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_extremidades"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1435,23 +1560,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenSegmentarioNeurologico" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.neurologico" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="examenSegmentarioNeurologico">Neurológico</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedSegmentarioNeurologico" autoResize rows="3"
-                                                    cols="30" />
+                                                <Textarea v-model="examenFisicoSegmentario.feed_neurologico" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedSegmentarioNeurologico">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_neurologico"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1467,13 +1593,13 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="examenObstetricoSituacion"
-                                                    v-model="examenObstetricoSituacion" />
+                                                    v-model="examenObstetrico.situacion" />
                                                 <label for="examenObstetricoSituacion">Situación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenObstetricoAFU" v-model="examenObstetricoAFU"
+                                                <InputNumber id="examenObstetricoAFU" v-model="examenObstetrico.afu"
                                                     inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenObstetricoAFU">AFU [cm.]</label>
                                             </FloatLabel>
@@ -1485,14 +1611,14 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="examenObstetricoMonitorizacion"
-                                                    v-model="examenObstetricoMonitorizacion" />
+                                                    v-model="examenObstetrico.monitorizacion" />
                                                 <label for="examenObstetricoMonitorizacion">Monitorización</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="examenObstetricoPelvis"
-                                                    v-model="examenObstetricoPelvis" />
+                                                    v-model="examenObstetrico.pelvis" />
                                                 <label for="examenObstetricoPelvis">Pelvis</label>
                                             </FloatLabel>
                                         </div>
@@ -1503,13 +1629,13 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="examenObstetricoPresentacion"
-                                                    v-model="examenObstetricoPresentacion" />
+                                                    v-model="examenObstetrico.presentacion" />
                                                 <label for="examenObstetricoPresentacion">Presentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenObstetricoFCF" v-model="examenObstetricoFCF"
+                                                <InputNumber id="examenObstetricoFCF" v-model="examenObstetrico.fcf"
                                                     inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenObstetricoFCF">FCF [pm.]</label>
                                             </FloatLabel>
@@ -1521,14 +1647,15 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputNumber id="examenObstetricoDilatacion"
-                                                    v-model="examenObstetricoDilatacion" inputId="locale-user"
+                                                    v-model="examenObstetrico.dilatacion" inputId="locale-user"
                                                     :minFractionDigits="2" />
                                                 <label for="examenObstetricoDilatacion">Dilatación [cm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="examenObstetricoPlano" v-model="examenObstetricoPlano" />
+                                                <InputText id="examenObstetricoPlano"
+                                                    v-model="examenObstetrico.plano" />
                                                 <label for="examenObstetricoPlano">Plano</label>
                                             </FloatLabel>
                                         </div>
@@ -1538,13 +1665,14 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="examenObstetricoVP" v-model="examenObstetricoVP" />
+                                                <InputText id="examenObstetricoVP" v-model="examenObstetrico.vp" />
                                                 <label for="examenObstetricoVP">VP</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="examenObstetricoDorso" v-model="examenObstetricoDorso" />
+                                                <InputText id="examenObstetricoDorso"
+                                                    v-model="examenObstetrico.dorso" />
                                                 <label for="examenObstetricoDorso">Dorso</label>
                                             </FloatLabel>
                                         </div>
@@ -1554,7 +1682,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenObstetricoPAF" v-model="examenObstetricoPAF"
+                                                <InputNumber id="examenObstetricoPAF" v-model="examenObstetrico.paf"
                                                     inputId="locale-user" :minFractionDigits="2" />
                                                 <label for="examenObstetricoPAF">PAF [gr.]</label>
                                             </FloatLabel>
@@ -1562,7 +1690,7 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputNumber id="examenObstetricoBorramiento"
-                                                    v-model="examenObstetricoBorramiento" inputId="locale-user"
+                                                    v-model="examenObstetrico.borramiento" inputId="locale-user"
                                                     :minFractionDigits="2" />
                                                 <label for="examenObstetricoBorramiento">Borramiento [%.]</label>
                                             </FloatLabel>
@@ -1574,13 +1702,13 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="examenObstetricoMembranas"
-                                                    v-model="examenObstetricoMembranas" />
+                                                    v-model="examenObstetrico.membranas" />
                                                 <label for="examenObstetricoMembranas">Membranas</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="examenObstetricoAU" v-model="examenObstetricoAU" />
+                                                <InputText id="examenObstetricoAU" v-model="examenObstetrico.au" />
                                                 <label for="examenObstetricoAU">AU</label>
                                             </FloatLabel>
                                         </div>
@@ -1590,16 +1718,17 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Textarea v-model="feedExamenObstetrico" autoResize rows="2"
-                                                    cols="30" />
+                                                <Textarea v-model="examenObstetrico.feed_examen_obstetrico" autoResize
+                                                    rows="2" cols="30" />
                                                 <label for="feedExamenObstetrico">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenObstetrico.puntaje_examen_obstetrico"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1624,21 +1753,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenViaAerea" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenViaAerea.descripcion" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="examenViaAerea">Examen de Via Aerea</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedViaAerea" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenViaAerea.feed_examen_via_aerea" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedViaAerea">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenViaAerea.puntaje_examen_via_aerea"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1648,21 +1780,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenRespiratorio" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenRespiratorio.descripcion" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="examenRespiratorio">Examen Respiratorio</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedRespiratorio" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenRespiratorio.feed_examen_respiratorio"
+                                                    autoResize rows="3" cols="30" />
                                                 <label for="feedRespiratorio">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenRespiratorio.puntaje_examen_respiratorio"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1672,21 +1807,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenCirculatorio" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenCirculatorio.descripcion" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="examenCirculatorio">Examen Circulatorio</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedCirculatorio" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenCirculatorio.feed_examen_circulatorio"
+                                                    autoResize rows="3" cols="30" />
                                                 <label for="feedCirculatorio">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenCirculatorio.puntaje_examen_circulatorio"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1696,21 +1834,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenDePiel" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenDePiel.descripcion" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="examenDePiel">Examen de Piel</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedDePiel" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenDePiel.feed_examen_piel" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="feedDePiel">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenDePiel.puntaje_examen_piel"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1720,21 +1861,24 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenPsicologico" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenPsicologico.descripcion" autoResize rows="3"
+                                                    cols="30" />
                                                 <label for="examenPsicologico">Examen Psicológico</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
-                                                <Textarea v-model="feedPsicologico" autoResize rows="3" cols="30" />
+                                                <Textarea v-model="examenPsicologico.feed_examen_psicologico" autoResize
+                                                    rows="3" cols="30" />
                                                 <label for="feedPsicologico">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-3">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeExamenFisico" :options="scoreExamenFisico"
-                                                    optionLabel="name" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <Dropdown v-model="examenPsicologico.puntaje_examen_psicologico"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -1744,11 +1888,15 @@ onMounted(() => {
                             <div class="flex py-4 gap-2">
                                 <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
+                                <Button label="Guardar" @click="guardarTodosLosCambiosExamen" severity="success"
+                                    icon="pi pi-save" />
+
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
                                     @click="nextCallback" />
                             </div>
                         </template>
                     </StepperPanel>
+
 
 
                     <StepperPanel header="Estabilizar">

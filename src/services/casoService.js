@@ -111,3 +111,67 @@ export const obtenerPuntaje = (id_historia_clinica) => {
 export const actualizarMotivoConsulta = (id_motivo_consulta, data) => {
   return api.put(`/motivos_consulta/${id_motivo_consulta}`, data)
 }
+
+export const obtenerExamenFisicoGeneral = (id_historia_clinica) => {
+  return api.get(`/examen_fisico_general/${id_historia_clinica}`)
+}
+
+export const actualizarExamenFisicoGeneral = (id_examen_fisico_general, data) => {
+  return api.put(`/examen_fisico_general/${id_examen_fisico_general}`, data)
+}
+
+export const obtenerExamenFisicoSegmentario = (id_historia_clinica) => {
+  return api.get(`/examen_fisico_segmentario/${id_historia_clinica}`)
+}
+
+export const actualizarExamenFisicoSegmentario = (id_examen_fisico_segmentario, data) => {
+  return api.put(`/examen_fisico_segmentario/${id_examen_fisico_segmentario}`, data)
+}
+
+export const obtenerExamenPiel = (id_historia_clinica) => {
+  return api.get(`/examen_piel/${id_historia_clinica}`)
+}
+
+export const actualizarExamenPiel = (id_examen_piel, data) => {
+  return api.put(`/examen_piel/${id_examen_piel}`, data)
+}
+
+export const obtenerExamenCirculatorio = (id_historia_clinica) => {
+  return api.get(`/examen_circulatorio/${id_historia_clinica}`)
+}
+
+export const actualizarExamenCirculatorio = (id_examen_circulatorio, data) => {
+  return api.put(`/examen_circulatorio/${id_examen_circulatorio}`, data)
+}
+
+export const obtenerExamenRespiratorio = (id_historia_clinica) => {
+  return api.get(`/examen_respiratorio/${id_historia_clinica}`)
+}
+
+export const actualizarExamenRespiratorio = (id_examen_respiratorio, data) => {
+  return api.put(`/examen_respiratorio/${id_examen_respiratorio}`, data)
+}
+
+export const obtenerExamenViaAerea = (id_historia_clinica) => {
+  return api.get(`/examen_via_aerea/${id_historia_clinica}`)
+}
+
+export const actualizarExamenViaAerea = (id_examen_via_aerea, data) => {
+  return api.put(`/examen_via_aerea/${id_examen_via_aerea}`, data)
+}
+
+export const obtenerExamenPsicologico = (id_historia_clinica) => {
+  return api.get(`/examen_psicologico/${id_historia_clinica}`)
+}
+
+export const actualizarExamenPsicologico = (id_examen_psicologico, data) => {
+  return api.put(`/examen_psicologico/${id_examen_psicologico}`, data)
+}
+
+export const obtenerExamenObstetrico = (id_historia_clinica) => {
+  return api.get(`/examen_obstetrico/${id_historia_clinica}`)
+}
+
+export const actualizarExamenObstetrico = (id_historia_clinica, data) => {
+  return api.put(`/examen_obstetrico/${id_historia_clinica}`, data)
+}
