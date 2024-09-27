@@ -215,3 +215,111 @@ export const obtenerMedicamentosSuministradosPorHistoriaClinica = (id_historia_c
 export const actualizarMedicamentosSuministrados = (id_historia_clinica, data) => {
   return api.put(`/medicamentos_suministrados/${id_historia_clinica}`, data)
 }
+
+export const obtenerSubespecialidades = () => {
+  return api.get('/subespecialidades')
+}
+
+export const obtenerSubespecialidadesPorHistoriaClinica = (id_historia_clinica) => {
+  return api.get(`/consulta_externa/historia_clinica/${id_historia_clinica}`)
+}
+
+export const actualizarSubespecialidades = (id_historia_clinica, subsData) => {
+  return api.post(`/consulta_externa/historia_clinica/${id_historia_clinica}`, subsData)
+}
+
+export const obtenerExamenFisicoOrina = (id_historia_clinica) => {
+  return api.get(`/examen_fisico_orina/${id_historia_clinica}`)
+}
+
+export const actualizarExamenFisicoOrina = (id_historia_clinica, data) => {
+  return api.put(`/examen_fisico_orina/${id_historia_clinica}`, data)
+}
+
+export const obtenerSedimentoUrinario = (id_historia_clinica) => {
+  return api.get(`/sedimento_urinario/${id_historia_clinica}`)
+}
+
+export const actualizarSedimentoUrinario = (id_historia_clinica, data) => {
+  return api.put(`/sedimento_urinario/${id_historia_clinica}`, data)
+}
+
+export const obtenerExamenQuimicoUrinario = (id_historia_clinica) => {
+  return api.get(`/examen_quimico_urinario/${id_historia_clinica}`)
+}
+
+export const actualizarExamenQuimicoUrinario = (id_historia_clinica, data) => {
+  return api.put(`/examen_quimico_urinario/${id_historia_clinica}`, data)
+}
+
+export const obtenerExamenEspecialOrina = (id_historia_clinica) => {
+  return api.get(`/examen_especial_orina/${id_historia_clinica}`)
+}
+
+export const actualizarExamenEspecialOrina = (id_historia_clinica, data) => {
+  return api.put(`/examen_especial_orina/${id_historia_clinica}`, data)
+}
+
+export const obtenerExamenHematologico = (id_historia_clinica) => {
+  return api.get(`/examen_hematologico/${id_historia_clinica}`)
+}
+
+export const actualizarExamenHematologico = (id_historia_clinica, data) => {
+  return api.put(`/examen_hematologico/${id_historia_clinica}`, data)
+}
+
+export const obtenerBiometriaHematica = (id_examen_hematologico) => {
+  return api.get(`/biometria_hematica/${id_examen_hematologico}`)
+}
+
+export const actualizarBiometriaHematica = (id_examen_hematologico, data) => {
+  return api.put(`/biometria_hematica/${id_examen_hematologico}`, data)
+}
+
+export const obtenerIndicesEritrocitarios = (id_examen_hematologico) => {
+  return api.get(`/indices_eritrocitarios/${id_examen_hematologico}`)
+}
+
+export const actualizarIndicesEritrocitarios = (id_examen_hematologico, data) => {
+  return api.put(`/indices_eritrocitarios/${id_examen_hematologico}`, data)
+}
+
+export const obtenerRecuentoDiferencialHematico = (id_examen_hematologico) => {
+  return api.get(`/recuento_diferencial_hematico/${id_examen_hematologico}`)
+}
+
+export const actualizarRecuentoDiferencialHematico = (id_examen_hematologico, data) => {
+  return api.put(`/recuento_diferencial_hematico/${id_examen_hematologico}`, data)
+}
+
+export const obtenerHemostasiaSanguinea = (id_examen_sanguineo) => {
+  return api.get(`/hemostasia_sanguinea/${id_examen_sanguineo}`)
+}
+
+export const actualizarHemostasiaSanguinea = (id_examen_sanguineo, data) => {
+  return api.put(`/hemostasia_sanguinea/${id_examen_sanguineo}`, data)
+}
+
+export const obtenerSerologiaSanguinea = (id_examen_sanguineo) => {
+  return api.get(`/serologia_sanguinea/${id_examen_sanguineo}`)
+}
+
+export const actualizarSerologiaSanguinea = (id_examen_sanguineo, data) => {
+  return api.put(`/serologia_sanguinea/${id_examen_sanguineo}`, data)
+}
+
+export const obtenerElectrolitosSanguineos = (id_examen_sanguineo) => {
+  return api.get(`/electrolitos_sanguineos/${id_examen_sanguineo}`)
+}
+
+export const actualizarElectrolitosSanguineos = (id_examen_sanguineo, data) => {
+  return api.put(`/electrolitos_sanguineos/${id_examen_sanguineo}`, data)
+}
+
+export const obtenerQuimicaSanguinea = (id_examen_sanguineo) => {
+  return api.get(`/quimica_sanguinea/${id_examen_sanguineo}`)
+}
+
+export const actualizarQuimicaSanguinea = (id_examen_sanguineo, data) => {
+  return api.put(`/quimica_sanguinea/${id_examen_sanguineo}`, data)
+}

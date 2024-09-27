@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watchEffect, computed } from 'vue';
+import { ref, onMounted, watchEffect, computed, watch } from 'vue';
 import {
     obtenerCasosClinicos, cambiarEstadoCaso, obtenerCategoriasSimulacion,
     obtenerCasoClinicoPorId, obtenerPuntajes, obtenerMensajes,
@@ -23,7 +23,11 @@ import {
     obtenerCategoriasDiferenciales, obtenerDiagnosticosPorCategoria,
     obtenerDiagnosticosDiferencialesPorHistoriaClinica, actualizarDiagnosticosDiferenciales,
     obtenerCategoriasMedicamentos, obtenerMedicamentosPorCategoria,
-    obtenerMedicamentosSuministradosPorHistoriaClinica, actualizarMedicamentosSuministrados
+    obtenerMedicamentosSuministradosPorHistoriaClinica, actualizarMedicamentosSuministrados,
+    obtenerSubespecialidades, obtenerSubespecialidadesPorHistoriaClinica,
+    actualizarSubespecialidades
+
+
 } from '../services/casoService';
 import { useToast } from 'primevue/usetoast';
 
@@ -64,7 +68,7 @@ const signosVitales = ref({});
 const scoreDiagnosticoDiferencial = ref([]);
 const categorias = ref([]);
 const diagnosticosByCategoria = ref({});
-const selectedDiagnosticosPorCategoria = ref({}); // Diagnósticos seleccionados por categoría
+const selectedDiagnosticosPorCategoria = ref({});
 const diagnosticoDetails = ref({});
 const diagnosesMap = ref({});
 
@@ -74,6 +78,13 @@ const medicamentosPorCategoria = ref({});
 const selectedMedicamentosPorCategoria = ref({});
 const medicamentoDetails = ref({});
 const medicamentosMap = ref({});
+
+const subespecialidadesDisponibles = ref([]);
+const subespecialidades = ref([]);
+const subsData = ref([]);
+const scoreSubespecialidad = ref([]);
+const isInitializing = ref(false);
+
 
 const cerrarDialogo = () => {
     visible.value = false;
@@ -189,6 +200,9 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarPuntajeMedicamentos(casoSeleccionado.value.id_historia_clinica);
         await cargarCategoriasYMedicamentos();
         await cargarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeSubespecialidad(casoSeleccionado.value.id_historia_clinica)
+        await cargarSubespecialidadesDisponibles();
+        await cargarSubespecialidadesSeleccionadas(casoSeleccionado.value.id_historia_clinica);
 
 
         visible.value = true;
@@ -742,7 +756,6 @@ const guardarMedicamentosSuministrados = async () => {
         await actualizarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica, data);
 
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Medicamentos suministrados guardados correctamente', life: 3000 });
-        visible.value = false;
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar medicamentos suministrados', life: 3000 });
     }
@@ -752,7 +765,6 @@ const guardarMedicamentosSuministrados = async () => {
 watchEffect(() => {
     const allMedicamentos = allSelectedMedicamentos.value.map(id => parseInt(id));
     const currentMedicamentosDetails = Object.keys(medicamentoDetails.value).map(id => parseInt(id));
-
     allMedicamentos.forEach(medicamentoId => {
         if (!currentMedicamentosDetails.includes(medicamentoId)) {
             medicamentoDetails.value[medicamentoId] = {
@@ -762,7 +774,6 @@ watchEffect(() => {
             };
         }
     });
-
     currentMedicamentosDetails.forEach(medicamentoId => {
         if (!allMedicamentos.includes(medicamentoId)) {
             delete medicamentoDetails.value[medicamentoId];
@@ -770,6 +781,107 @@ watchEffect(() => {
     });
 });
 
+
+const cargarPuntajeSubespecialidad = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreSubespecialidad.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
+const cargarSubespecialidadesDisponibles = async () => {
+    try {
+        const response = await obtenerSubespecialidades();
+        subespecialidadesDisponibles.value = response.data;
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al obtener subespecialidades',
+            life: 3000
+        });
+    }
+};
+
+const cargarSubespecialidadesSeleccionadas = async (id_historia_clinica) => {
+    try {
+        isInitializing.value = true;
+        const response = await obtenerSubespecialidadesPorHistoriaClinica(id_historia_clinica);
+        const selectedSubs = response.data;
+        subespecialidades.value = selectedSubs.map(sub => sub.id_subespecialidad);
+
+        subsData.value = selectedSubs.map(sub => ({
+            id_subespecialidad: sub.id_subespecialidad,
+            nombre: sub.nombre,
+            descripcion: sub.descripcion || '',
+            feedback: sub.feed_subespecialidad || '',
+            score: sub.puntaje_subespecialidad || ''
+        }));
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al obtener subespecialidades seleccionadas',
+            life: 3000
+        });
+    } finally {
+        isInitializing.value = false;
+    }
+};
+
+watch(subespecialidades, (newVal, oldVal) => {
+    if (isInitializing.value) {
+        return;
+    }
+
+    const addedSubs = newVal.filter(id => !oldVal.includes(id));
+    const removedSubs = oldVal.filter(id => !newVal.includes(id));
+
+    addedSubs.forEach(id => {
+        const sub = subespecialidadesDisponibles.value.find(s => s.id_subespecialidad === id);
+        if (sub) {
+            const exists = subsData.value.some(s => s.id_subespecialidad === id);
+            if (!exists) {
+                subsData.value.push({
+                    id_subespecialidad: sub.id_subespecialidad,
+                    nombre: sub.nombre,
+                    descripcion: '',
+                    feedback: '',
+                    score: ''
+                });
+            }
+        }
+    });
+    removedSubs.forEach(id => {
+        const index = subsData.value.findIndex(s => s.id_subespecialidad === id);
+        if (index !== -1) {
+            subsData.value.splice(index, 1);
+        }
+    });
+});
+
+const guardarSubespecialidades = async () => {
+    try {
+        await actualizarSubespecialidades(casoSeleccionado.value.id_historia_clinica, subsData.value);
+        toast.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Subespecialidades guardadas correctamente',
+            life: 3000
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al guardar las subespecialidades',
+            life: 3000
+        });
+    }
+};
 
 onMounted(() => {
     cargarCasosClinicos();
@@ -820,7 +932,7 @@ onMounted(() => {
         </div>
         <Dialog v-model:visible="visible" modal header="Ver caso clínico" :style="{ width: '65rem' }">
             <div class="justify-content-center">
-                <Stepper linear orientation="vertical">
+                <Stepper>
                     <StepperPanel header="Configuración Inicial">
                         <template #content="{ nextCallback }">
 
@@ -3636,68 +3748,43 @@ onMounted(() => {
                             <h5>Selecciona las subespecialidades para el caso</h5>
                             <div class="card flex justify-content-center">
                                 <SelectButton v-model="subespecialidades" :options="subespecialidadesDisponibles"
-                                    optionLabel="name" multiple aria-labelledby="multiple" />
+                                    optionLabel="nombre" optionValue="id_subespecialidad" multiple
+                                    aria-labelledby="multiple" />
                             </div>
-                            <div class="grid">
-                                <div class="col md:col-4">
-                                    <h6>Cardiologia</h6>
+
+                            <div v-for="(subData) in subsData" :key="subData.id_subespecialidad" class="pt-3">
+                                <div class="grid">
+                                    <div class="col md:col-3">
+                                        <h6>{{ subData.nombre }}</h6>
+                                    </div>
+                                    <div class="col md:col-3">
+                                        <FloatLabel>
+                                            <Textarea v-model="subData.descripcion" autoResize rows="3" cols="23" />
+                                            <label for="descripcionSubespecialidad">Descripción</label>
+                                        </FloatLabel>
+                                    </div>
+                                    <div class="col md:col-3">
+                                        <FloatLabel>
+                                            <Textarea v-model="subData.feedback" autoResize rows="3" cols="23" />
+                                            <label for="feedSubespecialidad">Retroalimentación</label>
+                                        </FloatLabel>
+                                    </div>
+                                    <div class="col md:col-3">
+                                        <FloatLabel>
+                                            <Dropdown v-model="subData.score" :options="scoreSubespecialidad"
+                                                optionLabel="name" optionValue="value" placeholder="Elige una opción"
+                                                checkmark :highlightOnSelect="false" class="w-full md:w-10rem" />
+                                            <label for="puntajeSubespecialidad">Puntaje Asignado</label>
+                                        </FloatLabel>
+                                    </div>
                                 </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedSubespecialidad" autoResize rows="3" cols="30" />
-                                        <label for="feedSubespecialidad">Retroalimentación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeSubespecialidad" :options="scoreSubespecialidad"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeSubespecialidad">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
-                                <div class="col md:col-4">
-                                    <h6>Endocrionologia</h6>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedSubespecialidad" autoResize rows="3" cols="30" />
-                                        <label for="feedSubespecialidad">Retroalimentación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeSubespecialidad" :options="scoreSubespecialidad"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeSubespecialidad">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
-                                <div class="col md:col-4">
-                                    <h6>Gastroenterologia</h6>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedSubespecialidad" autoResize rows="3" cols="30" />
-                                        <label for="feedSubespecialidad">Retroalimentación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeSubespecialidad" :options="scoreSubespecialidad"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeSubespecialidad">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
                             </div>
 
                             <div class="flex py-4 gap-2">
-                                <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
+                                <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
+                                <Button label="Guardar" @click="guardarSubespecialidades" severity="success"
+                                    icon="pi pi-save" />
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
                                     @click="nextCallback" />
                             </div>
