@@ -175,3 +175,27 @@ export const obtenerExamenObstetrico = (id_historia_clinica) => {
 export const actualizarExamenObstetrico = (id_historia_clinica, data) => {
   return api.put(`/examen_obstetrico/${id_historia_clinica}`, data)
 }
+
+export const obtenerSignosVitales = (id_historia_clinica) => {
+  return api.get(`/signos_vitales/${id_historia_clinica}`)
+}
+
+export const actualizarSignosVitales = (id_historia_clinica, data) => {
+  return api.put(`/signos_vitales/${id_historia_clinica}`, data)
+}
+
+export const obtenerCategoriasDiferenciales = () => {
+  return api.get(`/categoria_diferencial`)
+}
+
+export const obtenerDiagnosticosPorCategoria = (id_categoria_diferencial) => {
+  return api.get(`/diagnostico/${id_categoria_diferencial}`)
+}
+
+export const obtenerDiagnosticosDiferencialesPorHistoriaClinica = (id_historia_clinica) => {
+  return api.get(`/diagnosticos_diferenciales/${id_historia_clinica}`)
+}
+
+export const actualizarDiagnosticosDiferenciales = (id_historia_clinica, data) => {
+  return api.put(`/diagnosticos_diferenciales/${id_historia_clinica}`, data)
+}
