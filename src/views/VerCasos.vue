@@ -25,7 +25,19 @@ import {
     obtenerCategoriasMedicamentos, obtenerMedicamentosPorCategoria,
     obtenerMedicamentosSuministradosPorHistoriaClinica, actualizarMedicamentosSuministrados,
     obtenerSubespecialidades, obtenerSubespecialidadesPorHistoriaClinica,
-    actualizarSubespecialidades
+    actualizarSubespecialidades,
+    obtenerExamenFisicoOrina, actualizarExamenFisicoOrina,
+    obtenerSedimentoUrinario, actualizarSedimentoUrinario,
+    obtenerExamenQuimicoUrinario, actualizarExamenQuimicoUrinario,
+    obtenerExamenEspecialOrina, actualizarExamenEspecialOrina,
+    obtenerExamenHematologico, actualizarExamenHematologico,
+    obtenerIndicesEritrocitarios, actualizarIndicesEritrocitarios,
+    obtenerRecuentoDiferencialHematico, actualizarRecuentoDiferencialHematico,
+    obtenerHemostasiaSanguinea, actualizarHemostasiaSanguinea,
+    obtenerSerologiaSanguinea, actualizarSerologiaSanguinea,
+    obtenerElectrolitosSanguineos, actualizarElectrolitosSanguineos,
+    obtenerQuimicaSanguinea, actualizarQuimicaSanguinea,
+    obtenerBiometriaHematica, actualizarBiometriaHematica
 
 
 } from '../services/casoService';
@@ -84,6 +96,20 @@ const subespecialidades = ref([]);
 const subsData = ref([]);
 const scoreSubespecialidad = ref([]);
 const isInitializing = ref(false);
+
+const labOrina = ref({});
+const labSed = ref({});
+const labQuimico = ref({});
+const labEspecial = ref({});
+const labHematologico = ref({});
+const labBiometriaHematica = ref({});
+const labIndice = ref({});
+const labRecuento = ref({});
+const labHemostasea = ref({});
+const labSerologia = ref({});
+const labElectrolitos = ref({});
+const labQuimicoSanguineo = ref({});
+const scoreLaboratorioOrina = ref([]);
 
 
 const cerrarDialogo = () => {
@@ -200,10 +226,22 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarPuntajeMedicamentos(casoSeleccionado.value.id_historia_clinica);
         await cargarCategoriasYMedicamentos();
         await cargarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica);
-        await cargarPuntajeSubespecialidad(casoSeleccionado.value.id_historia_clinica)
+        await cargarPuntajeSubespecialidad(casoSeleccionado.value.id_historia_clinica);
         await cargarSubespecialidadesDisponibles();
         await cargarSubespecialidadesSeleccionadas(casoSeleccionado.value.id_historia_clinica);
-
+        await cargarExamenFisicoOrina(casoSeleccionado.value.id_historia_clinica);
+        await cargarSedimentoUrinario(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenQuimicoUrinario(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenEspecialOrina(casoSeleccionado.value.id_historia_clinica);
+        await cargarExamenHematologico(casoSeleccionado.value.id_historia_clinica);
+        await cargarIndicesEritrocitarios(casoSeleccionado.value.id_historia_clinica);
+        await cargarRecuentoDiferencialHematico(casoSeleccionado.value.id_historia_clinica);
+        await cargarHemostasiaSanguinea(casoSeleccionado.value.id_historia_clinica);
+        await cargarSerologiaSanguinea(casoSeleccionado.value.id_historia_clinica);
+        await cargarElectrolitosSanguineos(casoSeleccionado.value.id_historia_clinica);
+        await cargarQuimicaSanguinea(casoSeleccionado.value.id_historia_clinica);
+        await cargarBiometriaHematica(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeInvestigar(casoSeleccionado.value.id_historia_clinica)
 
         visible.value = true;
     } catch (error) {
@@ -882,6 +920,140 @@ const guardarSubespecialidades = async () => {
         });
     }
 };
+
+const cargarExamenFisicoOrina = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenFisicoOrina(id_historia_clinica);
+        labOrina.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+
+const cargarSedimentoUrinario = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerSedimentoUrinario(id_historia_clinica);
+        labSed.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarExamenQuimicoUrinario = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenQuimicoUrinario(id_historia_clinica);
+        labQuimico.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarExamenEspecialOrina = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenEspecialOrina(id_historia_clinica);
+        labEspecial.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarExamenHematologico = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerExamenHematologico(id_historia_clinica);
+        labHematologico.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarIndicesEritrocitarios = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerIndicesEritrocitarios(id_historia_clinica);
+        labIndice.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarRecuentoDiferencialHematico = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerRecuentoDiferencialHematico(id_historia_clinica);
+        labRecuento.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarHemostasiaSanguinea = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerHemostasiaSanguinea(id_historia_clinica);
+        labHemostasea.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarSerologiaSanguinea = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerSerologiaSanguinea(id_historia_clinica);
+        labSerologia.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarElectrolitosSanguineos = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerElectrolitosSanguineos(id_historia_clinica);
+        labElectrolitos.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarQuimicaSanguinea = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerQuimicaSanguinea(id_historia_clinica);
+        labQuimicoSanguineo.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+const cargarBiometriaHematica = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerBiometriaHematica(id_historia_clinica);
+        labBiometriaHematica.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
+    }
+};
+
+const guardarTodosLosCambiosLaboratorio = async () => {
+    try {
+
+        console.log(labEspecial.value);
+        await actualizarExamenFisicoOrina(paciente.value.id_historia_clinica, labOrina.value);
+        await actualizarSedimentoUrinario(paciente.value.id_historia_clinica, labSed.value);
+        await actualizarExamenQuimicoUrinario(paciente.value.id_historia_clinica, labQuimico.value);
+        await actualizarExamenEspecialOrina(paciente.value.id_historia_clinica, labEspecial.value);
+        await actualizarExamenHematologico(paciente.value.id_historia_clinica, labHematologico.value);
+        await actualizarIndicesEritrocitarios(paciente.value.id_historia_clinica, labIndice.value);
+        await actualizarRecuentoDiferencialHematico(paciente.value.id_historia_clinica, labRecuento.value);
+        await actualizarHemostasiaSanguinea(paciente.value.id_historia_clinica, labHemostasea.value);
+        await actualizarSerologiaSanguinea(paciente.value.id_historia_clinica, labSerologia.value);
+        await actualizarElectrolitosSanguineos(paciente.value.id_historia_clinica, labElectrolitos.value);
+        await actualizarQuimicaSanguinea(paciente.value.id_historia_clinica, labQuimicoSanguineo.value);
+        await actualizarBiometriaHematica(paciente.value.id_historia_clinica, labBiometriaHematica.value);
+
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Examen físico general actualizado correctamente', life: 3000 });
+    } catch (error) {
+        console.log(error)
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar el examen físico general', life: 3000 });
+    }
+};
+
+const cargarPuntajeInvestigar = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreLaboratorioOrina.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
 
 onMounted(() => {
     cargarCasosClinicos();
@@ -2456,7 +2628,6 @@ onMounted(() => {
                         </template>
                     </StepperPanel>
 
-
                     <StepperPanel header="Investigar">
                         <template #content="{ prevCallback, nextCallback }">
                             <div class="grid">
@@ -2475,13 +2646,13 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labOrinaColor" v-model="labOrinaColor" />
+                                                <InputText id="labOrinaColor" v-model="labOrina.color" />
                                                 <label for="labOrinaColor">Color</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labOrinaAspecto" v-model="labOrinaAspecto" />
+                                                <InputText id="labOrinaAspecto" v-model="labOrina.aspecto" />
                                                 <label for="labOrinaAspecto">Aspecto</label>
                                             </FloatLabel>
                                         </div>
@@ -2489,7 +2660,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labOrinaVolumen" v-model="labOrinaVolumen" />
+                                                <InputText id="labOrinaVolumen" v-model="labOrina.volumen" />
                                                 <label for="labOrinaVolumen">Volumen</label>
                                             </FloatLabel>
                                         </div>
@@ -2499,17 +2670,17 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Textarea v-model="feedLaboratorioOrina" autoResize rows="3"
-                                                    cols="30" />
-                                                <label for="feedLaboratorioOrina">Retroalimentación</label>
+                                                <Textarea v-model="labOrina.feed_examen_fisico_orina" autoResize
+                                                    rows="3" cols="30" />
+                                                <label for="feed_examen_fisico_orina">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Dropdown v-model="puntajeLaboratorioOrina"
+                                                <Dropdown v-model="labOrina.puntaje_examen_fisico_orina"
                                                     :options="scoreLaboratorioOrina" optionLabel="name"
-                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                    class="w-full md:w-14rem" />
+                                                    optionValue="value" placeholder="Elige una opción" checkmark
+                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
                                                 <label for="puntajeLaboratorioOrina">Puntaje Asignado</label>
                                             </FloatLabel>
                                         </div>
@@ -2527,25 +2698,26 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSedHematies" v-model="labSedHematies" />
+                                                <InputText id="labSedHematies" v-model="labSed.hematies" />
                                                 <label for="labSedHematies">Hematies [cpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSedLeucocitos" v-model="labSedLeucocitos" />
+                                                <InputText id="labSedLeucocitos" v-model="labSed.leucocitos" />
                                                 <label for="labSedLeucocitos">Leucocitos [cpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSedPiocitos" v-model="labSedPiocitos" />
+                                                <InputText id="labSedPiocitos" v-model="labSed.piocitos" />
                                                 <label for="labSedPiocitos">Piocitos [cpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSedEpiteliales" v-model="labSedEpiteliales" />
+                                                <InputText id="labSedEpiteliales"
+                                                    v-model="labSed.celulas_epiteliales" />
                                                 <label for="labSedEpiteliales">Células Epiteliales [cpm.]</label>
                                             </FloatLabel>
                                         </div>
@@ -2553,25 +2725,26 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSedRenales" v-model="labSedRenales" />
+                                                <InputText id="labSedRenales" v-model="labSed.celulas_renales" />
                                                 <label for="labSedRenales">Células Renales [cpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 ">
                                             <FloatLabel>
-                                                <InputText id="labSedCereo" v-model="labSedCereo" />
+                                                <InputText id="labSedCereo" v-model="labSed.cilindro_cereo" />
                                                 <label for="labSedCereo">Cilindro Cereo [cpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSedHialianos" v-model="labSedHialianos" />
+                                                <InputText id="labSedHialianos" v-model="labSed.cilindros_hialianos" />
                                                 <label for="labSedHialianos">Cilindros Hialianos [cpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSedGranulosos" v-model="labSedGranulosos" />
+                                                <InputText id="labSedGranulosos"
+                                                    v-model="labSed.cilindros_granulosos" />
                                                 <label for="labSedGranulosos">Cilindors Granulosos [cpm.]</label>
                                             </FloatLabel>
                                         </div>
@@ -2581,26 +2754,28 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSedLeucocitarios" v-model="labSedLeucocitarios" />
+                                                <InputText id="labSedLeucocitarios"
+                                                    v-model="labSed.cilindros_leucocitarios" />
                                                 <label for="labSedLeucocitarios">Cilindros Leucocitarios [cpm]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSedEritrocitarios" v-model="labSedEritrocitarios" />
+                                                <InputText id="labSedEritrocitarios"
+                                                    v-model="labSed.cilindros_eritrocitarios" />
                                                 <label for="labSedEritrocitarios">Cilindros Eritrocitarios
                                                     [cpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSedFlora" v-model="labSedFlora" />
+                                                <InputText id="labSedFlora" v-model="labSed.flora_bacteriana" />
                                                 <label for="labSedFlora">Flora Bacteriana</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSedCristales" v-model="labSedCristales" />
+                                                <InputText id="labSedCristales" v-model="labSed.cristales" />
                                                 <label for="labSedCristales">Cristales</label>
                                             </FloatLabel>
                                         </div>
@@ -2608,25 +2783,25 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSedFilamento" v-model="labSedFilamento" />
+                                                <InputText id="labSedFilamento" v-model="labSed.filamento_mucoso" />
                                                 <label for="labSedFilamento">Filamento Mucoso</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSedHifas" v-model="labSedHifas" />
+                                                <InputText id="labSedHifas" v-model="labSed.hifas" />
                                                 <label for="labSedHifas">Hifas</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSedLevaduras" v-model="labSedLevaduras" />
+                                                <InputText id="labSedLevaduras" v-model="labSed.levaduras" />
                                                 <label for="labSedLevaduras">Levaduras</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSedOtros" v-model="labSedOtros" />
+                                                <InputText id="labSedOtros" v-model="labSed.otros" />
                                                 <label for="labSedOtros">Otros</label>
                                             </FloatLabel>
                                         </div>
@@ -2643,15 +2818,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabEspecial" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labSed.feed_examen_sedimento_urinario" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabEspecial">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabEspecial" :options="scoreLabEspecial"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labSed.puntaje_examen_sedimento_urinario"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabEspecial">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -2668,25 +2845,25 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labQuimicopH" v-model="labQuimicopH" />
+                                                <InputText id="labQuimicopH" v-model="labQuimico.ph" />
                                                 <label for="labQuimicopH">pH </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoDensidad" v-model="labQuimicoDensidad" />
+                                                <InputText id="labQuimicoDensidad" v-model="labQuimico.densidad" />
                                                 <label for="labQuimicoDensidad">Densidad </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoProteinas" v-model="labQuimicoProteinas" />
+                                                <InputText id="labQuimicoProteinas" v-model="labQuimico.proteinas" />
                                                 <label for="labQuimicoProteinas">Proteinas [mg/dl]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoSangre" v-model="labQuimicoSangre" />
+                                                <InputText id="labQuimicoSangre" v-model="labQuimico.sangre" />
                                                 <label for="labQuimicoSangre">Sangre </label>
                                             </FloatLabel>
                                         </div>
@@ -2694,13 +2871,13 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoGlucosa" v-model="labQuimicoGlucosa" />
+                                                <InputText id="labQuimicoGlucosa" v-model="labQuimico.glucosa" />
                                                 <label for="labQuimicoGlucosa">Células Glucosa </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 ">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoCetona" v-model="labQuimicoCetona" />
+                                                <InputText id="labQuimicoCetona" v-model="labQuimico.cetonas" />
                                                 <label for="labQuimicoCetona">Cilindro Cetonas </label>
                                             </FloatLabel>
                                         </div>
@@ -2710,32 +2887,34 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoPigmentos" v-model="labQuimicoPigmentos" />
+                                                <InputText id="labQuimicoPigmentos"
+                                                    v-model="labQuimico.pigmentos_biliares" />
                                                 <label for="labQuimicoPigmentos">Pigmentos Biliares</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoNitritos" v-model="labQuimicoNitritos" />
+                                                <InputText id="labQuimicoNitritos" v-model="labQuimico.nitritos" />
                                                 <label for="labQuimicoNitritos">Nitritos</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoLeucocitos" v-model="labQuimicoLeucocitos" />
+                                                <InputText id="labQuimicoLeucocitos" v-model="labQuimico.leucocitos" />
                                                 <label for="labQuimicoLeucocitos">Leucocitos</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labQuimicoBilirrubina" v-model="labQuimicoBilirrubina" />
+                                                <InputText id="labQuimicoBilirrubina"
+                                                    v-model="labQuimico.bilirrubina" />
                                                 <label for="labQuimicoBilirrubina">Bilirrubina </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoUrobilinogeno"
-                                                    v-model="labQuimicoUrobilinogeno" />
+                                                    v-model="labQuimico.urobilinogeno" />
                                                 <label for="labQuimicoUrobilinogeno">Urobilinogeno [mg/dl]</label>
                                             </FloatLabel>
                                         </div>
@@ -2752,15 +2931,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabQuimico" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labQuimico.feed_examen_quimico_urinario" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabQuimico">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabQuimico" :options="scoreLabQuimico"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labQuimico.puntaje_examen_quimico_urinario"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabQuimico">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -2779,14 +2960,14 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labEspecialProteurinaria"
-                                                    v-model="labEspecialProteurinaria" />
+                                                    v-model="labEspecial.proteurinaria" />
                                                 <label for="labEspecialProteurinaria">Proteurinaria </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labEspecialCreatinuria"
-                                                    v-model="labEspecialCreatinuria" />
+                                                    v-model="labEspecial.creatinuria" />
                                                 <label for="labEspecialCreatinuria">Creatinuria </label>
                                             </FloatLabel>
                                         </div>
@@ -2797,14 +2978,14 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labEspecialMicroalbuminuria"
-                                                    v-model="labEspecialMicroalbuminuria" />
+                                                    v-model="labEspecial.microalbuminuria" />
                                                 <label for="labEspecialMicroalbuminuria">Microalbuminuria </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labEspecialClearenceCreatinina"
-                                                    v-model="labEspecialClearenceCreatinina" />
+                                                    v-model="labEspecial.clearence_creatinina" />
                                                 <label for="labEspecialClearenceCreatinina">Clearence Creatinina</label>
                                             </FloatLabel>
                                         </div>
@@ -2821,15 +3002,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabSed" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labEspecial.feed_examen_especial_orina" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabSed">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabSedimento" :options="scoreLabSedimento"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labEspecial.puntaje_examen_especial_orina"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabSedimento">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -2846,13 +3029,15 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labHematologicoGrupo" v-model="labHematologicoGrupo" />
+                                                <InputText id="labHematologicoGrupo"
+                                                    v-model="labHematologico.grupo_sanguineo" />
                                                 <label for="labHematologicoGrupo">GrupoSanguineo </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labHematologicoFactor" v-model="labHematologicoFactor" />
+                                                <InputText id="labHematologicoFactor"
+                                                    v-model="labHematologico.factor_rh" />
                                                 <label for="labHematologicoFactor">Factor RH </label>
                                             </FloatLabel>
                                         </div>
@@ -2863,7 +3048,7 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labHematologicoObservaciones"
-                                                    v-model="labHematologicoObservaciones" />
+                                                    v-model="labHematologico.observaciones" />
                                                 <label for="labHematologicoObservaciones">Observaciones </label>
                                             </FloatLabel>
                                         </div>
@@ -2880,15 +3065,15 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabBiometriaHematica" autoResize rows="3"
-                                                cols="30" />
+                                            <Textarea v-model="labHematologico.feed_examen_hematologico" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabBiometriaHematica">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabBiometriaHematica"
-                                                :options="scoreLabBiometriaHematica" optionLabel="name"
+                                            <Dropdown v-model="labHematologico.puntaje_examen_hematologico"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
                                                 placeholder="Elige una opción" checkmark :highlightOnSelect="false"
                                                 class="w-full md:w-14rem" />
                                             <label for="puntajeLabBiometriaHematica">Puntaje Asignado</label>
@@ -2908,23 +3093,23 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labiometriaHematicaRojos"
-                                                    v-model="labiometriaHematicaRojos" />
-                                                <label for="labiometriaHematicaRojos">Globulos Rojos </label>
+                                                <InputText id="labBiometriaHematicaRojos"
+                                                    v-model="labBiometriaHematica.globulos_rojos" />
+                                                <label for="labBiometriaHematicaRojos">Globulos Rojos </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labiometriaHematicaBlancos"
-                                                    v-model="labiometriaHematicaBlancos" />
-                                                <label for="labiometriaHematicaBlancos">Globulos Blancos</label>
+                                                <InputText id="labBiometriaHematicaBlancos"
+                                                    v-model="labBiometriaHematica.globulos_blancos" />
+                                                <label for="labBiometriaHematicaBlancos">Globulos Blancos</label>
                                             </FloatLabel>
                                         </div>
-                                        <div class="col md:col-6">
+                                        <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labiometriaHematicaHemoglobina"
-                                                    v-model="labiometriaHematicaHemoglobina" />
-                                                <label for="labiometriaHematicaHemoglobina">Hemoglobina </label>
+                                                <InputText id="labBiometriaHematicaHemoglobina"
+                                                    v-model="labBiometriaHematica.hemoglobina" />
+                                                <label for="labBiometriaHematicaHemoglobina">Hemoglobina </label>
                                             </FloatLabel>
                                         </div>
                                     </div>
@@ -2933,16 +3118,16 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labiometriaHematicaHematrocito"
-                                                    v-model="labiometriaHematicaHematrocito" />
-                                                <label for="labiometriaHematicaHematrocito">Hematrocito </label>
+                                                <InputText id="labBiometriaHematicaHematrocito"
+                                                    v-model="labBiometriaHematica.hematocrito" />
+                                                <label for="labBiometriaHematicaHematrocito">Hematrocito </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labiometriaHematicaVes"
-                                                    v-model="labiometriaHematicaVes" />
-                                                <label for="labiometriaHematicaVes">VES</label>
+                                                <InputText id="labBiometriaHematicaVes"
+                                                    v-model="labBiometriaHematica.ves" />
+                                                <label for="labBiometriaHematicaVes">VES</label>
                                             </FloatLabel>
                                         </div>
                                     </div>
@@ -2958,15 +3143,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabHematologico" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labBiometriaHematica.feed_examen_biometria_hematica"
+                                                autoResize rows="3" cols="30" />
                                             <label for="feedLabHematologico">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabHematologico" :options="scoreLabHematologico"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labBiometriaHematica.puntaje_examen_biometria_hematica"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabHematologico">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -2983,13 +3170,13 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labIndiceVcm" v-model="labIndiceVcm" />
+                                                <InputText id="labIndiceVcm" v-model="labIndice.vcm" />
                                                 <label for="labIndiceVcm">VCM </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labIndiceHbcm" v-model="labIndiceHbcm" />
+                                                <InputText id="labIndiceHbcm" v-model="labIndice.hbcm" />
                                                 <label for="labIndiceHbcm">HBCM </label>
                                             </FloatLabel>
                                         </div>
@@ -2999,7 +3186,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labIndiceChbcm" v-model="labIndiceChbcm" />
+                                                <InputText id="labIndiceChbcm" v-model="labIndice.chbcm" />
                                                 <label for="labIndiceChbcm">CHBCM </label>
                                             </FloatLabel>
                                         </div>
@@ -3016,15 +3203,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabIndice" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labIndice.feed_indices_eritrocitarios" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabIndice">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabIndice" :options="scoreLabIndice"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labIndice.puntaje_indices_eritrocitarios"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabIndice">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -3042,28 +3231,28 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoCayadosRelativo"
-                                                    v-model="labRecuentoCayadosRelativo" />
+                                                    v-model="labRecuento.cayados_relativo" />
                                                 <label for="labRecuentoCayadosRelativo">Cayados Relativo</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoCayadosAbsoluto"
-                                                    v-model="labRecuentoCayadosAbsoluto" />
+                                                    v-model="labRecuento.cayados_absoluto" />
                                                 <label for="labRecuentoCayadosAbsoluto">Cayados Absoluto [cpm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoLinfocitosRelativo"
-                                                    v-model="labRecuentoLinfocitosRelativo" />
+                                                    v-model="labRecuento.linfocitos_relativo" />
                                                 <label for="labRecuentoLinfocitosRelativo">Linfocitos Relativo</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoLinfocitosAbsoluto"
-                                                    v-model="labRecuentoLinfocitosAbsoluto" />
+                                                    v-model="labRecuento.linfocitos_absoluto" />
                                                 <label for="labRecuentoLinfocitosAbsoluto">Linfocitos Absoluto</label>
                                             </FloatLabel>
                                         </div>
@@ -3072,28 +3261,28 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoEosinofilosRelativo"
-                                                    v-model="labRecuentoEosinofilosRelativo" />
+                                                    v-model="labRecuento.eosinofilos_relativo" />
                                                 <label for="labRecuentoEosinofilosRelativo">Eosinofilos Relativo</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 ">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoEosinofilosAbsoluto"
-                                                    v-model="labRecuentoEosinofilosAbsoluto" />
+                                                    v-model="labRecuento.eosinofilos_absoluto" />
                                                 <label for="labRecuentoEosinofilosAbsoluto">Eosinofilos Absoluto</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoBasofilosRelativo"
-                                                    v-model="labRecuentoBasofilosRelativo" />
+                                                    v-model="labRecuento.basofilos_relativo" />
                                                 <label for="labRecuentoBasofilosRelativo">Basofilos Relativo</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoBasofilosAbsoluto"
-                                                    v-model="labRecuentoBasofilosAbsoluto" />
+                                                    v-model="labRecuento.basofilos_absoluto" />
                                                 <label for="labRecuentoBasofilosAbsoluto">Basofilos Absoluto</label>
                                             </FloatLabel>
                                         </div>
@@ -3104,28 +3293,28 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoSegmentadosRelativo"
-                                                    v-model="labRecuentoSegmentadosRelativo" />
+                                                    v-model="labRecuento.segmentados_relativo" />
                                                 <label for="labRecuentoSegmentadosRelativo">Segmentados Relativo</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoSegmentadosAbsoluto"
-                                                    v-model="labRecuentoSegmentadosAbsoluto" />
+                                                    v-model="labRecuento.segmentados_absoluto" />
                                                 <label for="labRecuentoSegmentadosAbsoluto">Segmentados Absoluto</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoMonocitosRelativo"
-                                                    v-model="labRecuentoMonocitosRelativo" />
+                                                    v-model="labRecuento.monocitos_relativo" />
                                                 <label for="labRecuentoMonocitosRelativo">Monocitos Relativo</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labRecuentoMonocitosAbsoluto"
-                                                    v-model="labRecuentoMonocitosAbsoluto" />
+                                                    v-model="labRecuento.monocitos_absoluto" />
                                                 <label for="labRecuentoMonocitosAbsoluto">Monocitos Absoluto</label>
                                             </FloatLabel>
                                         </div>
@@ -3133,13 +3322,15 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-3">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labRecuentoPlaquetas" v-model="labRecuentoPlaquetas" />
+                                                <InputText id="labRecuentoPlaquetas"
+                                                    v-model="labRecuento.recuento_plaquetas" />
                                                 <label for="labRecuentoPlaquetas">Recuento de Plaquetas</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labRecuentoReticulos" v-model="labRecuentoReticulos" />
+                                                <InputText id="labRecuentoReticulos"
+                                                    v-model="labRecuento.recuento_reticulos" />
                                                 <label for="labRecuentoReticulos">Recuento Reticulos</label>
                                             </FloatLabel>
                                         </div>
@@ -3156,15 +3347,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabRecuento" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labRecuento.feed_recuento_diferencial_hematico"
+                                                autoResize rows="3" cols="30" />
                                             <label for="feedLabRecuento">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabRecuento" :options="scoreLabRecuento"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labRecuento.puntaje_recuento_diferencial_hematico"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabRecuento">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -3183,26 +3376,27 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labHemostaseaCoagulacion"
-                                                    v-model="labHemostaseaCoagulacion" />
+                                                    v-model="labHemostasea.tiempo_coagulacion" />
                                                 <label for="labHemostaseaCoagulacion">Tiempo de Coagulación </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labHemostaseaSangria" v-model="labHemostaseaSangria" />
+                                                <InputText id="labHemostaseaSangria"
+                                                    v-model="labHemostasea.tiempo_sangria" />
                                                 <label for="labHemostaseaSangria">Tiempo de Sangria </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labHemostaseaProtrombina"
-                                                    v-model="labHemostaseaProtrombina" />
+                                                    v-model="labHemostasea.tiempo_protrombina" />
                                                 <label for="labHemostaseaProtrombina">Tiempo de Protrombina</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labHemostaseaInr" v-model="labHemostaseaInr" />
+                                                <InputText id="labHemostaseaInr" v-model="labHemostasea_inr" />
                                                 <label for="labHemostaseaInr">INR</label>
                                             </FloatLabel>
                                         </div>
@@ -3211,7 +3405,7 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labHemostaseaActividad"
-                                                    v-model="labHemostaseaActividad" />
+                                                    v-model="labHemostasea.actividad_protrombinica" />
                                                 <label for="labHemostaseaActividad">Actividad Protrombinica </label>
                                             </FloatLabel>
                                         </div>
@@ -3221,27 +3415,28 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labHemostaseaDimeroD" v-model="labHemostaseaDimeroD" />
+                                                <InputText id="labHemostaseaDimeroD" v-model="labHemostasea.dimero_d" />
                                                 <label for="labHemostaseaDimeroD">Dimero D</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labHemostaseaFibrinogeno"
-                                                    v-model="labHemostaseaFibrinogeno" />
+                                                    v-model="labHemostasea.fibrinogeno" />
                                                 <label for="labHemostaseaFibrinogeno">Fibrinogeno</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labHemostaseaControl" v-model="labHemostaseaControl" />
+                                                <InputText id="labHemostaseaControl"
+                                                    v-model="labHemostasea.tiempo_control" />
                                                 <label for="labHemostaseaControl">Tiempo de Control </label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labHemostaseaTroboplastina"
-                                                    v-model="labHemostaseaTroboplastina" />
+                                                    v-model="labHemostasea.tiempo_tromboplastina_parcial" />
                                                 <label for="labHemostaseaTroboplastina">Tiempo Troboplastina
                                                     Parcial</label>
                                             </FloatLabel>
@@ -3259,15 +3454,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabHemostasea" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labHemostasea.feed_hemostasia_sanguinea" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabHemostasea">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabHemostasea" :options="scoreLabHemostasea"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labHemostasea.puntaje_hemostasia_sanguinea"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabHemostasea">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -3284,25 +3481,28 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSerologiaProteinaC" v-model="labSerologiaProteinaC" />
+                                                <InputText id="labSerologiaProteinaC"
+                                                    v-model="labSerologia.proteina_c" />
                                                 <label for="labSerologiaProteinaC">Proteina C</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSerologiaFactor" v-model="labSerologiaFactor" />
+                                                <InputText id="labSerologiaFactor"
+                                                    v-model="labSerologia.factor_reumatico" />
                                                 <label for="labSerologiaFactor">Factor Reumatico</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSerologiaRPR" v-model="labSerologiaRPR" />
+                                                <InputText id="labSerologiaRPR" v-model="labSerologia.rpr_sifilis" />
                                                 <label for="labSerologiaRPR">RPR Sifilis</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labSerologiaPrueba" v-model="labSerologiaPrueba" />
+                                                <InputText id="labSerologiaPrueba"
+                                                    v-model="labSerologia.prueba_sifilis" />
                                                 <label for="labSerologiaPrueba">Prueba SIfilis</label>
                                             </FloatLabel>
                                         </div>
@@ -3312,13 +3512,15 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSerologiaVIH" v-model="labSerologiaVIH" />
+                                                <InputText id="labSerologiaVIH"
+                                                    v-model="labSerologia.prueba_vih_sida" />
                                                 <label for="labSerologiaVIH">Prueba VIH/SIDA</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labSerologiaHepatitis" v-model="labSerologiaHepatitis" />
+                                                <InputText id="labSerologiaHepatitis"
+                                                    v-model="labSerologia.prueba_hepatitis_b" />
                                                 <label for="labSerologiaHepatitis">Prueba Hepatitis B</label>
                                             </FloatLabel>
                                         </div>
@@ -3335,15 +3537,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabSerologia" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labSerologia.feed_serologia_sanguinea" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabSerologia">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabSerologia" :options="scoreLabSerologia"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labSerologia.puntaje_serologia_sanguinea"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabSerologia">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -3360,26 +3564,27 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labElectrolitosCalcio" v-model="labElectrolitosCalcio" />
+                                                <InputText id="labElectrolitosCalcio"
+                                                    v-model="labElectrolitos.calcio" />
                                                 <label for="labElectrolitosCalcio">Calcio</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labElectrolitosSodio" v-model="labElectrolitosSodio" />
+                                                <InputText id="labElectrolitosSodio" v-model="labElectrolitos.sodio" />
                                                 <label for="labElectrolitosSodio">Sodio</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labElectrolitosPotasio"
-                                                    v-model="labElectrolitosPotasio" />
+                                                    v-model="labElectrolitos.potasio" />
                                                 <label for="labElectrolitosPotasio">Potasio</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
-                                                <InputText id="labElectrolitosCloro" v-model="labElectrolitosCloro" />
+                                                <InputText id="labElectrolitosCloro" v-model="labElectrolitos.cloro" />
                                                 <label for="labElectrolitosCloro">Cloro</label>
                                             </FloatLabel>
                                         </div>
@@ -3389,14 +3594,15 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputText id="labElectrolitosFoforo" v-model="labElectrolitosFoforo" />
+                                                <InputText id="labElectrolitosFoforo"
+                                                    v-model="labElectrolitos.fosforo" />
                                                 <label for="labElectrolitosFoforo">Foforo</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labElectrolitosMagnesio"
-                                                    v-model="labElectrolitosMagnesio" />
+                                                    v-model="labElectrolitos.magnesio" />
                                                 <label for="labElectrolitosMagnesio">Magnesio</label>
                                             </FloatLabel>
                                         </div>
@@ -3413,15 +3619,17 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabElectrolitos" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labElectrolitos.feed_electrolitos_sanguineos" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabElectrolitos">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabElectrolitos" :options="scoreLabElectrolitos"
-                                                optionLabel="name" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="labElectrolitos.puntaje_electrolitos_sanguineos"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="puntajeLabElectrolitos">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
@@ -3439,28 +3647,28 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoGlicemia"
-                                                    v-model="labQuimicoSanguineoGlicemia" />
+                                                    v-model="labQuimicoSanguineo.glicemia" />
                                                 <label for="labQuimicoSanguineoGlicemia">Glicemia</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoCreatinina"
-                                                    v-model="labQuimicoSanguineoCreatinina" />
+                                                    v-model="labQuimicoSanguineo.creatinina" />
                                                 <label for="labQuimicoSanguineoCreatinina">Creatinina</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoNitrogeno"
-                                                    v-model="labQuimicoSanguineoNitrogeno" />
+                                                    v-model="labQuimicoSanguineo.nitrogeno_ureico" />
                                                 <label for="labQuimicoSanguineoNitrogeno">Nitrogeno Ureico</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoUrea"
-                                                    v-model="labQuimicoSanguineoUrea" />
+                                                    v-model="labQuimicoSanguineo.urea" />
                                                 <label for="labQuimicoSanguineoUrea">Urea</label>
                                             </FloatLabel>
                                         </div>
@@ -3469,14 +3677,14 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoAcidoUrico"
-                                                    v-model="labQuimicoSanguineoAcidoUrico" />
+                                                    v-model="labQuimicoSanguineo.acido_urico" />
                                                 <label for="labQuimicoSanguineoAcidoUrico">Acido Urico</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 ">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoBilirrubinaTotal"
-                                                    v-model="labQuimicoSanguineoBilirrubinaTotal" />
+                                                    v-model="labQuimicoSanguineo.bilirrubina_total" />
                                                 <label for="labQuimicoSanguineoBilirrubinaTotal">Bilirrubina
                                                     Total</label>
                                             </FloatLabel>
@@ -3484,7 +3692,7 @@ onMounted(() => {
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoBilirrubinaDirecta"
-                                                    v-model="labQuimicoSanguineoBilirrubinaDirecta" />
+                                                    v-model="labQuimicoSanguineo.bilirrubina_directa" />
                                                 <label for="labQuimicoSanguineoBilirrubinaDirecta">Bilirrubina
                                                     Directa</label>
                                             </FloatLabel>
@@ -3492,7 +3700,7 @@ onMounted(() => {
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoBilirrubinaIndirecta"
-                                                    v-model="labQuimicoSanguineoBilirrubinaIndirecta" />
+                                                    v-model="labQuimicoSanguineo.bilirrubina_indirecta" />
                                                 <label for="labQuimicoSanguineoBilirrubinaIndirecta">Bilirrubina
                                                     Indirecta</label>
                                             </FloatLabel>
@@ -3502,29 +3710,29 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoTransaminasaGPT"
-                                                    v-model="labQuimicoSanguineoTransaminasaGPT" />
+                                                    v-model="labQuimicoSanguineo.transaminasa_gpt" />
                                                 <label for="labQuimicoSanguineoTransaminasaGPT">Transaminasa GPT</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 ">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoTransaminasaGOT"
-                                                    v-model="labQuimicoSanguineoTransaminasaGOT" />
+                                                    v-model="labQuimicoSanguineo.transaminasa_got" />
                                                 <label for="labQuimicoSanguineoTransaminasaGOT">Transaminasa GOT</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoLactato"
-                                                    v-model="labQuimicoSanguineoLactato" />
+                                                    v-model="labQuimicoSanguineo.lactato_deshidrogenasa" />
                                                 <label for="labQuimicoSanguineoLactato">Lactato Deshidrogenasa</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoFosfatosa"
-                                                    v-model="labQuimicoSanguineoFosfatosa" />
-                                                <label for="labQuimicoSanguineoFosfatosa">Fosfatosa Alcalina</label>
+                                                    v-model="labQuimicoSanguineo.fosfatasa_alcalina" />
+                                                <label for="labQuimicoSanguineoFosfatosa">Fosfatasa Alcalina</label>
                                             </FloatLabel>
                                         </div>
                                     </div>
@@ -3534,28 +3742,28 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoProteinas"
-                                                    v-model="labQuimicoSanguineoProteinas" />
+                                                    v-model="labQuimicoSanguineo.proteinas_totales" />
                                                 <label for="labQuimicoSanguineoProteinas">Proteinas Totales</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoAlbumina"
-                                                    v-model="labQuimicoSanguineoAlbumina" />
+                                                    v-model="labQuimicoSanguineo.albumina" />
                                                 <label for="labQuimicoSanguineoAlbumina">Albumina</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoGlobulina"
-                                                    v-model="labQuimicoSanguineoGlobulina" />
+                                                    v-model="labQuimicoSanguineo.globulina" />
                                                 <label for="labQuimicoSanguineoGlobulina">Globulina</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoRelacion"
-                                                    v-model="labQuimicoSanguineoRelacion" />
+                                                    v-model="labQuimicoSanguineo.relacion_alb_glo" />
                                                 <label for="labQuimicoSanguineoRelacion">Relación ALB-GLO</label>
                                             </FloatLabel>
                                         </div>
@@ -3564,21 +3772,21 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoColesterol"
-                                                    v-model="labQuimicoSanguineoColesterol" />
+                                                    v-model="labQuimicoSanguineo.colesterol_total" />
                                                 <label for="labQuimicoSanguineoColesterol">Colesterol Total</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoTrigliceridos"
-                                                    v-model="labQuimicoSanguineoTrigliceridos" />
+                                                    v-model="labQuimicoSanguineo.trigliceridos" />
                                                 <label for="labQuimicoSanguineoTrigliceridos">Trigliceridos</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoHemoglobina"
-                                                    v-model="labQuimicoSanguineoHemoglobina" />
+                                                    v-model="labQuimicoSanguineo.hemoglobina_glicosilada" />
                                                 <label for="labQuimicoSanguineoHemoglobina">Hemoglobina
                                                     Glicosilada</label>
                                             </FloatLabel>
@@ -3586,7 +3794,7 @@ onMounted(() => {
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoHdl"
-                                                    v-model="labQuimicoSanguineoHdl" />
+                                                    v-model="labQuimicoSanguineo.hdl_colesterol" />
                                                 <label for="labQuimicoSanguineoHdl">HDL Colesterol</label>
                                             </FloatLabel>
                                         </div>
@@ -3595,21 +3803,21 @@ onMounted(() => {
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoLdl"
-                                                    v-model="labQuimicoSanguineoLdl" />
+                                                    v-model="labQuimicoSanguineo.ldl_colesterol" />
                                                 <label for="labQuimicoSanguineoLdl">LDL Colesterol</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoVldl"
-                                                    v-model="labQuimicoSanguineoVldl" />
+                                                    v-model="labQuimicoSanguineo.vldl_colesterol" />
                                                 <label for="labQuimicoSanguineoVldl">VLDL Colesterol</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
                                             <FloatLabel>
                                                 <InputText id="labQuimicoSanguineoGlicemia"
-                                                    v-model="labQuimicoSanguineoGlicemia" />
+                                                    v-model="labQuimicoSanguineo.glicemia_rn" />
                                                 <label for="labQuimicoSanguineoGlicemia">Glicemia RN</label>
                                             </FloatLabel>
                                         </div>
@@ -3626,14 +3834,15 @@ onMounted(() => {
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Textarea v-model="feedLabQuimicoSanguineo" autoResize rows="3" cols="30" />
+                                            <Textarea v-model="labQuimicoSanguineo.feed_quimica_sanguinea" autoResize
+                                                rows="3" cols="30" />
                                             <label for="feedLabQuimicoSanguineo">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-6 pt-1">
                                         <FloatLabel>
-                                            <Dropdown v-model="puntajeLabQuimicoSanguineo"
-                                                :options="scoreLabQuimicoSanguineo" optionLabel="name"
+                                            <Dropdown v-model="labQuimicoSanguineo.puntaje_quimica_sanguinea"
+                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
                                                 placeholder="Elige una opción" checkmark :highlightOnSelect="false"
                                                 class="w-full md:w-14rem" />
                                             <label for="puntajeLabQuimicoSanguineo">Puntaje Asignado</label>
@@ -3642,42 +3851,11 @@ onMounted(() => {
                                 </div>
                             </div>
 
-                            <h5>Selecciona los estudios de imagenologia para el caso</h5>
-                            <div class="card flex justify-content-center">
-                                <SelectButton v-model="imagen" :options="imagenesDisponibles" optionLabel="name"
-                                    multiple aria-labelledby="multiple" />
-                            </div>
-                            <h5>Imagen 1</h5>
-                            <div class="grid p-fluid">
-                                <div class="col md:col-5">
-                                    <FileUpload name="demo[]" url="/api/upload" @upload="onAdvancedUpload($event)"
-                                        :multiple="false" chooseLabel="Elegir Imagen" cancelLabel="Cancelar"
-                                        :showUploadButton="false" :maxFileSize="1000000" class="p-fileupload-file-size">
-                                        <template #empty>
-                                            <p>Elige y arrastra una imagen.</p>
-                                        </template>
-                                    </FileUpload>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="interpretacionSubespecialidad" autoResize rows="3"
-                                            cols="30" />
-                                        <label for="interpretacionSubespecialidad">Interpretación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeSubespecialidad" :options="scoreSubespecialidad"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeSubespecialidad">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                            </div>
 
                             <div class="flex py-4 gap-2">
                                 <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
+                                <Button label="Guardar" @click="guardarTodosLosCambiosLaboratorio" />
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
                                     @click="nextCallback" />
                             </div>
