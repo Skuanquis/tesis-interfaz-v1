@@ -21,7 +21,9 @@ import {
     actualizarExamenPiel, actualizarExamenPsicologico,
     obtenerSignosVitales, actualizarSignosVitales,
     obtenerCategoriasDiferenciales, obtenerDiagnosticosPorCategoria,
-    obtenerDiagnosticosDiferencialesPorHistoriaClinica, actualizarDiagnosticosDiferenciales
+    obtenerDiagnosticosDiferencialesPorHistoriaClinica, actualizarDiagnosticosDiferenciales,
+    obtenerCategoriasMedicamentos, obtenerMedicamentosPorCategoria,
+    obtenerMedicamentosSuministradosPorHistoriaClinica, actualizarMedicamentosSuministrados
 } from '../services/casoService';
 import { useToast } from 'primevue/usetoast';
 
@@ -66,6 +68,12 @@ const selectedDiagnosticosPorCategoria = ref({}); // Diagnósticos seleccionados
 const diagnosticoDetails = ref({});
 const diagnosesMap = ref({});
 
+const scoreMedicamentos = ref([]);
+const categoriasMedicamentos = ref([]);
+const medicamentosPorCategoria = ref({});
+const selectedMedicamentosPorCategoria = ref({});
+const medicamentoDetails = ref({});
+const medicamentosMap = ref({});
 
 const cerrarDialogo = () => {
     visible.value = false;
@@ -178,6 +186,9 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarPuntajeDiagnosticoDiferencial(casoSeleccionado.value.id_historia_clinica);
         await cargarCategoriasYDiagnosticos();
         await cargarDiagnosticosDiferenciales(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeMedicamentos(casoSeleccionado.value.id_historia_clinica);
+        await cargarCategoriasYMedicamentos();
+        await cargarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica);
 
 
         visible.value = true;
@@ -642,6 +653,119 @@ watchEffect(() => {
     currentDiagnosticosDetails.forEach(diagnosisId => {
         if (!allDiagnosticos.includes(diagnosisId)) {
             delete diagnosticoDetails.value[diagnosisId];
+        }
+    });
+});
+
+const cargarPuntajeMedicamentos = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreMedicamentos.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
+const cargarCategoriasYMedicamentos = async () => {
+    try {
+        const response = await obtenerCategoriasMedicamentos();
+        categoriasMedicamentos.value = response.data;
+        categoriasMedicamentos.value.forEach(categoria => {
+            selectedMedicamentosPorCategoria.value[categoria.id_categoria_medicamento] = [];
+        });
+        for (let categoria of categoriasMedicamentos.value) {
+            const resMedicamentos = await obtenerMedicamentosPorCategoria(categoria.id_categoria_medicamento);
+            const medicamentos = resMedicamentos.data.map(m => ({
+                ...m,
+                name: m.nombre,
+                value: m.id_medicamento,
+            }));
+            medicamentosPorCategoria.value[categoria.id_categoria_medicamento] = medicamentos;
+            medicamentos.forEach(medicamento => {
+                medicamentosMap.value[medicamento.id_medicamento] = medicamento;
+            });
+        }
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar categorías y medicamentos', life: 3000 });
+    }
+};
+
+const cargarMedicamentosSuministrados = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerMedicamentosSuministradosPorHistoriaClinica(id_historia_clinica);
+        const data = response.data;
+        for (let categoriaId in selectedMedicamentosPorCategoria.value) {
+            selectedMedicamentosPorCategoria.value[categoriaId] = [];
+        }
+        data.forEach(ms => {
+            const medicamento = medicamentosMap.value[ms.id_medicamento];
+            if (medicamento) {
+                const categoriaId = medicamento.id_categoria_medicamento;
+                if (!selectedMedicamentosPorCategoria.value[categoriaId]) {
+                    selectedMedicamentosPorCategoria.value[categoriaId] = [];
+                }
+                selectedMedicamentosPorCategoria.value[categoriaId].push(ms.id_medicamento);
+                medicamentoDetails.value[ms.id_medicamento] = {
+                    feedback: ms.feed_medicamento_diferencial,
+                    score: ms.puntaje_medicamento_diferencial,
+                    nombre: ms.nombre,
+                };
+            }
+        });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar medicamentos suministrados', life: 3000 });
+    }
+};
+
+const getMedicamentoNameById = (medicamentoId) => {
+    return medicamentosMap.value[medicamentoId]?.name || '';
+};
+
+const allSelectedMedicamentos = computed(() => {
+    let allMedicamentos = [];
+    for (let categoriaId in selectedMedicamentosPorCategoria.value) {
+        allMedicamentos = allMedicamentos.concat(selectedMedicamentosPorCategoria.value[categoriaId]);
+    }
+    return allMedicamentos;
+});
+
+const guardarMedicamentosSuministrados = async () => {
+    try {
+        const data = allSelectedMedicamentos.value.map(medicamentoId => ({
+            id_medicamento: medicamentoId,
+            feed_medicamento_diferencial: medicamentoDetails.value[medicamentoId].feedback,
+            puntaje_medicamento_diferencial: medicamentoDetails.value[medicamentoId].score,
+        }));
+
+        await actualizarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica, data);
+
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Medicamentos suministrados guardados correctamente', life: 3000 });
+        visible.value = false;
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar medicamentos suministrados', life: 3000 });
+    }
+};
+
+
+watchEffect(() => {
+    const allMedicamentos = allSelectedMedicamentos.value.map(id => parseInt(id));
+    const currentMedicamentosDetails = Object.keys(medicamentoDetails.value).map(id => parseInt(id));
+
+    allMedicamentos.forEach(medicamentoId => {
+        if (!currentMedicamentosDetails.includes(medicamentoId)) {
+            medicamentoDetails.value[medicamentoId] = {
+                feedback: '',
+                score: null,
+                nombre: getMedicamentoNameById(medicamentoId),
+            };
+        }
+    });
+
+    currentMedicamentosDetails.forEach(medicamentoId => {
+        if (!allMedicamentos.includes(medicamentoId)) {
+            delete medicamentoDetails.value[medicamentoId];
         }
     });
 });
@@ -3452,141 +3576,54 @@ onMounted(() => {
                     <StepperPanel header="Intervenir">
                         <template #content="{ prevCallback, nextCallback }">
                             <h5>Selecciona los medicamentos para el caso</h5>
-                            <div class="grid">
-                                <div class="col-12">
-                                    <h5>Sedación/Analgesia</h5>
-                                </div>
-                            </div>
-                            <div class="card flex justify-content-center">
-                                <SelectButton v-model="medicamentos" :options="medicamentosDisponibles"
-                                    optionLabel="name" multiple aria-labelledby="multiple" />
-                            </div>
-                            <div class="grid">
-                                <div class="col md:col-4">
-                                    <h6>Medicamento 1</h6>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedMedicamento" autoResize rows="3" cols="30" />
-                                        <label for="feedMedicamento">Retroalimentación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeMedicamentos" :options="scoreMedicamentos"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeMedicamentos">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
-                                <div class="col md:col-4">
-                                    <h6>Medicamento 2</h6>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedMedicamento" autoResize rows="3" cols="30" />
-                                        <label for="feedMedicamento">Retroalimentación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeMedicamentos" :options="scoreMedicamentos"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeMedicamentos">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
-                                <div class="col md:col-4">
-                                    <h6>Medicamento 3</h6>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedMedicamentos" autoResize rows="3" cols="30" />
-                                        <label for="feedMedicamentos">Retroalimentación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeMedicamentos" :options="scoreMedicamentos"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeMedicamentos">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
-                            </div>
 
-                            <div class="grid">
-                                <div class="col-12">
-                                    <h5>Antibióticos</h5>
+                            <!-- Iterar sobre categorías de medicamentos -->
+                            <div v-for="categoria in categoriasMedicamentos" :key="categoria.id_categoria_medicamento"
+                                class="pt-4">
+                                <div class="grid">
+                                    <div class="col-12">
+                                        <h5>{{ categoria.categoria }}</h5>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="card flex justify-content-center">
-                                <SelectButton v-model="medicamentos" :options="medicamentosDisponibles"
-                                    optionLabel="name" multiple aria-labelledby="multiple" />
-                            </div>
-                            <div class="grid">
-                                <div class="col md:col-4">
-                                    <h6>Medicamento 1</h6>
+                                <div class="card flex justify-content-center">
+                                    <SelectButton
+                                        v-model="selectedMedicamentosPorCategoria[categoria.id_categoria_medicamento]"
+                                        :options="medicamentosPorCategoria[categoria.id_categoria_medicamento]"
+                                        optionLabel="name" optionValue="value" multiple aria-labelledby="multiple" />
                                 </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedMedicamentos" autoResize rows="3" cols="30" />
-                                        <label for="feedMedicamentos">Retroalimentación</label>
-                                    </FloatLabel>
+
+                                <!-- Campos dinámicos para medicamentos seleccionados en esta categoría -->
+                                <div v-for="(medicamentoId, index) in selectedMedicamentosPorCategoria[categoria.id_categoria_medicamento]"
+                                    :key="medicamentoId" class="grid pt-3">
+                                    <div class="col md:col-4">
+                                        <h6>Medicamento {{ index + 1 }}: {{ medicamentoDetails[medicamentoId]?.nombre }}
+                                        </h6>
+                                    </div>
+                                    <div class="col md:col-4">
+                                        <FloatLabel>
+                                            <Textarea v-model="medicamentoDetails[medicamentoId].feedback" autoResize
+                                                rows="3" cols="30" />
+                                            <label for="feedback">Retroalimentación</label>
+                                        </FloatLabel>
+                                    </div>
+                                    <div class="col md:col-3">
+                                        <FloatLabel>
+                                            <Dropdown v-model="medicamentoDetails[medicamentoId].score"
+                                                :options="scoreMedicamentos" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
+                                            <label for="score">Puntaje Asignado</label>
+                                        </FloatLabel>
+                                    </div>
+                                    <div class="col md:col-1"></div>
                                 </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeMedicamentos" :options="scoreMedicamentos"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeMedicamentos">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
-                                <div class="col md:col-4">
-                                    <h6>Medicamento 2</h6>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedMedicamentos" autoResize rows="3" cols="30" />
-                                        <label for="feedMedicamentos">Retroalimentación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeMedicamentos" :options="scoreMedicamentos"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeMedicamentos">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
-                                <div class="col md:col-4">
-                                    <h6>Medicamento 3</h6>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="feedMedicamentos" autoResize rows="3" cols="30" />
-                                        <label for="feedMedicamentos">Retroalimentación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeMedicamentos" :options="scoreMedicamentos"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeMedicamentos">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-1"></div>
                             </div>
 
                             <div class="flex py-4 gap-2">
-                                <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
+                                <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
+                                <Button label="Guardar" @click="guardarMedicamentosSuministrados" severity="success"
+                                    icon="pi pi-save" />
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
                                     @click="nextCallback" />
                             </div>

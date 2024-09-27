@@ -7,10 +7,10 @@ import {
     obtenerCasoClinicoPorId,
     obtenerPaciente,
     obtenerPuntaje,
-    obtenerCategoriasDiferenciales,
-    obtenerDiagnosticosPorCategoria,
-    obtenerDiagnosticosDiferencialesPorHistoriaClinica,
-    actualizarDiagnosticosDiferenciales
+    obtenerCategoriasMedicamentos,
+    obtenerMedicamentosPorCategoria,
+    obtenerMedicamentosSuministradosPorHistoriaClinica,
+    actualizarMedicamentosSuministrados
 } from '../services/casoService';
 import { useToast } from 'primevue/usetoast';
 
@@ -20,18 +20,17 @@ const visible = ref(false);
 const casoSeleccionado = ref(null);
 const paciente = ref({});
 
-const scoreDiagnosticoDiferencial = ref([]);
-const categorias = ref([]);
-const diagnosticosByCategoria = ref({});
-const selectedDiagnosticosPorCategoria = ref({}); // Diagnósticos seleccionados por categoría
-const diagnosticoDetails = ref({});
-const diagnosesMap = ref({}); // Mapa para acceso rápido a diagnósticos
+const scoreMedicamentos = ref([]);
+const categoriasMedicamentos = ref([]);
+const medicamentosPorCategoria = ref({});
+const selectedMedicamentosPorCategoria = ref({});
+const medicamentoDetails = ref({});
+const medicamentosMap = ref({});
 
-// Cargar los puntajes
-const cargarPuntajeDiagnosticoDiferencial = async (id_historia_clinica) => {
+const cargarPuntajeMedicamentos = async (id_historia_clinica) => {
     try {
         const response = await obtenerPuntaje(id_historia_clinica);
-        scoreDiagnosticoDiferencial.value = response.data.map(item => ({
+        scoreMedicamentos.value = response.data.map(item => ({
             name: `${item.codigo}: ${item.valor}`, value: item.codigo
         }));
     } catch (error) {
@@ -116,9 +115,10 @@ const mostrarDetalleCaso = async (idCaso) => {
         casoSeleccionado.value = response.data;
 
         await cargarDatosPaciente(casoSeleccionado.value.id_historia_clinica);
-        await cargarPuntajeDiagnosticoDiferencial(casoSeleccionado.value.id_historia_clinica);
-        await cargarCategoriasYDiagnosticos();
-        await cargarDiagnosticosDiferenciales(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeMedicamentos(casoSeleccionado.value.id_historia_clinica);
+        await cargarCategoriasYMedicamentos();
+        await cargarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica);
+
 
         visible.value = true;
     } catch (error) {
@@ -126,112 +126,104 @@ const mostrarDetalleCaso = async (idCaso) => {
     }
 };
 
-const cargarCategoriasYDiagnosticos = async () => {
+const cargarCategoriasYMedicamentos = async () => {
     try {
-        const response = await obtenerCategoriasDiferenciales();
-        categorias.value = response.data;
-        // Inicializar selectedDiagnosticosPorCategoria
-        categorias.value.forEach(categoria => {
-            selectedDiagnosticosPorCategoria.value[categoria.id_categoria_diferencial] = [];
+        const response = await obtenerCategoriasMedicamentos();
+        categoriasMedicamentos.value = response.data;
+        categoriasMedicamentos.value.forEach(categoria => {
+            selectedMedicamentosPorCategoria.value[categoria.id_categoria_medicamento] = [];
         });
-        // Cargar diagnósticos por categoría y llenar el mapa de diagnósticos
-        for (let categoria of categorias.value) {
-            const resDiagnosticos = await obtenerDiagnosticosPorCategoria(categoria.id_categoria_diferencial);
-            const diagnosticos = resDiagnosticos.data.map(d => ({
-                ...d,
-                name: d.nombre,
-                value: d.id_diagnostico,
+        for (let categoria of categoriasMedicamentos.value) {
+            const resMedicamentos = await obtenerMedicamentosPorCategoria(categoria.id_categoria_medicamento);
+            const medicamentos = resMedicamentos.data.map(m => ({
+                ...m,
+                name: m.nombre,
+                value: m.id_medicamento,
             }));
-            diagnosticosByCategoria.value[categoria.id_categoria_diferencial] = diagnosticos;
-            diagnosticos.forEach(diagnostico => {
-                diagnosesMap.value[diagnostico.id_diagnostico] = diagnostico;
+            medicamentosPorCategoria.value[categoria.id_categoria_medicamento] = medicamentos;
+            medicamentos.forEach(medicamento => {
+                medicamentosMap.value[medicamento.id_medicamento] = medicamento;
             });
         }
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar categorías y diagnósticos', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar categorías y medicamentos', life: 3000 });
     }
 };
 
-const cargarDiagnosticosDiferenciales = async (id_historia_clinica) => {
+const cargarMedicamentosSuministrados = async (id_historia_clinica) => {
     try {
-        const response = await obtenerDiagnosticosDiferencialesPorHistoriaClinica(id_historia_clinica);
+        const response = await obtenerMedicamentosSuministradosPorHistoriaClinica(id_historia_clinica);
         const data = response.data;
-        // Reiniciar selectedDiagnosticosPorCategoria
-        for (let categoriaId in selectedDiagnosticosPorCategoria.value) {
-            selectedDiagnosticosPorCategoria.value[categoriaId] = [];
+        for (let categoriaId in selectedMedicamentosPorCategoria.value) {
+            selectedMedicamentosPorCategoria.value[categoriaId] = [];
         }
-        data.forEach(dd => {
-            // Encontrar la categoría del diagnóstico
-            const diagnostico = diagnosesMap.value[dd.id_diagnostico];
-            if (diagnostico) {
-                const categoriaId = diagnostico.id_categoria_diferencial;
-                if (!selectedDiagnosticosPorCategoria.value[categoriaId]) {
-                    selectedDiagnosticosPorCategoria.value[categoriaId] = [];
+        data.forEach(ms => {
+            const medicamento = medicamentosMap.value[ms.id_medicamento];
+            if (medicamento) {
+                const categoriaId = medicamento.id_categoria_medicamento;
+                if (!selectedMedicamentosPorCategoria.value[categoriaId]) {
+                    selectedMedicamentosPorCategoria.value[categoriaId] = [];
                 }
-                selectedDiagnosticosPorCategoria.value[categoriaId].push(dd.id_diagnostico);
-                diagnosticoDetails.value[dd.id_diagnostico] = {
-                    feedback: dd.feed_diagnostico_diferencial,
-                    score: dd.puntaje_diagnostico_diferencial,
-                    nombre: dd.nombre,
+                selectedMedicamentosPorCategoria.value[categoriaId].push(ms.id_medicamento);
+                medicamentoDetails.value[ms.id_medicamento] = {
+                    feedback: ms.feed_medicamento_diferencial,
+                    score: ms.puntaje_medicamento_diferencial,
+                    nombre: ms.nombre,
                 };
             }
         });
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar diagnósticos diferenciales', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar medicamentos suministrados', life: 3000 });
     }
 };
 
-const getDiagnosisNameById = (diagnosisId) => {
-    return diagnosesMap.value[diagnosisId]?.name || '';
+const getMedicamentoNameById = (medicamentoId) => {
+    return medicamentosMap.value[medicamentoId]?.name || '';
 };
 
-// Propiedad computada para obtener todos los diagnósticos seleccionados
-const allSelectedDiagnosticos = computed(() => {
-    let allDiagnosticos = [];
-    for (let categoriaId in selectedDiagnosticosPorCategoria.value) {
-        allDiagnosticos = allDiagnosticos.concat(selectedDiagnosticosPorCategoria.value[categoriaId]);
+const allSelectedMedicamentos = computed(() => {
+    let allMedicamentos = [];
+    for (let categoriaId in selectedMedicamentosPorCategoria.value) {
+        allMedicamentos = allMedicamentos.concat(selectedMedicamentosPorCategoria.value[categoriaId]);
     }
-    return allDiagnosticos;
+    return allMedicamentos;
 });
 
-// Actualizar diagnosticoDetails cuando cambien los diagnósticos seleccionados
 watchEffect(() => {
-    const allDiagnosticos = allSelectedDiagnosticos.value.map(id => parseInt(id));
-    const currentDiagnosticosDetails = Object.keys(diagnosticoDetails.value).map(id => parseInt(id));
+    const allMedicamentos = allSelectedMedicamentos.value.map(id => parseInt(id));
+    const currentMedicamentosDetails = Object.keys(medicamentoDetails.value).map(id => parseInt(id));
 
-    // Diagnósticos añadidos
-    allDiagnosticos.forEach(diagnosisId => {
-        if (!currentDiagnosticosDetails.includes(diagnosisId)) {
-            diagnosticoDetails.value[diagnosisId] = {
+    allMedicamentos.forEach(medicamentoId => {
+        if (!currentMedicamentosDetails.includes(medicamentoId)) {
+            medicamentoDetails.value[medicamentoId] = {
                 feedback: '',
                 score: null,
-                nombre: getDiagnosisNameById(diagnosisId),
+                nombre: getMedicamentoNameById(medicamentoId),
             };
         }
     });
 
-    // Diagnósticos eliminados
-    currentDiagnosticosDetails.forEach(diagnosisId => {
-        if (!allDiagnosticos.includes(diagnosisId)) {
-            delete diagnosticoDetails.value[diagnosisId];
+    currentMedicamentosDetails.forEach(medicamentoId => {
+        if (!allMedicamentos.includes(medicamentoId)) {
+            delete medicamentoDetails.value[medicamentoId];
         }
     });
 });
 
-const guardarDiagnosticosDiferenciales = async () => {
+const guardarMedicamentosSuministrados = async () => {
     try {
-        const data = allSelectedDiagnosticos.value.map(diagnosisId => ({
-            id_diagnostico: diagnosisId,
-            feed_diagnostico_diferencial: diagnosticoDetails.value[diagnosisId].feedback,
-            puntaje_diagnostico_diferencial: diagnosticoDetails.value[diagnosisId].score,
+        const data = allSelectedMedicamentos.value.map(medicamentoId => ({
+            id_medicamento: medicamentoId,
+            feed_medicamento_diferencial: medicamentoDetails.value[medicamentoId].feedback,
+            puntaje_medicamento_diferencial: medicamentoDetails.value[medicamentoId].score,
         }));
 
-        await actualizarDiagnosticosDiferenciales(casoSeleccionado.value.id_historia_clinica, data);
+        await actualizarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica, data);
 
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Diagnósticos diferenciales guardados correctamente', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Medicamentos suministrados guardados correctamente', life: 3000 });
         visible.value = false;
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar diagnósticos diferenciales', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar medicamentos suministrados', life: 3000 });
     }
 };
 
@@ -286,13 +278,14 @@ onMounted(() => {
         </div>
         <Dialog v-model:visible="visible" modal header="Ver caso clínico" :style="{ width: '65rem' }">
             <div class="justify-content-center">
-                <Stepper>
-                    <StepperPanel header="Diagnostico Diferencial">
+                <Stepper linear orientation="vertical">
+                    <StepperPanel header="Intervenir">
                         <template #content="{ prevCallback, nextCallback }">
-                            <h5>Selecciona los diagnósticos para el caso</h5>
+                            <h5>Selecciona los medicamentos para el caso</h5>
 
-                            <!-- Iterar sobre categorías -->
-                            <div v-for="categoria in categorias" :key="categoria.id_categoria_diferencial" class="pt-4">
+                            <!-- Iterar sobre categorías de medicamentos -->
+                            <div v-for="categoria in categoriasMedicamentos" :key="categoria.id_categoria_medicamento"
+                                class="pt-4">
                                 <div class="grid">
                                     <div class="col-12">
                                         <h5>{{ categoria.categoria }}</h5>
@@ -300,36 +293,110 @@ onMounted(() => {
                                 </div>
                                 <div class="card flex justify-content-center">
                                     <SelectButton
-                                        v-model="selectedDiagnosticosPorCategoria[categoria.id_categoria_diferencial]"
-                                        :options="diagnosticosByCategoria[categoria.id_categoria_diferencial]"
+                                        v-model="selectedMedicamentosPorCategoria[categoria.id_categoria_medicamento]"
+                                        :options="medicamentosPorCategoria[categoria.id_categoria_medicamento]"
                                         optionLabel="name" optionValue="value" multiple aria-labelledby="multiple" />
                                 </div>
 
-                                <!-- Campos dinámicos para diagnósticos seleccionados en esta categoría -->
-                                <div v-for="(diagnosisId, index) in selectedDiagnosticosPorCategoria[categoria.id_categoria_diferencial]"
-                                    :key="diagnosisId" class="grid pt-3">
+                                <!-- Campos dinámicos para medicamentos seleccionados en esta categoría -->
+                                <div v-for="(medicamentoId, index) in selectedMedicamentosPorCategoria[categoria.id_categoria_medicamento]"
+                                    :key="medicamentoId" class="grid pt-3">
                                     <div class="col md:col-4">
-                                        <h6>Diagnóstico {{ index + 1 }}: {{ diagnosticoDetails[diagnosisId]?.nombre }}
+                                        <h6>Medicamento {{ index + 1 }}: {{ medicamentoDetails[medicamentoId]?.nombre }}
                                         </h6>
                                     </div>
                                     <div class="col md:col-4">
                                         <FloatLabel>
-                                            <Textarea v-model="diagnosticoDetails[diagnosisId].feedback" autoResize
+                                            <Textarea v-model="medicamentoDetails[medicamentoId].feedback" autoResize
                                                 rows="3" cols="30" />
                                             <label for="feedback">Retroalimentación</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-3">
                                         <FloatLabel>
-                                            <Dropdown v-model="diagnosticoDetails[diagnosisId].score"
-                                                :options="scoreDiagnosticoDiferencial" optionLabel="name"
-                                                optionValue="value" placeholder="Elige una opción" checkmark
-                                                :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                            <Dropdown v-model="medicamentoDetails[medicamentoId].score"
+                                                :options="scoreMedicamentos" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
                                             <label for="score">Puntaje Asignado</label>
                                         </FloatLabel>
                                     </div>
                                     <div class="col md:col-1"></div>
                                 </div>
+                            </div>
+
+                            <div class="flex py-4 gap-2">
+                                <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="prevCallback" />
+                                <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
+                                    @click="nextCallback" />
+                            </div>
+                        </template>
+                    </StepperPanel>
+
+
+                    <StepperPanel header="Consulta Externa">
+                        <template #content="{ prevCallback, nextCallback }">
+                            <h5>Selecciona las subespecialidades para el caso</h5>
+                            <div class="card flex justify-content-center">
+                                <SelectButton v-model="subespecialidades" :options="subespecialidadesDisponibles"
+                                    optionLabel="name" multiple aria-labelledby="multiple" />
+                            </div>
+                            <div class="grid">
+                                <div class="col md:col-4">
+                                    <h6>Cardiologia</h6>
+                                </div>
+                                <div class="col md:col-4">
+                                    <FloatLabel>
+                                        <Textarea v-model="feedSubespecialidad" autoResize rows="3" cols="30" />
+                                        <label for="feedSubespecialidad">Retroalimentación</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3">
+                                    <FloatLabel>
+                                        <Dropdown v-model="puntajeSubespecialidad" :options="scoreSubespecialidad"
+                                            optionLabel="name" placeholder="Elige una opción" checkmark
+                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                        <label for="puntajeSubespecialidad">Puntaje Asignado</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-1"></div>
+                                <div class="col md:col-4">
+                                    <h6>Endocrionologia</h6>
+                                </div>
+                                <div class="col md:col-4">
+                                    <FloatLabel>
+                                        <Textarea v-model="feedSubespecialidad" autoResize rows="3" cols="30" />
+                                        <label for="feedSubespecialidad">Retroalimentación</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3">
+                                    <FloatLabel>
+                                        <Dropdown v-model="puntajeSubespecialidad" :options="scoreSubespecialidad"
+                                            optionLabel="name" placeholder="Elige una opción" checkmark
+                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                        <label for="puntajeSubespecialidad">Puntaje Asignado</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-1"></div>
+                                <div class="col md:col-4">
+                                    <h6>Gastroenterologia</h6>
+                                </div>
+                                <div class="col md:col-4">
+                                    <FloatLabel>
+                                        <Textarea v-model="feedSubespecialidad" autoResize rows="3" cols="30" />
+                                        <label for="feedSubespecialidad">Retroalimentación</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3">
+                                    <FloatLabel>
+                                        <Dropdown v-model="puntajeSubespecialidad" :options="scoreSubespecialidad"
+                                            optionLabel="name" placeholder="Elige una opción" checkmark
+                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                        <label for="puntajeSubespecialidad">Puntaje Asignado</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-1"></div>
                             </div>
 
                             <div class="flex py-4 gap-2">
@@ -344,7 +411,7 @@ onMounted(() => {
 
                 <div class="flex justify-content-end gap-2">
                     <Button type="button" label="Cancel" severity="secondary" @click=cerrarDialogo></Button>
-                    <Button label="Guardar" @click="guardarDiagnosticosDiferenciales" severity="success"
+                    <Button label="Guardar" @click="guardarMedicamentosSuministrados" severity="success"
                         icon="pi pi-save" />
                     <Button type=" button" label="Guardar" @click="visible = false"></Button>
                 </div>

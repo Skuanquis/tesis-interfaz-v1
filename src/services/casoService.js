@@ -199,3 +199,19 @@ export const obtenerDiagnosticosDiferencialesPorHistoriaClinica = (id_historia_c
 export const actualizarDiagnosticosDiferenciales = (id_historia_clinica, data) => {
   return api.put(`/diagnosticos_diferenciales/${id_historia_clinica}`, data)
 }
+
+export const obtenerCategoriasMedicamentos = () => {
+  return api.get('/categoria_medicamento')
+}
+
+export const obtenerMedicamentosPorCategoria = (id_categoria_medicamento) => {
+  return api.get(`/medicamento/${id_categoria_medicamento}`)
+}
+
+export const obtenerMedicamentosSuministradosPorHistoriaClinica = (id_historia_clinica) => {
+  return api.get(`/medicamentos_suministrados/${id_historia_clinica}`)
+}
+
+export const actualizarMedicamentosSuministrados = (id_historia_clinica, data) => {
+  return api.put(`/medicamentos_suministrados/${id_historia_clinica}`, data)
+}
