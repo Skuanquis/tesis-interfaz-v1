@@ -1,12 +1,16 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import {
     obtenerCasosClinicos,
     cambiarEstadoCaso,
     obtenerCasoClinicoPorId,
     obtenerPaciente,
-    obtenerPuntaje
+    obtenerPuntaje,
+    obtenerCategoriasImagenologia,
+    obtenerImagenesPorHistoriaClinica,
+    actualizarImagenes,
+    cargarImagen
 
 } from '../services/casoService';
 import { useToast } from 'primevue/usetoast';
@@ -17,8 +21,11 @@ const visible = ref(false);
 const casoSeleccionado = ref(null);
 const paciente = ref({});
 
-const scoreLaboratorioOrina = ref([]);
+const scoreImagenologia = ref([]);
 
+const categoriasImagenologia = ref([]);
+const categoriasSeleccionadas = ref([]);
+const imagenesData = ref([]);
 
 const cerrarDialogo = () => {
     visible.value = false;
@@ -98,6 +105,8 @@ const mostrarDetalleCaso = async (idCaso) => {
 
         await cargarDatosPaciente(casoSeleccionado.value.id_historia_clinica);
         await cargarPuntaje(casoSeleccionado.value.id_historia_clinica);
+        await cargarCategoriasImagenologia();
+        await cargarImagenes(casoSeleccionado.value.id_historia_clinica);
         visible.value = true;
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el caso clínico', life: 3000 });
@@ -107,13 +116,104 @@ const mostrarDetalleCaso = async (idCaso) => {
 const cargarPuntaje = async (id_historia_clinica) => {
     try {
         const response = await obtenerPuntaje(id_historia_clinica);
-        scoreLaboratorioOrina.value = response.data.map(item => ({
+        scoreImagenologia.value = response.data.map(item => ({
             name: `${item.codigo}: ${item.valor}`, value: item.codigo
         }));
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
     }
 };
+
+
+const cargarCategoriasImagenologia = async () => {
+    try {
+        const response = await obtenerCategoriasImagenologia();
+        categoriasImagenologia.value = response.data.map(cat => ({
+            id_categoria_imagenologia: cat.id_categoria_imagenologia,
+            nombre: cat.nombre,
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener categorías de imagenología', life: 3000 });
+    }
+};
+
+const cargarImagenes = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerImagenesPorHistoriaClinica(id_historia_clinica);
+        const imagenes = response.data;
+        const backendBaseUrl = '';
+        imagenes.forEach(img => {
+            if (img.path) {
+                img.path = backendBaseUrl + img.path;
+            }
+        });
+
+        imagenesData.value = imagenes;
+        categoriasSeleccionadas.value = [...new Set(imagenes.map(img => img.id_categoria_imagenologia))];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener imágenes', life: 3000 });
+    }
+};
+
+watch(categoriasSeleccionadas, (newVal, oldVal) => {
+    const addedCategorias = newVal.filter(id => !oldVal.includes(id));
+    const removedCategorias = oldVal.filter(id => !newVal.includes(id));
+
+    addedCategorias.forEach(id_categoria => {
+        const categoria = categoriasImagenologia.value.find(cat => cat.id_categoria_imagenologia === id_categoria);
+        if (categoria) {
+            const exists = imagenesData.value.some(img => img.id_categoria_imagenologia === id_categoria);
+            if (!exists) {
+                imagenesData.value.push({
+                    id_imagenologia: null,
+                    id_categoria_imagenologia: id_categoria,
+                    categoria_nombre: categoria.nombre,
+                    interpretacion: '',
+                    path: '',
+                    feed_imagenologia: '',
+                    puntaje_imagenologia: ''
+                });
+            }
+        }
+    });
+
+    removedCategorias.forEach(id_categoria => {
+        const index = imagenesData.value.findIndex(img => img.id_categoria_imagenologia === id_categoria);
+        if (index !== -1) {
+            imagenesData.value.splice(index, 1);
+        }
+    });
+});
+
+
+const onUpload = async (event, index) => {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('imagen', file);
+
+    try {
+        const response = await cargarImagen(formData);
+        const backendBaseUrl = 'http://localhost:3000'; // Ajusta según tu configuración
+        // Actualizar la ruta de la imagen en imagenesData
+        imagenesData.value[index].path = backendBaseUrl + response.data.path;
+        imagenesData.value[index].path = response.data.path;
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Imagen cargada correctamente', life: 3000 });
+    } catch (error) {
+        console.log(error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar la imagen', life: 3000 });
+    }
+};
+
+const guardarImagenes = async () => {
+    try {
+        await actualizarImagenes(casoSeleccionado.value.id_historia_clinica, imagenesData.value);
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Imágenes actualizadas correctamente', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar las imágenes', life: 3000 });
+    }
+};
+
+
 onMounted(() => {
     cargarCasosClinicos();
 });
@@ -166,46 +266,69 @@ onMounted(() => {
         <Dialog v-model:visible="visible" modal header="Ver caso clínico" :style="{ width: '65rem' }">
             <div class="justify-content-center">
                 <Stepper linear orientation="vertical">
-                    <StepperPanel header="Investigar">
+                    <StepperPanel header="Imagenología">
                         <template #content="{ prevCallback, nextCallback }">
-                            <h5>Selecciona los estudios de imagenologia para el caso</h5>
+                            <h5>Selecciona las categorías de imagenología para el caso</h5>
                             <div class="card flex justify-content-center">
-                                <SelectButton v-model="imagen" :options="imagenesDisponibles" optionLabel="name"
-                                    multiple aria-labelledby="multiple" />
-                            </div>
-                            <h5>Imagen 1</h5>
-                            <div class="grid p-fluid">
-                                <div class="col md:col-5">
-                                    <FileUpload name="demo[]" url="/api/upload" @upload="onAdvancedUpload($event)"
-                                        :multiple="false" chooseLabel="Elegir Imagen" cancelLabel="Cancelar"
-                                        :showUploadButton="false" :maxFileSize="1000000" class="p-fileupload-file-size">
-                                        <template #empty>
-                                            <p>Elige y arrastra una imagen.</p>
-                                        </template>
-                                    </FileUpload>
-                                </div>
-                                <div class="col md:col-4">
-                                    <FloatLabel>
-                                        <Textarea v-model="interpretacionSubespecialidad" autoResize rows="3"
-                                            cols="30" />
-                                        <label for="interpretacionSubespecialidad">Interpretación</label>
-                                    </FloatLabel>
-                                </div>
-                                <div class="col md:col-3">
-                                    <FloatLabel>
-                                        <Dropdown v-model="puntajeSubespecialidad" :options="scoreSubespecialidad"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                        <label for="puntajeSubespecialidad">Puntaje Asignado</label>
-                                    </FloatLabel>
-                                </div>
+                                <SelectButton v-model="categoriasSeleccionadas" :options="categoriasImagenologia"
+                                    optionLabel="nombre" optionValue="id_categoria_imagenologia" multiple
+                                    aria-labelledby="multiple" />
                             </div>
 
+                            <!-- Mostrar imágenes por categoría seleccionada -->
+                            <div v-for="(imgData, index) in imagenesData" :key="imgData.id_categoria_imagenologia"
+                                class="mt-4">
+                                <h5>{{ imgData.categoria_nombre }}</h5>
+                                <div class="grid p-fluid    x">
+                                    <div class="col md:col-5">
+                                        <FileUpload name="imagen" accept="image/*" :auto="true" :customUpload="true"
+                                            :maxFileSize="1000000" chooseLabel="Elegir Imagen" :showCancelButton="false"
+                                            :showUploadButton="false" @select="(event) => onUpload(event, index)">
+                                            <template #content>
+                                                <div v-if="imgData.path">
+                                                    <img :src="imgData.path" alt="Imagen" width="200" />
+                                                </div>
+                                                <div v-else>
+                                                    <p>Elige y arrastra una imagen.</p>
+                                                </div>
+                                            </template>
+                                        </FileUpload>
+                                    </div>
+                                    <div class="col md:col-4">
+                                        <div class="grid">
+                                            <div class="col md:col-12">
+                                                <FloatLabel>
+                                                    <Textarea v-model="imgData.interpretacion" autoResize rows="3"
+                                                        cols="30" />
+                                                    <label for="interpretacion">Interpretación</label>
+                                                </FloatLabel>
+                                            </div>
+                                            <div class="col md:col-12 pt-3">
+                                                <FloatLabel>
+                                                    <Textarea v-model="imgData.feed_imagenologia" autoResize rows="3"
+                                                        cols="30" />
+                                                    <label for="interpretacion">Retroalimentación</label>
+                                                </FloatLabel>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col md:col-3">
+                                        <FloatLabel>
+                                            <Dropdown v-model="imgData.puntaje_imagenologia"
+                                                :options="scoreImagenologia" optionLabel="name" optionValue="value"
+                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                class="w-full md:w-14rem" />
+                                            <label for="puntaje_imagenologia">Puntaje Asignado</label>
+                                        </FloatLabel>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="flex py-4 gap-2">
-                                <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
+                                <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
-                                <Button label="Guardar" @click="guardarTodosLosCambiosLaboratorio" />
+                                <Button label="Guardar" @click="guardarImagenes" severity="success" icon="pi pi-save" />
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
                                     @click="nextCallback" />
                             </div>

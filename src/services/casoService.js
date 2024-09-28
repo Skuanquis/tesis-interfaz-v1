@@ -323,3 +323,23 @@ export const obtenerQuimicaSanguinea = (id_examen_sanguineo) => {
 export const actualizarQuimicaSanguinea = (id_examen_sanguineo, data) => {
   return api.put(`/quimica_sanguinea/${id_examen_sanguineo}`, data)
 }
+
+export const obtenerCategoriasImagenologia = () => {
+  return api.get(`/categorias_imagenologia`)
+}
+
+export const obtenerImagenesPorHistoriaClinica = (id_historia_clinica) => {
+  return api.get(`/imagenes/${id_historia_clinica}`)
+}
+
+export const actualizarImagenes = (id_historia_clinica, imagenesData) => {
+  return api.post(`/imagenes/${id_historia_clinica}`, { imagenesData })
+}
+
+export const cargarImagen = (formData) => {
+  return api.post(`/upload_imagen`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
