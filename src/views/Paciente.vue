@@ -47,16 +47,17 @@ const anamnesisTegumentario = ref(store.getters['anamnesis/anamnesisTegumentario
 
 const id_simulacion = localStorage.getItem('id_simulacion');
 
-const registrarAccionSimulacion = async (descripcion, tipo_accion) => {
+const registrarAccionSimulacion = async (descripcion, rubrica, puntaje, retroalimentacion, section) => {
     try {
         const accionData = {
             id_simulacion: id_simulacion,
-            id_categoria_decision: 1,
             descripcion: descripcion,
-            tipo_accion: tipo_accion
+            tipo_accion: rubrica,
+            puntaje: puntaje,
+            retroalimentacion: retroalimentacion
         };
         await registrarAccion(accionData);
-        toast.add({ severity: 'success', summary: 'Acción registrada', detail: 'La acción ha sido registrada con éxito', life: 3000 });
+        toast.add({ severity: 'info', summary: `Examen ${section} realizado.`, detail: `${accionData.retroalimentacion}`, life: 3000 });
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al registrar la acción', life: 3000 });
         console.error('Error al registrar la acción:', error);
@@ -66,7 +67,7 @@ const registrarAccionSimulacion = async (descripcion, tipo_accion) => {
 const fetchPacienteData = async (type, section = null) => {
     const id_historia_clinica = localStorage.getItem('id_historia_clinica');
     if (!id_historia_clinica) {
-        toast.error('ID de historia clínica no encontrado en el localStorage');
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se encontro el id de la historia clinica', life: 3000 });
         return;
     }
     try {
@@ -82,64 +83,64 @@ const fetchPacienteData = async (type, section = null) => {
             let anamnesisRef;
             switch (section) {
                 case 'cardiovascular':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de cardiovascular', 'Innecesaria');
                     loadingRef = loadingCardiovascular;
                     anamnesisRef = anamnesisCardiovascular;
                     responseAnamnesis = await getAnamnesisCardiovascular(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario cardiovascular', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_cardiovascular, section);
                     break;
                 case 'endocrino':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de endocrino', 'Innecesaria');
                     loadingRef = loadingEndocrino;
                     anamnesisRef = anamnesisEndocrino;
                     responseAnamnesis = await getAnamnesisEndocrino(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario endocrino', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_endocrino, section);
                     break;
                 case 'gastrointestinal':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de gastrointestinal', 'Util');
                     loadingRef = loadingGastrointestinal;
                     anamnesisRef = anamnesisGastrointestinal;
                     responseAnamnesis = await getAnamnesisGastrointestinal(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario gastrointestinal', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_gastrointestinal, section);
                     break;
                 case 'genitourinario':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de genitourinario', 'Innecesaria');
                     loadingRef = loadingGenitourinario;
                     anamnesisRef = anamnesisGenitourinario;
                     responseAnamnesis = await getAnamnesisGenitourinario(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario genitourinario', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_genitourinario, section);
                     break;
                 case 'hematico':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de hematico', 'Util');
                     loadingRef = loadingHematico;
                     anamnesisRef = anamnesisHematico;
                     responseAnamnesis = await getAnamnesisHematico(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario hematico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_hematico, section);
                     break;
                 case 'locomotor':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de locomotor', 'Util');
                     loadingRef = loadingLocomotor;
                     anamnesisRef = anamnesisLocomotor;
                     responseAnamnesis = await getAnamnesisLocomotor(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario locomotor', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_locomotor, section);
                     break;
                 case 'neurologico':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario neurologico', 'Critico');
                     loadingRef = loadingNeurologico;
                     anamnesisRef = anamnesisNeurologico;
                     responseAnamnesis = await getAnamnesisNeurologico(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario neurologico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_neurologico, section);
                     break;
                 case 'psiquiatrico':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de psiquiatrico', 'Inutil');
                     loadingRef = loadingPsiquiatrico;
                     anamnesisRef = anamnesisPsiquiatrico;
                     responseAnamnesis = await getAnamnesisPsiquiatrico(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario psiquiatrico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_psiquiatrico, section);
                     break;
                 case 'respiratorio':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario respiratorio', 'Innecesaria');
                     loadingRef = loadingRespiratorio;
                     anamnesisRef = anamnesisRespiratorio;
                     responseAnamnesis = await getAnamnesisRespiratorio(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario respiratorio', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_respiratorio, section);
                     break;
                 case 'tegumentario':
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario tegumentario', 'Innecesaria');
                     loadingRef = loadingTegumentario;
                     anamnesisRef = anamnesisTegumentario;
                     responseAnamnesis = await getAnamnesisTegumentario(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario tegumentario', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_tegumentario, section);
                     break;
                 default:
                     throw new Error('Sección no válida');
@@ -156,7 +157,7 @@ const fetchPacienteData = async (type, section = null) => {
         }
 
     } catch (error) {
-        toast.error('Error al cargar los datos del paciente');
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener la información del paciente', life: 3000 });
         console.error(error);
         loadingGeneral.value = loadingCardiovascular.value = loadingEndocrino.value =
             loadingGastrointestinal.value = loadingGenitourinario.value = loadingHematico.value =
@@ -397,11 +398,11 @@ function onDialogHide() {
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Psiquiatrico:</strong></div>
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisPsiquiatrico && !loadingPsiquiatrico" label="Realizar"
-                        @click="() => fetchPacienteData('anamnesis', 'psquiatrico')" />
+                        @click="() => fetchPacienteData('anamnesis', 'psiquiatrico')" />
                 </div>
                 <div class="col">
                     <p v-if="loadingPsiquiatrico">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisPsiquiatrico?.psquiatrico || '' }}</p>
+                    <p class="text-justify text-lg" v-else>{{ anamnesisPsiquiatrico?.psiquiatrico || '' }}</p>
                 </div>
             </div>
             <div class="grid">

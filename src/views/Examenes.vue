@@ -62,16 +62,17 @@ const buttonsState = ref({
     neurologico: { loading: false, label: "Obtener" }
 });
 
-const registrarAccionSimulacion = async (descripcion, tipo_accion) => {
+const registrarAccionSimulacion = async (descripcion, tipo_accion, puntaje, retroalimentacion, section) => {
     try {
         const accionData = {
             id_simulacion: id_simulacion,
-            id_categoria_decision: 1,
             descripcion: descripcion,
-            tipo_accion: tipo_accion
+            tipo_accion: tipo_accion,
+            puntaje: puntaje,
+            retroalimentacion: retroalimentacion
         };
         await registrarAccion(accionData);
-        toast.add({ severity: 'success', summary: 'Acción registrada', detail: 'La acción ha sido registrada con éxito', life: 3000 });
+        toast.add({ severity: 'info', summary: `Examen ${section} realizado.`, detail: `${accionData.retroalimentacion}`, life: 3000 });
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al registrar la acción', life: 3000 });
         console.error('Error al registrar la acción:', error);
@@ -93,10 +94,9 @@ const fetchData = async (type, section = null) => {
 
             buttonsState.value.general.loading = true;
             buttonsState.value.general.label = "Obteniendo...";
-            await registrarAccionSimulacion('Se  realizo el examen físico general', 'Innecesaria');
             loadingGeneral.value = true;
             response = await getExamenFisicoGeneral(id_historia_clinica);
-
+            await registrarAccionSimulacion('Se  realizo el examen físico general', response.data[0].rubrica, response.data[0].puntaje_examen_fisico, response.data[0].feed_examen_fisico, type);
             setTimeout(() => {
                 examenFisico.value = response.data[0];
                 store.dispatch('examenes/saveExamenFisico', examenFisico.value);
@@ -107,10 +107,9 @@ const fetchData = async (type, section = null) => {
         } else if (type === 'obstetrico' && !examenObstetrico.value) {
             buttonsState.value.obstetrico.loading = true;
             buttonsState.value.obstetrico.label = "Obteniendo...";
-            await registrarAccionSimulacion('Se  realizo el examen obstetrico', 'Critico');
             loadingObstetrico.value = true;
             response = await getExamenObstetrico(id_historia_clinica);
-
+            await registrarAccionSimulacion('Se  realizo el examen obstetrico', response.data[0].rubrica, response.data[0].puntaje_examen_obstetrico, response.data[0].feed_examen_obstetrico, type);
             setTimeout(() => {
                 examenObstetrico.value = response.data[0];
                 store.dispatch('examenes/saveExamenObstetrico', examenObstetrico.value);
@@ -126,74 +125,74 @@ const fetchData = async (type, section = null) => {
                 case 'cabeza':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de cabeza', 'Innecesaria');
                     loadingRef = loadingCabeza;
                     examenSegmentarioRef = examenSegmentarioCabeza;
                     response = await getExamenFisicoSegmentarioCabeza(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de cabeza', response.data[0].rubrica, response.data[0].puntaje_cabeza, response.data[0].feed_cabeza, `segmentario de ${section}`);
                     break;
                 case 'cuello':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de cuello', 'Innecesaria');
                     loadingRef = loadingCuello;
                     examenSegmentarioRef = examenSegmentarioCuello;
                     response = await getExamenFisicoSegmentarioCuello(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de cuello', response.data[0].rubrica, response.data[0].puntaje_cuello, response.data[0].feed_cuello, `segmentario de ${section}`);
                     break;
                 case 'torax':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de torax', 'Util');
                     loadingRef = loadingTorax;
                     examenSegmentarioRef = examenSegmentarioTorax;
                     response = await getExamenFisicoSegmentarioTorax(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de torax', response.data[0].rubrica, response.data[0].puntaje_torax, response.data[0].feed_torax, `segmentario de ${section}`);
                     break;
                 case 'corazon':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de corazon', 'Innecesaria');
                     loadingRef = loadingCorazon;
                     examenSegmentarioRef = examenSegmentarioCorazon;
                     response = await getExamenFisicoSegmentarioCorazon(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de corazon', response.data[0].rubrica, response.data[0].puntaje_corazon, response.data[0].feed_corazon, `segmentario de ${section}`);
                     break;
                 case 'mamas':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de mamas', 'Util');
                     loadingRef = loadingMamas;
                     examenSegmentarioRef = examenSegmentarioMamas;
                     response = await getExamenFisicoSegmentarioMamas(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de mamas', response.data[0].rubrica, response.data[0].puntaje_mamas, response.data[0].feed_mamas, `segmentario de ${section}`);
                     break;
                 case 'abdomen':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de abdomen', 'Util');
                     loadingRef = loadingAbdomen;
                     examenSegmentarioRef = examenSegmentarioAbdomen;
                     response = await getExamenFisicoSegmentarioAbdomen(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de abdomen', response.data[0].rubrica, response.data[0].puntaje_abdomen, response.data[0].feed_abdomen, `segmentario de ${section}`);
                     break;
                 case 'genitourinario':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario genitourinario', 'Critico');
                     loadingRef = loadingGenitourinario;
                     examenSegmentarioRef = examenSegmentarioGenitourinario;
                     response = await getExamenFisicoSegmentarioGenitourinario(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario genitourinario', response.data[0].rubrica, response.data[0].puntaje_genitourinario, response.data[0].feed_genitourinario, `segmentario ${section}`);
                     break;
                 case 'extremidades':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario de extremidades', 'Inutil');
                     loadingRef = loadingExtremidades;
                     examenSegmentarioRef = examenSegmentarioExtremidades;
                     response = await getExamenFisicoSegmentarioExtremidades(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de extremidades', response.data[0].rubrica, response.data[0].puntaje_extremidades, response.data[0].feed_extremidades, `segmentario de ${section}`);
                     break;
                 case 'neurologico':
                     buttonsState.value[section].loading = true;
                     buttonsState.value[section].label = "Obteniendo...";
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario neurologico', 'Innecesaria');
                     loadingRef = loadingNeurologico;
                     examenSegmentarioRef = examenSegmentarioNeurologico;
                     response = await getExamenFisicoSegmentarioNeurologico(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario neurologico', response.data[0].rubrica, response.data[0].puntaje_neurologico, response.data[0].feed_neurologico, `segmentario ${section}`);
                     break;
                 default:
                     throw new Error('Sección no válida');
