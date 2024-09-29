@@ -23,3 +23,9 @@ export const registrarAccion = (accionData) => {
 export const obtenerAccionesSimulacion = (id_simulacion) => {
   return api.get(`/simulacion/${id_simulacion}/acciones`)
 }
+
+export const eliminarAccion = (id_simulacion, descripcion) => {
+  return api.delete('/accion/eliminar', {
+    data: { id_simulacion, descripcion }
+  })
+}

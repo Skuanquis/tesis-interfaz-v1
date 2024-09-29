@@ -1,25 +1,95 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-//import { useToast } from 'primevue/usetoast';
+import { useToast } from 'primevue/usetoast';
+import { useStore } from 'vuex';
+import { obtenerMedicamentos } from '@/services/historiaService';
+import { registrarAccion, eliminarAccion } from '@/services/simulacionService';
 
 const display = ref(true);
 const router = useRouter();
 const position = ref('right');
-//const toast = useToast();
+const toast = useToast();
+const store = useStore();
 
+const medicamentosData = ref({});
+const selectedMedicamentos = ref([]);
+
+const id_simulacion = localStorage.getItem('id_simulacion');
 
 function closeDialog() {
+    store.dispatch('medicamentos/saveSelectedMedicamentos', selectedMedicamentos.value);
     display.value = false;
     router.push('/app');
 }
 
 function onDialogHide() {
     if (!display.value) {
+        store.dispatch('medicamentos/saveSelectedMedicamentos', selectedMedicamentos.value);
         router.push('/app');
     }
 }
+
+async function loadMedicamentos(id_historia_clinica) {
+    try {
+        const response = await obtenerMedicamentos(id_historia_clinica);
+        medicamentosData.value = response.data;
+    } catch (error) {
+        console.error("Error al cargar los medicamentos:", error);
+    }
+}
+
+watch(selectedMedicamentos, (newSelected, oldSelected) => {
+    const added = newSelected.filter(m => !oldSelected.includes(m));
+    const removed = oldSelected.filter(m => !newSelected.includes(m));
+
+    added.forEach(medicamento => {
+        const accionData = {
+            id_simulacion: id_simulacion,
+            descripcion: `Se suministró el medicamento: ${medicamento.nombre}`,
+            tipo_accion: medicamento.rubrica,
+            puntaje: medicamento.puntaje,
+            retroalimentacion: medicamento.feed
+        };
+        // eslint-disable-next-line no-unused-vars
+        registrarAccion(accionData, (err, result) => {
+            if (err) {
+                console.error("Error al registrar la acción:", err);
+            }
+        });
+        toast.add({
+            severity: 'info',
+            summary: `Medicamento ${medicamento.nombre} seleccionado`,
+            detail: `${medicamento.feed}`,
+            life: 3000
+        });
+    });
+
+    removed.forEach(medicamento => {
+        const descripcion = `Se suministró el medicamento: ${medicamento.nombre}`;
+
+        // eslint-disable-next-line no-unused-vars
+        eliminarAccion(id_simulacion, descripcion, (err, result) => {
+            if (err) {
+                console.error("Error al eliminar la acción:", err);
+            }
+        });
+        toast.add({
+            severity: 'warn',
+            summary: 'Medicamento desmarcado',
+            detail: `Se desmarco: ${medicamento.nombre}`,
+            life: 3000
+        });
+    });
+});
+
+onMounted(() => {
+    selectedMedicamentos.value = store.getters['medicamentos/selectedMedicamentos'] || [];
+    const id_historia_clinica = localStorage.getItem('id_historia_clinica');
+    loadMedicamentos(id_historia_clinica);
+});
+
 
 </script>
 
@@ -44,32 +114,30 @@ function onDialogHide() {
         </div>
 
         <Accordion>
-            <AccordionTab header="Analgesicos">
-
+            <AccordionTab v-for="(category, categoryName) in medicamentosData" :key="categoryName"
+                :header="categoryName">
+                <div class="flex-col gap-4">
+                    <div v-for="medicamento in category.medicamentos" :key="medicamento.nombre"
+                        class="flex items-center pt-3">
+                        <Checkbox v-model="selectedMedicamentos" :inputId="medicamento.nombre" :value="medicamento" />
+                        <label class="pl-3 text-lg" :for="medicamento.nombre">{{ medicamento.nombre }}</label>
+                    </div>
+                </div>
             </AccordionTab>
-            <AccordionTab header="Antibioticos">
-
-            </AccordionTab>
-            <AccordionTab header="Medicamentos Cardiacos">
-
-            </AccordionTab>
-            <AccordionTab header="Medicamentos Respiratorio">
-
-            </AccordionTab>
-            <AccordionTab header="Medicamentos Gastrointestinal">
-
-            </AccordionTab>
-            <AccordionTab header="Medicamentos Gineco-Obstetricos">
-
-            </AccordionTab>
-            <AccordionTab header="Medicamentos Psquiatricos">
-
-            </AccordionTab>
-            <AccordionTab header="Medicamentos Miscelaneos">
-
-            </AccordionTab>
-
         </Accordion>
+
+        <h5>Medicamentos suministrados</h5>
+        <div class="grid">
+            <div v-if="selectedMedicamentos.length > 0" class="col-12">
+                <div v-for="category in selectedMedicamentos" :key="category" class="flex items-center pt-3">
+                    <Checkbox v-model="selectedMedicamentos" :inputId="category" :value="category" />
+                    <label class="pl-3 text-lg" :for="category">{{ category.nombre }}</label>
+                </div>
+            </div>
+            <div v-else class="col-12">
+                <p>No hay diagnósticos seleccionados.</p>
+            </div>
+        </div>
 
         <div class="grid pt-4">
             <div class="col md:col-9"></div>

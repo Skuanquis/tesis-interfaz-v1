@@ -1,16 +1,21 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-import { getDiagnosticosDiferenciales } from '@/services/historiaService'; // Importa el servicio
+import { getDiagnosticosDiferenciales } from '@/services/historiaService';
+import { registrarAccion, eliminarAccion } from '@/services/simulacionService';
+import { useToast } from 'primevue/usetoast';
 
+const toast = useToast();
 const display = ref(true);
 const router = useRouter();
 const position = ref('left');
 const store = useStore();
 const selectedCategories = ref([]);
 const diagnosticosData = ref({});
+
+const id_simulacion = localStorage.getItem('id_simulacion');
 
 function closeDialog() {
     store.dispatch('diferencial/saveSelectedCategories', selectedCategories.value);
@@ -34,6 +39,51 @@ async function loadDiagnosticos(id_historia_clinica) {
     }
 }
 
+watch(selectedCategories, (newSelected, oldSelected) => {
+    const added = newSelected.filter(d => !oldSelected.includes(d));
+    const removed = oldSelected.filter(d => !newSelected.includes(d));
+
+    added.forEach(diagnostico => {
+        const accionData = {
+            id_simulacion: id_simulacion,
+            descripcion: `Se seleccionó el diagnóstico: ${diagnostico.nombre}`,
+            tipo_accion: diagnostico.rubrica,
+            puntaje: diagnostico.puntaje,
+            retroalimentacion: diagnostico.feed
+        };
+
+        // eslint-disable-next-line no-unused-vars
+        registrarAccion(accionData, (err, result) => {
+            if (err) {
+                console.error("Error al registrar la acción:", err);
+            }
+        });
+        toast.add({
+            severity: 'info',
+            summary: `Diagnóstico ${diagnostico.nombre} seleccionado`,
+            detail: `${diagnostico.feed}`,
+            life: 3000
+        });
+    });
+
+    removed.forEach(diagnostico => {
+        const descripcion = `Se seleccionó el diagnóstico: ${diagnostico.nombre}`;
+
+        // eslint-disable-next-line no-unused-vars
+        eliminarAccion(id_simulacion, descripcion, (err, result) => {
+            if (err) {
+                console.error("Error al eliminar la acción:", err);
+            }
+        });
+        toast.add({
+            severity: 'warn',
+            summary: 'Diagnóstico desmarcado',
+            detail: `Se desmarco: ${diagnostico.nombre}`,
+            life: 3000
+        });
+    });
+});
+
 onMounted(() => {
     selectedCategories.value = store.getters['diferencial/selectedCategories'] || [];
     const id_historia_clinica = localStorage.getItem('id_historia_clinica');
@@ -52,7 +102,7 @@ onMounted(() => {
                 <div class="flex-col gap-4">
                     <div v-for="diagnostico in category.diagnosticos" :key="diagnostico" class="flex items-center pt-3">
                         <Checkbox v-model="selectedCategories" :inputId="diagnostico" :value="diagnostico" />
-                        <label class="pl-3 text-lg" :for="diagnostico">{{ diagnostico }}</label>
+                        <label class="pl-3 text-lg" :for="diagnostico">{{ diagnostico.nombre }}</label>
                     </div>
                 </div>
             </AccordionTab>
@@ -64,7 +114,7 @@ onMounted(() => {
             <div v-if="selectedCategories.length > 0" class="col-12">
                 <div v-for="category in selectedCategories" :key="category" class="flex items-center pt-3">
                     <Checkbox v-model="selectedCategories" :inputId="category" :value="category" />
-                    <label class="pl-3 text-lg" :for="category">{{ category }}</label>
+                    <label class="pl-3 text-lg" :for="category">{{ category.nombre }}</label>
                 </div>
             </div>
             <div v-else class="col-12">

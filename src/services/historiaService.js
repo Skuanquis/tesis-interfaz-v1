@@ -144,3 +144,7 @@ export const getAnamnesisRespiratorio = (id_historia_clinica) => {
 export const getDiagnosticosDiferenciales = (id_historia_clinica) => {
   return api.get(`/diferencial/diagnosticos/${id_historia_clinica}`)
 }
+
+export const obtenerMedicamentos = (id_historia_clinica) => {
+  return api.get(`/medicamentos/${id_historia_clinica}`)
+}

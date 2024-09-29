@@ -5,6 +5,7 @@ import navigation from './modules/navigation'
 import examenesModule from './modules/examenes'
 import anamnesisModule from './modules/anamnesis'
 import diferencialModule from './modules/diferencial'
+import medicamentosModule from './modules/medicamentos'
 const store = createStore({
   modules: {
     user: userModule,
@@ -12,7 +13,8 @@ const store = createStore({
     navigation,
     examenes: examenesModule,
     anamnesis: anamnesisModule,
-    diferencial: diferencialModule
+    diferencial: diferencialModule,
+    medicamentos: medicamentosModule
   }
 })
 
