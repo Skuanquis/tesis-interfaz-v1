@@ -33,3 +33,7 @@ export const eliminarAccion = (id_simulacion, descripcion) => {
 export const obtenerMensaje = (id_caso_clinico) => {
   return api.get(`/mensajes/${id_caso_clinico}`)
 }
+
+export const enviarDiagnosticoFinal = (id_simulacion, diagnostico_final) => {
+  return api.put(`/enviar-diagnostico/${id_simulacion}`, { diagnostico_final })
+}

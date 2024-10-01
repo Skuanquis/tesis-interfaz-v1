@@ -39,7 +39,9 @@ import {
     obtenerQuimicaSanguinea, actualizarQuimicaSanguinea,
     obtenerBiometriaHematica, actualizarBiometriaHematica,
     obtenerCategoriasImagenologia, obtenerImagenesPorHistoriaClinica,
-    actualizarImagenes, cargarImagen
+    actualizarImagenes, cargarImagen,
+    obtenerTraspaso, actualizarTraspaso,
+    actualizarDiagnosticoFinal
 
 
 } from '../services/casoService';
@@ -117,6 +119,12 @@ const scoreImagenologia = ref([]);
 const categoriasImagenologia = ref([]);
 const categoriasSeleccionadas = ref([]);
 const imagenesData = ref([]);
+
+const scoreTraspaso = ref([]);
+const traspaso = ref({});
+
+const diagnosticosDiferenciales = ref([]);
+const diagnosticoFinal = ref(null);
 
 
 const cerrarDialogo = () => {
@@ -252,6 +260,9 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarPuntajeImagenologia(casoSeleccionado.value.id_historia_clinica);
         await cargarCategoriasImagenologia();
         await cargarImagenes(casoSeleccionado.value.id_historia_clinica);
+        await cargarTraspaso(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeTraspaso(casoSeleccionado.value.id_historia_clinica);
+        await cargarDiagnosticoFinal(casoSeleccionado.value.id_historia_clinica);
         visible.value = true;
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el caso clínico', life: 3000 });
@@ -1155,6 +1166,71 @@ const onUpload = async (event, index) => {
     }
 };
 
+const cargarPuntajeTraspaso = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreTraspaso.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
+const cargarTraspaso = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerTraspaso(id_historia_clinica);
+        traspaso.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener antecedentes patológicos', life: 3000 });
+    }
+};
+
+const guardarTodosLosCambiosTraspaso = async () => {
+    try {
+
+        await actualizarTraspaso(paciente.value.id_historia_clinica, traspaso.value);
+        if (diagnosticoFinal.value) {
+            await actualizarDiagnosticoFinal(casoSeleccionado.value.id_historia_clinica, diagnosticoFinal.value);
+            toast.add({
+                severity: 'success',
+                summary: 'Éxito',
+                detail: 'El diagnóstico final se ha actualizado correctamente',
+                life: 3000
+            });
+        } else {
+            toast.add({
+                severity: 'warn',
+                summary: 'Advertencia',
+                detail: 'Debe seleccionar un diagnóstico final antes de guardar',
+                life: 3000
+            });
+        }
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Todos los cambios se han guardado correctamente', life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar los cambios', life: 3000 });
+    }
+};
+
+
+const cargarDiagnosticoFinal = async (idCaso) => {
+    try {
+        const response = await obtenerCasoClinicoPorId(idCaso);
+        casoSeleccionado.value = response.data;
+        await cargarDatosPaciente(casoSeleccionado.value.id_historia_clinica);
+        const diagnosticosResponse = await obtenerDiagnosticosDiferencialesPorHistoriaClinica(casoSeleccionado.value.id_historia_clinica);
+        diagnosticosDiferenciales.value = diagnosticosResponse.data.map(diagnostico => ({
+            label: diagnostico.nombre,
+            value: diagnostico.id_diagnostico
+        }));
+
+        diagnosticoFinal.value = parseInt(casoSeleccionado.value.diagnostico, 10);
+
+        visible.value = true;
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el caso clínico o diagnósticos diferenciales', life: 3000 });
+    }
+};
 
 onMounted(() => {
     cargarCasosClinicos();
@@ -4131,22 +4207,22 @@ onMounted(() => {
                     <StepperPanel header="Traspaso">
                         <template #content="{ prevCallback }">
 
-                            <h5>¿Cual es el siguiente paso para el paciente?</h5>
+                            <h5>{{ traspaso.opcion_uno }}</h5>
                             <div class="grid pt-3">
                                 <div class="col md:col-4">
                                     <h5>Ingresar al paciente a una unidade de cuidados intensivos</h5>
                                 </div>
                                 <div class="col md:col-4">
                                     <FloatLabel>
-                                        <Textarea v-model="feedTraspasoUCI" autoResize rows="3" cols="30" />
+                                        <Textarea v-model="traspaso.feed_opcion_uno" autoResize rows="3" cols="30" />
                                         <label for="feedTraspasoUCI">Retroalimentación</label>
                                     </FloatLabel>
                                 </div>
                                 <div class="col md:col-3">
                                     <FloatLabel>
-                                        <Dropdown v-model="puntajeTraspasoUCI" :options="scoreTraspasoUCI"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                        <Dropdown v-model="traspaso.puntaje_opcion_uno" :options="scoreTraspaso"
+                                            optionLabel="name" optionValue="value" placeholder="Elige una opción"
+                                            checkmark :highlightOnSelect="false" class="w-full md:w-14rem" />
                                         <label for="puntajeTraspasoUCI">Puntaje Asignado</label>
                                     </FloatLabel>
                                 </div>
@@ -4155,19 +4231,19 @@ onMounted(() => {
                                 </div>
 
                                 <div class="col md:col-4 pt-3">
-                                    <h5>Ingresar al paciente a una habitación de hospitalización general</h5>
+                                    <h5>{{ traspaso.opcion_dos }}</h5>
                                 </div>
                                 <div class="col md:col-4 pt-3">
                                     <FloatLabel>
-                                        <Textarea v-model="feedTraspasoInternar" autoResize rows="3" cols="30" />
+                                        <Textarea v-model="traspaso.feed_opcion_dos" autoResize rows="3" cols="30" />
                                         <label for="feedTraspasoInternar">Retroalimentación</label>
                                     </FloatLabel>
                                 </div>
                                 <div class="col md:col-3 pt-3">
                                     <FloatLabel>
-                                        <Dropdown v-model="puntajeTraspasoInternar" :options="scoreTraspasoInternar"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                        <Dropdown v-model="traspaso.puntaje_opcion_dos" :options="scoreTraspaso"
+                                            optionLabel="name" optionValue="value" placeholder="Elige una opción"
+                                            checkmark :highlightOnSelect="false" class="w-full md:w-14rem" />
                                         <label for="puntajeTraspasoInternar">Puntaje Asignado</label>
                                     </FloatLabel>
                                 </div>
@@ -4176,19 +4252,19 @@ onMounted(() => {
                                 </div>
 
                                 <div class="col md:col-4">
-                                    <h5>Preparar al paciente para una cirugía</h5>
+                                    <h5>{{ traspaso.opcion_tres }}</h5>
                                 </div>
                                 <div class="col md:col-4">
                                     <FloatLabel>
-                                        <Textarea v-model="feedTraspasoCirugia" autoResize rows="3" cols="30" />
+                                        <Textarea v-model="traspaso.feed_opcion_tres" autoResize rows="3" cols="30" />
                                         <label for="feedTraspasoCirugia">Retroalimentación</label>
                                     </FloatLabel>
                                 </div>
                                 <div class="col md:col-3">
                                     <FloatLabel>
-                                        <Dropdown v-model="puntajeTraspasoCirugia" :options="scoreTraspasoCirugia"
-                                            optionLabel="name" placeholder="Elige una opción" checkmark
-                                            :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                        <Dropdown v-model="traspaso.puntaje_opcion_tres" :options="scoreTraspaso"
+                                            optionLabel="name" optionValue="value" placeholder="Elige una opción"
+                                            checkmark :highlightOnSelect="false" class="w-full md:w-14rem" />
                                         <label for="puntajeTraspasoCirugia">Puntaje Asignado</label>
                                     </FloatLabel>
                                 </div>
@@ -4198,29 +4274,16 @@ onMounted(() => {
                             </div>
 
                             <h5>¿Cual es el diagnostico final?</h5>
-                            <div class="grid">
-                                <div class="col-12">
-                                    <h5>Alergia/Inmunológico</h5>
-                                </div>
-                            </div>
                             <div class="card flex justify-content-center">
                                 <SelectButton v-model="diagnosticoFinal" :options="diagnosticosDiferenciales"
-                                    optionLabel="name" aria-labelledby="basic" />
+                                    optionLabel="label" optionValue="value" aria-labelledby="basic" />
                             </div>
-                            <div class="grid">
-                                <div class="col-12">
-                                    <h5>Cardiovascular</h5>
-                                </div>
-                            </div>
-                            <div class="card flex justify-content-center">
-                                <SelectButton v-model="diagnosticoFinal" :options="diagnosticosDiferenciales"
-                                    optionLabel="name" aria-labelledby="basic" />
-                            </div>
-
 
                             <div class="flex py-4 gap-2">
                                 <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
+                                <Button label="Guardar" severity="success" icon="pi pi-save"
+                                    @click="guardarTodosLosCambiosTraspaso" />
                                 <Button label="Crear" severity="primary" icon="pi pi-check" @click="prevCallback" />
                             </div>
                         </template>

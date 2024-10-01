@@ -65,7 +65,7 @@ function onDockItemClick(item) {
                 const id_simulacion = localStorage.getItem('id_simulacion');
                 const minutos = localStorage.getItem('minutos');
                 const segundos = localStorage.getItem('segundos');
-                const tiempo_empleado = `${minutos}:${segundos}`;
+                const tiempo_empleado = `${minutos.padStart(2, '0')}:${segundos.padStart(2, '0')}`;
                 console.log(tiempo_empleado)
                 try {
                     await finalizarSimulacion(id_simulacion, tiempo_empleado);

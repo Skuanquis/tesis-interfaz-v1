@@ -343,3 +343,19 @@ export const cargarImagen = (formData) => {
     }
   })
 }
+
+export const obtenerTraspaso = (id_historia_clinica) => {
+  return api.get(`/traspaso/${id_historia_clinica}`)
+}
+
+export const actualizarTraspaso = (id_historia_clinica, data) => {
+  return api.put(`/traspaso/${id_historia_clinica}`, data)
+}
+
+export const actualizarDiagnosticoFinal = (id_historia_clinica, diagnostico) => {
+  return api.put(`/diagnostico-final/${id_historia_clinica}`, { diagnostico })
+}
+
+export const obtenerTraspasoRubrica = (id_historia_clinica) => {
+  return api.get(`/traspaso-rubrica/${id_historia_clinica}`)
+}
