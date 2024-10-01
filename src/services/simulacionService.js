@@ -29,3 +29,7 @@ export const eliminarAccion = (id_simulacion, descripcion) => {
     data: { id_simulacion, descripcion }
   })
 }
+
+export const obtenerMensaje = (id_caso_clinico) => {
+  return api.get(`/mensajes/${id_caso_clinico}`)
+}

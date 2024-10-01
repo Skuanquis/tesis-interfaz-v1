@@ -1,26 +1,97 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-//import { useToast } from 'primevue/usetoast';
-
+import { useStore } from 'vuex';
+import { useToast } from 'primevue/usetoast';
+import { obtenerSubespecialidades } from '@/services/historiaService';
+import { registrarAccion } from '@/services/simulacionService';
 const display = ref(true);
 const router = useRouter();
 const position = ref('right');
-//const toast = useToast();
-
+const store = useStore();
+const toast = useToast();
+const subespecialidadesData = ref([]);
+const selectedSubespecialidades = ref([]);
+const id_historia_clinica = localStorage.getItem('id_historia_clinica');
+const id_simulacion = localStorage.getItem('id_simulacion');
 
 function closeDialog() {
+    store.dispatch('subespecialidades/saveSelectedSubespecialidades', selectedSubespecialidades.value);
     display.value = false;
     router.push('/app');
 }
 
 function onDialogHide() {
     if (!display.value) {
+        store.dispatch('subespecialidades/saveSelectedSubespecialidades', selectedSubespecialidades.value);
         router.push('/app');
     }
 }
 
+async function loadSubespecialidades(id_historia_clinica) {
+    try {
+        const response = await obtenerSubespecialidades(id_historia_clinica);
+        subespecialidadesData.value = response.data.map(sub => ({
+            ...sub,
+            seleccionado: false,
+            mostrarDescripcion: false
+        }));
+    } catch (error) {
+        console.error("Error al cargar las subespecialidades:", error);
+    }
+}
+
+
+function selectSubespecialidad(subespecialidad) {
+    if (!subespecialidad.seleccionado) {
+        subespecialidad.loading = true;
+        setTimeout(() => {
+            subespecialidad.mostrarDescripcion = true;
+            subespecialidad.seleccionado = true;
+            subespecialidad.loading = false;
+            const accionData = {
+                id_simulacion: id_simulacion,
+                descripcion: `Se consulto con: ${subespecialidad.subespecialidad}`,
+                tipo_accion: subespecialidad.rubrica,
+                puntaje: subespecialidad.puntaje_subespecialidad,
+                retroalimentacion: subespecialidad.feed_subespecialidad
+            };
+
+            // eslint-disable-next-line no-unused-vars
+            registrarAccion(accionData, (err, result) => {
+                if (err) {
+                    console.error("Error al registrar la acción:", err);
+                }
+            });
+            toast.add({
+                severity: 'info',
+                summary: `Se consulto con ${subespecialidad.subespecialidad}`,
+                detail: `${subespecialidad.feed_subespecialidad}`,
+                life: 3000
+            });
+
+            selectedSubespecialidades.value.push(subespecialidad);
+            store.dispatch('subespecialidades/saveSelectedSubespecialidades', selectedSubespecialidades.value); // Guardar en Vuex
+        }, 2000);
+    }
+}
+
+
+onMounted(() => {
+    const storedSubespecialidades = store.getters['subespecialidades/selectedSubespecialidades'] || [];
+    selectedSubespecialidades.value = storedSubespecialidades;
+
+    loadSubespecialidades(id_historia_clinica).then(() => {
+        subespecialidadesData.value.forEach(subespecialidad => {
+            const selected = storedSubespecialidades.find(item => item.subespecialidad === subespecialidad.subespecialidad);
+            if (selected) {
+                subespecialidad.seleccionado = true;
+                subespecialidad.mostrarDescripcion = true;
+            }
+        });
+    });
+});
 </script>
 
 <template>
@@ -28,32 +99,20 @@ function onDialogHide() {
         class="p-fluid" @hide="onDialogHide" :position="position" :draggable="false">
         <h5 class="text-center datos-paciente">Subespecialidades Disponibles</h5>
         <div class="grid">
-            <div class="col md:col-8 text-lg pt-3">
-                <strong>Subespecialidad 1</strong>
+            <div v-for="(subespecialidad, index) in subespecialidadesData" :key="index" class="col-12 md:flex">
+                <div class="col md:col-8 text-lg pt-3">
+                    <strong>{{ subespecialidad.subespecialidad }}</strong>
+                    <p v-if="subespecialidad.mostrarDescripcion" class="mt-2">{{ subespecialidad.descripcion }}</p>
+                </div>
+                <div class="col md:col-4 pt-2">
+                    <Button v-if="!subespecialidad.seleccionado"
+                        :label="subespecialidad.loading ? 'Consultando...' : 'Consultar'" icon="pi pi-comment"
+                        :class="{ 'p-button-loading': subespecialidad.loading }"
+                        @click="selectSubespecialidad(subespecialidad)" :disabled="subespecialidad.loading" />
+                </div>
             </div>
-            <div class="col md:col-4 pt-2">
-                <Button type="button" icon="pi pi-search" />
-            </div>
-            <div class="col md:col-8 text-lg pt-3">
-                <strong>Subespecialidad 2</strong>
-            </div>
-            <div class="col md:col-4 pt-2">
-                <Button type="button" icon="pi pi-search" />
-            </div>
-            <div class="col md:col-8 text-lg pt-3">
-                <strong>Subespecialidad 3</strong>
-            </div>
-            <div class="col md:col-4 pt-2">
-                <Button type="button" icon="pi pi-search" />
-            </div>
-            <div class="col md:col-8 text-lg pt-3">
-                <strong>Subespecialidad 4</strong>
-            </div>
-            <div class="col md:col-4 pt-2">
-                <Button type="button" icon="pi pi-search" />
-            </div>
-
         </div>
+
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">

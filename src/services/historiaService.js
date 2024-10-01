@@ -93,7 +93,7 @@ export const getExamenSerologiaSanguinea = (id_historia_clinica) => {
   return api.get(`/laboratorio-serologia-sanguinea/${id_historia_clinica}`)
 }
 
-export const getExamenElectrolitosSanquineos = (id_historia_clinica) => {
+export const getExamenElectrolitosSanguineos = (id_historia_clinica) => {
   return api.get(`/laboratorio-electrolitos-sanguineos/${id_historia_clinica}`)
 }
 
@@ -147,4 +147,12 @@ export const getDiagnosticosDiferenciales = (id_historia_clinica) => {
 
 export const obtenerMedicamentos = (id_historia_clinica) => {
   return api.get(`/medicamentos/${id_historia_clinica}`)
+}
+
+export const obtenerSubespecialidades = (id_historia_clinica) => {
+  return api.get(`/consulta-externa/${id_historia_clinica}`)
+}
+
+export const obtenerImagenologia = (id_historia_clinica) => {
+  return api.get(`/imagenologia/${id_historia_clinica}`)
 }

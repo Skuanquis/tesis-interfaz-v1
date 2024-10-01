@@ -6,6 +6,9 @@ import examenesModule from './modules/examenes'
 import anamnesisModule from './modules/anamnesis'
 import diferencialModule from './modules/diferencial'
 import medicamentosModule from './modules/medicamentos'
+import subespecialidadesModule from './modules/subespecialidades'
+import imagenologiaModule from './modules/imagenologia'
+import laboratoriosModule from './modules/laboratorios'
 const store = createStore({
   modules: {
     user: userModule,
@@ -14,7 +17,10 @@ const store = createStore({
     examenes: examenesModule,
     anamnesis: anamnesisModule,
     diferencial: diferencialModule,
-    medicamentos: medicamentosModule
+    medicamentos: medicamentosModule,
+    subespecialidades: subespecialidadesModule,
+    imagenologia: imagenologiaModule,
+    laboratorios: laboratoriosModule
   }
 })
 

@@ -17,6 +17,19 @@ const medicamentosData = ref({});
 const selectedMedicamentos = ref([]);
 
 const id_simulacion = localStorage.getItem('id_simulacion');
+const id_historia_clinica = localStorage.getItem('id_historia_clinica');
+
+// Helper function to find medicamento by nombre
+function findMedicamentoByNombre(nombre) {
+    for (const categoryName in medicamentosData.value) {
+        const category = medicamentosData.value[categoryName];
+        const medicamento = category.medicamentos.find(m => m.nombre === nombre);
+        if (medicamento) {
+            return medicamento;
+        }
+    }
+    return null;
+}
 
 function closeDialog() {
     store.dispatch('medicamentos/saveSelectedMedicamentos', selectedMedicamentos.value);
@@ -40,57 +53,62 @@ async function loadMedicamentos(id_historia_clinica) {
     }
 }
 
+// Use a flag to skip the initial watch invocation
+let isInitialLoad = true;
+
 watch(selectedMedicamentos, (newSelected, oldSelected) => {
+    if (isInitialLoad) {
+        isInitialLoad = false;
+        return;
+    }
+
     const added = newSelected.filter(m => !oldSelected.includes(m));
     const removed = oldSelected.filter(m => !newSelected.includes(m));
 
-    added.forEach(medicamento => {
-        const accionData = {
-            id_simulacion: id_simulacion,
-            descripcion: `Se suministró el medicamento: ${medicamento.nombre}`,
-            tipo_accion: medicamento.rubrica,
-            puntaje: medicamento.puntaje,
-            retroalimentacion: medicamento.feed
-        };
-        // eslint-disable-next-line no-unused-vars
-        registrarAccion(accionData, (err, result) => {
-            if (err) {
+    added.forEach(medicamentoNombre => {
+        const medicamento = findMedicamentoByNombre(medicamentoNombre);
+        if (medicamento) {
+            const accionData = {
+                id_simulacion: id_simulacion,
+                descripcion: `Se suministró el medicamento: ${medicamento.nombre}`,
+                tipo_accion: medicamento.rubrica,
+                puntaje: medicamento.puntaje,
+                retroalimentacion: medicamento.feed
+            };
+
+            registrarAccion(accionData).catch(err => {
                 console.error("Error al registrar la acción:", err);
-            }
-        });
-        toast.add({
-            severity: 'info',
-            summary: `Medicamento ${medicamento.nombre} seleccionado`,
-            detail: `${medicamento.feed}`,
-            life: 3000
-        });
+            });
+
+            toast.add({
+                severity: 'info',
+                summary: `Medicamento ${medicamento.nombre} seleccionado`,
+                detail: `${medicamento.feed}`,
+                life: 3000
+            });
+        }
     });
 
-    removed.forEach(medicamento => {
-        const descripcion = `Se suministró el medicamento: ${medicamento.nombre}`;
+    removed.forEach(medicamentoNombre => {
+        const descripcion = `Se suministró el medicamento: ${medicamentoNombre}`;
 
-        // eslint-disable-next-line no-unused-vars
-        eliminarAccion(id_simulacion, descripcion, (err, result) => {
-            if (err) {
-                console.error("Error al eliminar la acción:", err);
-            }
+        eliminarAccion(id_simulacion, descripcion).catch(err => {
+            console.error("Error al eliminar la acción:", err);
         });
+
         toast.add({
             severity: 'warn',
             summary: 'Medicamento desmarcado',
-            detail: `Se desmarco: ${medicamento.nombre}`,
+            detail: `Se desmarcó: ${medicamentoNombre}`,
             life: 3000
         });
     });
-});
+}, { deep: true });
 
 onMounted(() => {
     selectedMedicamentos.value = store.getters['medicamentos/selectedMedicamentos'] || [];
-    const id_historia_clinica = localStorage.getItem('id_historia_clinica');
     loadMedicamentos(id_historia_clinica);
 });
-
-
 </script>
 
 <template>
@@ -119,23 +137,26 @@ onMounted(() => {
                 <div class="flex-col gap-4">
                     <div v-for="medicamento in category.medicamentos" :key="medicamento.nombre"
                         class="flex items-center pt-3">
-                        <Checkbox v-model="selectedMedicamentos" :inputId="medicamento.nombre" :value="medicamento" />
+                        <Checkbox v-model="selectedMedicamentos" :inputId="medicamento.nombre"
+                            :value="medicamento.nombre" />
                         <label class="pl-3 text-lg" :for="medicamento.nombre">{{ medicamento.nombre }}</label>
                     </div>
                 </div>
             </AccordionTab>
         </Accordion>
 
+
         <h5>Medicamentos suministrados</h5>
         <div class="grid">
             <div v-if="selectedMedicamentos.length > 0" class="col-12">
-                <div v-for="category in selectedMedicamentos" :key="category" class="flex items-center pt-3">
-                    <Checkbox v-model="selectedMedicamentos" :inputId="category" :value="category" />
-                    <label class="pl-3 text-lg" :for="category">{{ category.nombre }}</label>
+                <div v-for="medicamentoNombre in selectedMedicamentos" :key="medicamentoNombre"
+                    class="flex items-center pt-3">
+                    <Checkbox v-model="selectedMedicamentos" :inputId="medicamentoNombre" :value="medicamentoNombre" />
+                    <label class="pl-3 text-lg" :for="medicamentoNombre">{{ medicamentoNombre }}</label>
                 </div>
             </div>
             <div v-else class="col-12">
-                <p>No hay diagnósticos seleccionados.</p>
+                <p>No hay medicamentos seleccionados.</p>
             </div>
         </div>
 

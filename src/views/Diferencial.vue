@@ -16,6 +16,7 @@ const selectedCategories = ref([]);
 const diagnosticosData = ref({});
 
 const id_simulacion = localStorage.getItem('id_simulacion');
+const id_historia_clinica = localStorage.getItem('id_historia_clinica');
 
 function closeDialog() {
     store.dispatch('diferencial/saveSelectedCategories', selectedCategories.value);
@@ -30,6 +31,18 @@ function onDialogHide() {
     }
 }
 
+// Helper function to find diagnostico by nombre
+function findDiagnosticoByNombre(nombre) {
+    for (const categoryName in diagnosticosData.value) {
+        const category = diagnosticosData.value[categoryName];
+        const diagnostico = category.diagnosticos.find(d => d.nombre === nombre);
+        if (diagnostico) {
+            return diagnostico;
+        }
+    }
+    return null;
+}
+
 async function loadDiagnosticos(id_historia_clinica) {
     try {
         const response = await getDiagnosticosDiferenciales(id_historia_clinica);
@@ -39,57 +52,62 @@ async function loadDiagnosticos(id_historia_clinica) {
     }
 }
 
+// Use a flag to skip the initial watch invocation
+let isInitialLoad = true;
+
 watch(selectedCategories, (newSelected, oldSelected) => {
+    if (isInitialLoad) {
+        isInitialLoad = false;
+        return;
+    }
+
     const added = newSelected.filter(d => !oldSelected.includes(d));
     const removed = oldSelected.filter(d => !newSelected.includes(d));
 
-    added.forEach(diagnostico => {
-        const accionData = {
-            id_simulacion: id_simulacion,
-            descripcion: `Se seleccionó el diagnóstico: ${diagnostico.nombre}`,
-            tipo_accion: diagnostico.rubrica,
-            puntaje: diagnostico.puntaje,
-            retroalimentacion: diagnostico.feed
-        };
+    added.forEach(diagnosticoNombre => {
+        const diagnostico = findDiagnosticoByNombre(diagnosticoNombre);
+        if (diagnostico) {
+            const accionData = {
+                id_simulacion: id_simulacion,
+                descripcion: `Se seleccionó el diagnóstico: ${diagnostico.nombre}`,
+                tipo_accion: diagnostico.rubrica,
+                puntaje: diagnostico.puntaje,
+                retroalimentacion: diagnostico.feed
+            };
 
-        // eslint-disable-next-line no-unused-vars
-        registrarAccion(accionData, (err, result) => {
-            if (err) {
+            registrarAccion(accionData).catch(err => {
                 console.error("Error al registrar la acción:", err);
-            }
-        });
-        toast.add({
-            severity: 'info',
-            summary: `Diagnóstico ${diagnostico.nombre} seleccionado`,
-            detail: `${diagnostico.feed}`,
-            life: 3000
-        });
+            });
+
+            toast.add({
+                severity: 'info',
+                summary: `Diagnóstico ${diagnostico.nombre} seleccionado`,
+                detail: `${diagnostico.feed}`,
+                life: 3000
+            });
+        }
     });
 
-    removed.forEach(diagnostico => {
-        const descripcion = `Se seleccionó el diagnóstico: ${diagnostico.nombre}`;
+    removed.forEach(diagnosticoNombre => {
+        const descripcion = `Se seleccionó el diagnóstico: ${diagnosticoNombre}`;
 
-        // eslint-disable-next-line no-unused-vars
-        eliminarAccion(id_simulacion, descripcion, (err, result) => {
-            if (err) {
-                console.error("Error al eliminar la acción:", err);
-            }
+        eliminarAccion(id_simulacion, descripcion).catch(err => {
+            console.error("Error al eliminar la acción:", err);
         });
+
         toast.add({
             severity: 'warn',
             summary: 'Diagnóstico desmarcado',
-            detail: `Se desmarco: ${diagnostico.nombre}`,
+            detail: `Se desmarcó: ${diagnosticoNombre}`,
             life: 3000
         });
     });
-});
+}, { deep: true });
 
 onMounted(() => {
     selectedCategories.value = store.getters['diferencial/selectedCategories'] || [];
-    const id_historia_clinica = localStorage.getItem('id_historia_clinica');
     loadDiagnosticos(id_historia_clinica);
 });
-
 </script>
 
 <template>
@@ -100,9 +118,11 @@ onMounted(() => {
             <AccordionTab v-for="(category, categoryName) in diagnosticosData" :key="categoryName"
                 :header="categoryName">
                 <div class="flex-col gap-4">
-                    <div v-for="diagnostico in category.diagnosticos" :key="diagnostico" class="flex items-center pt-3">
-                        <Checkbox v-model="selectedCategories" :inputId="diagnostico" :value="diagnostico" />
-                        <label class="pl-3 text-lg" :for="diagnostico">{{ diagnostico.nombre }}</label>
+                    <div v-for="diagnostico in category.diagnosticos" :key="diagnostico.nombre"
+                        class="flex items-center pt-3">
+                        <Checkbox v-model="selectedCategories" :inputId="diagnostico.nombre"
+                            :value="diagnostico.nombre" />
+                        <label class="pl-3 text-lg" :for="diagnostico.nombre">{{ diagnostico.nombre }}</label>
                     </div>
                 </div>
             </AccordionTab>
@@ -112,9 +132,10 @@ onMounted(() => {
         <h5>Diagnosticos Seleccionados</h5>
         <div class="grid">
             <div v-if="selectedCategories.length > 0" class="col-12">
-                <div v-for="category in selectedCategories" :key="category" class="flex items-center pt-3">
-                    <Checkbox v-model="selectedCategories" :inputId="category" :value="category" />
-                    <label class="pl-3 text-lg" :for="category">{{ category.nombre }}</label>
+                <div v-for="diagnosticoNombre in selectedCategories" :key="diagnosticoNombre"
+                    class="flex items-center pt-3">
+                    <Checkbox v-model="selectedCategories" :inputId="diagnosticoNombre" :value="diagnosticoNombre" />
+                    <label class="pl-3 text-lg" :for="diagnosticoNombre">{{ diagnosticoNombre }}</label>
                 </div>
             </div>
             <div v-else class="col-12">
