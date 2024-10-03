@@ -311,10 +311,11 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisCardiovascular && !loadingCardiovascular" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'cardiovascular')" />
+                    <Button v-if="loadingCardiovascular" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingCardiovascular">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisCardiovascular?.cardiovascular || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisCardiovascular">{{
+                        anamnesisCardiovascular?.cardiovascular || '' }}</p>
                 </div>
             </div>
             <div class="grid">
@@ -322,10 +323,11 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisEndocrino && !loadingEndocrino" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'endocrino')" />
+                    <Button v-if="loadingEndocrino" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingEndocrino">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisEndocrino?.endocrino || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisEndocrino">{{ anamnesisEndocrino?.endocrino || '' }}
+                    </p>
                 </div>
             </div>
             <div class="grid">
@@ -333,10 +335,12 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisGastrointestinal && !loadingGastrointestinal" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'gastrointestinal')" />
+                    <Button v-if="loadingGastrointestinal" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                        disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingGastrointestinal">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisGastrointestinal?.gastrointestinal || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisGastrointestinal">{{
+                        anamnesisGastrointestinal?.gastrointestinal || '' }}</p>
                 </div>
             </div>
             <div class="grid">
@@ -344,10 +348,11 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisGenitourinario && !loadingGenitourinario" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'genitourinario')" />
+                    <Button v-if="loadingGenitourinario" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingGenitourinario">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisGenitourinario?.genitourinario || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisGenitourinario">{{
+                        anamnesisGenitourinario?.genitourinario || '' }}</p>
                 </div>
             </div>
             <div class="grid">
@@ -355,10 +360,11 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisRespiratorio && !loadingRespiratorio" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'respiratorio')" />
+                    <Button v-if="loadingRespiratorio" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingRespiratorio">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisRespiratorio?.respiratorio || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisRespiratorio">{{ anamnesisRespiratorio?.respiratorio
+                        || '' }}</p>
                 </div>
             </div>
             <div class="grid">
@@ -366,10 +372,11 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisNeurologico && !loadingNeurologico" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'neurologico')" />
+                    <Button v-if="loadingNeurologico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingNeurologico">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisNeurologico?.neurologico || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisNeurologico">{{ anamnesisNeurologico?.neurologico ||
+                        '' }}</p>
                 </div>
             </div>
             <div class="grid">
@@ -377,10 +384,11 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisLocomotor && !loadingLocomotor" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'locomotor')" />
+                    <Button v-if="loadingLocomotor" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingLocomotor">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisLocomotor?.locomotor || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisLocomotor">{{ anamnesisLocomotor?.locomotor || '' }}
+                    </p>
                 </div>
             </div>
             <div class="grid">
@@ -388,10 +396,10 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisHematico && !loadingHematico" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'hematico')" />
+                    <Button v-if="loadingHematico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingHematico">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisHematico?.hematico || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisHematico">{{ anamnesisHematico?.hematico || '' }}</p>
                 </div>
             </div>
             <div class="grid">
@@ -399,10 +407,11 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisPsiquiatrico && !loadingPsiquiatrico" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'psiquiatrico')" />
+                    <Button v-if="loadingPsiquiatrico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingPsiquiatrico">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisPsiquiatrico?.psiquiatrico || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisPsiquiatrico">{{ anamnesisPsiquiatrico?.psiquiatrico
+                        || '' }}</p>
                 </div>
             </div>
             <div class="grid">
@@ -410,10 +419,11 @@ function onDialogHide() {
                 <div class="col md:col-4">
                     <Button v-if="!anamnesisTegumentario && !loadingTegumentario" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'tegumentario')" />
+                    <Button v-if="loadingTegumentario" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
-                    <p v-if="loadingTegumentario">Cargando...</p>
-                    <p class="text-justify text-lg" v-else>{{ anamnesisTegumentario?.tegumentario || '' }}</p>
+                    <p class="text-justify text-lg" v-if="anamnesisTegumentario">{{ anamnesisTegumentario?.tegumentario
+                        || '' }}</p>
                 </div>
             </div>
             <div class="grid ">

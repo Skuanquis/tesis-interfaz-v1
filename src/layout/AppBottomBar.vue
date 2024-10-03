@@ -78,7 +78,11 @@ function onDockItemClick(item) {
                 store.dispatch('examenes/limpiarExamenes');
                 store.dispatch('anamnesis/limpiarAnamnesis');
                 store.dispatch('diferencial/limpiarDiferencial');
-
+                store.dispatch('imagenologia/limpiarImagenologia');
+                store.dispatch('laboratorios/limpiarLaboratorios');
+                store.dispatch('medicamentos/limpiarMedicamentos');
+                store.dispatch('diferencial/limpiarDiferencial');
+                store.dispatch('subespecialidades/limpiarSubespecialidades');
             },
             reject: () => {
                 toast.add({ severity: 'warn', summary: 'Cancelado', detail: 'Has cancelado la acción', life: 3000 });

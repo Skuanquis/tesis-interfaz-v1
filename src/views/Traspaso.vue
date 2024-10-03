@@ -6,6 +6,7 @@ import { useStore } from 'vuex';
 import { obtenerTraspasoRubrica } from '../services/casoService';
 import { registrarAccion } from '@/services/simulacionService';
 import { enviarDiagnosticoFinal } from '@/services/simulacionService';
+import { finalizarSimulacion } from '@/services/simulacionService';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 
@@ -75,14 +76,37 @@ const finalizarAccion = () => {
                 if (diagnosticoFinal.value) {
                     try {
                         await enviarDiagnosticoFinal(id_simulacion, diagnosticoFinal.value);
-                        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Diagnóstico final actualizado correctamente', life: 3000 });
+                        const minutos = localStorage.getItem('minutos');
+                        const segundos = localStorage.getItem('segundos');
+                        const tiempo_empleado = `${minutos.padStart(2, '0')}:${segundos.padStart(2, '0')}`;
+                        console.log(tiempo_empleado);
+
+                        try {
+                            await finalizarSimulacion(id_simulacion, tiempo_empleado);
+                            toast.add({ severity: 'info', summary: 'Simulación Finalizada', detail: 'Has finalizado la simulación', life: 3000 });
+                            router.push('/app/resultados');
+                        } catch (error) {
+                            toast.add({ severity: 'error', summary: 'Error', detail: 'Error al finalizar la simulación', life: 3000 });
+                        }
+
+                        stop();
+                        store.dispatch('examenes/limpiarExamenes');
+                        store.dispatch('anamnesis/limpiarAnamnesis');
+                        store.dispatch('diferencial/limpiarDiferencial');
+                        store.dispatch('imagenologia/limpiarImagenologia');
+                        store.dispatch('laboratorios/limpiarLaboratorios');
+                        store.dispatch('medicamentos/limpiarMedicamentos');
+                        store.dispatch('subespecialidades/limpiarSubespecialidades');
+
                     } catch (error) {
                         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar el diagnóstico final', life: 3000 });
                         console.error('Error al actualizar el diagnóstico final:', error);
                     }
+
                 } else {
                     toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'Debe seleccionar un diagnóstico final antes de finalizar', life: 3000 });
                 }
+
             } else {
                 toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'Debe seleccionar el siguiente paso antes de finalizar', life: 3000 });
             }

@@ -45,9 +45,9 @@ const fetchAcciones = async () => {
     try {
         const response = await obtenerAccionesSimulacion(id_simulacion);
         if (response.data.message === 'No hay acciones registradas para esta simulación') {
-            acciones.value = [];// No hay acciones
+            acciones.value = [];
         } else {
-            acciones.value = response.data; // Guardar las acciones en el estado
+            acciones.value = response.data;
         }
         display.value = true;
     } catch (error) {
@@ -102,7 +102,7 @@ function onDialogHide() {
         <button @click="reset">Reset</button>-->
         <div>
             <h4 class="text-center"> Historial de eventos </h4>
-        </div>  
+        </div>
         <DataTable :value="acciones" paginator :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]"
             tableStyle="min-width: 30rem"
             paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"

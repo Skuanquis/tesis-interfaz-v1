@@ -359,3 +359,31 @@ export const actualizarDiagnosticoFinal = (id_historia_clinica, diagnostico) => 
 export const obtenerTraspasoRubrica = (id_historia_clinica) => {
   return api.get(`/traspaso-rubrica/${id_historia_clinica}`)
 }
+
+export const actualizarPuntajeAnamnesis = (id_historia_clinica, data) => {
+  return api.put(`/anamnesis-puntaje/${id_historia_clinica}`, data)
+}
+
+export const actualizarPuntajeExamen = (id_historia_clinica, data) => {
+  return api.put(`/examen-puntaje/${id_historia_clinica}`, data)
+}
+
+export const actualizarPuntajeDiferencial = (id_historia_clinica, data) => {
+  return api.put(`/diferencial-puntaje/${id_historia_clinica}`, data)
+}
+
+export const actualizarPuntajeLaboratorio = (id_historia_clinica, data) => {
+  return api.put(`/laboratorio-puntaje/${id_historia_clinica}`, data)
+}
+
+export const actualizarPuntajeIntervenir = (id_historia_clinica, data) => {
+  return api.put(`/intervenir-puntaje/${id_historia_clinica}`, data)
+}
+
+export const actualizarPuntajeExterna = (id_historia_clinica, data) => {
+  return api.put(`/externa-puntaje/${id_historia_clinica}`, data)
+}
+
+export const actualizarPuntajeTraspaso = (id_historia_clinica, data) => {
+  return api.put(`/traspaso-puntaje/${id_historia_clinica}`, data)
+}

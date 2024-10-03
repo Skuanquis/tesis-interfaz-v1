@@ -222,9 +222,11 @@ function realizarCategoria(categoryName) {
                 <div class="grid">
                     <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio de orina</strong></div>
                     <div class="col md:col-4"> <Button v-if="!examenOrina && !loadingStates.orina" label="Realizar"
-                            @click="() => fetchExamenData('orina')" /></div>
+                            @click="() => fetchExamenData('orina')" />
+                        <Button v-if="loadingStates.orina" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                            disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.orina">Obteniendo...</div>
                 <template v-if="examenOrina">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -246,9 +248,12 @@ function realizarCategoria(categoryName) {
                 <div class="grid">
                     <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio de Sedimento Urinario</strong></div>
                     <div class="col md:col-4"> <Button v-if="!examenSedimento && !loadingStates.sedimento"
-                            label="Realizar" @click="() => fetchExamenData('sedimento')" /></div>
+                            label="Realizar" @click="() => fetchExamenData('sedimento')" />
+                        <Button v-if="loadingStates.sedimento" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                            disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.sedimento">Obteniendo...</div>
+
                 <template v-if="examenSedimento">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -337,9 +342,12 @@ function realizarCategoria(categoryName) {
                 <div class="grid">
                     <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio Químico Urinario</strong></div>
                     <div class="col md:col-4"> <Button v-if="!examenQuimicoUrinario && !loadingStates.quimico_urinario"
-                            label="Realizar" @click="() => fetchExamenData('quimico_urinario')" /></div>
+                            label="Realizar" @click="() => fetchExamenData('quimico_urinario')" />
+                        <Button v-if="loadingStates.quimico_urinario" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                            disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.quimico_urinario">Obteniendo...</div>
+
                 <template v-if="examenQuimicoUrinario">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -406,9 +414,12 @@ function realizarCategoria(categoryName) {
                 <div class="grid">
                     <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio Especial de Orina</strong></div>
                     <div class="col md:col-4"> <Button v-if="!examenEspecialOrina && !loadingStates.especial_orina"
-                            label="Realizar" @click="() => fetchExamenData('especial_orina')" /></div>
+                            label="Realizar" @click="() => fetchExamenData('especial_orina')" />
+                        <Button v-if="loadingStates.especial_orina" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                            disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.especial_orina">Obteniendo...</div>
+
                 <template v-if="examenEspecialOrina">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -447,10 +458,13 @@ function realizarCategoria(categoryName) {
                     <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio de Biometria Hemática</strong></div>
                     <div class="col md:col-4"> <Button
                             v-if="!examenBiometriaHematica && !loadingStates.biometria_hematica" label="Realizar"
-                            @click="() => fetchExamenData('biometria_hematica')" /></div>
+                            @click="() => fetchExamenData('biometria_hematica')" />
+                        <Button v-if="loadingStates.biometria_hematica" label="Obteniendo..."
+                            icon="pi pi-spin pi-spinner" disabled />
+                    </div>
                     <div class="col md:col-4"></div>
                 </div>
-                <div v-if="loadingStates.biometria_hematica">Obteniendo...</div>
+
                 <template v-if="examenBiometriaHematica">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -492,9 +506,12 @@ function realizarCategoria(categoryName) {
                     </div>
                     <div class="col md:col-4"> <Button
                             v-if="!examenRecuentoDiferencial && !loadingStates.recuento_diferencial" label="Realizar"
-                            @click="() => fetchExamenData('recuento_diferencial')" /></div>
+                            @click="() => fetchExamenData('recuento_diferencial')" />
+                        <Button v-if="loadingStates.recuento_diferencial" label="Obteniendo..."
+                            icon="pi pi-spin pi-spinner" disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.recuento_diferencial">Obteniendo...</div>
+
                 <template v-if="examenRecuentoDiferencial">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -559,7 +576,7 @@ function realizarCategoria(categoryName) {
                                 <div class="col md:col-4">
                                     <p><strong>Monocitos Relativo: </strong> {{
                                         examenRecuentoDiferencial.monocitos_relativo
-                                        }}</p>
+                                    }}</p>
                                 </div>
                                 <div class="col md:col-4">
                                     <p><strong>Monocitos Absoluto: </strong> {{
@@ -572,7 +589,7 @@ function realizarCategoria(categoryName) {
                                 <div class="col md:col-4">
                                     <p><strong>Recuendo Plaquetas: </strong> {{
                                         examenRecuentoDiferencial.recuento_plaquetas
-                                        }}</p>
+                                    }}</p>
                                 </div>
                                 <div class="col md:col-4">
                                     <p><strong>Recuento Reticulos: </strong> {{
@@ -592,9 +609,12 @@ function realizarCategoria(categoryName) {
                     </div>
                     <div class="col md:col-4"> <Button
                             v-if="!examenIndiceEritrocitario && !loadingStates.indice_eritrocitario" label="Realizar"
-                            @click="() => fetchExamenData('indice_eritrocitario')" /></div>
+                            @click="() => fetchExamenData('indice_eritrocitario')" />
+                        <Button v-if="loadingStates.indice_eritrocitario" label="Obteniendo..."
+                            icon="pi pi-spin pi-spinner" disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.indice_eritrocitario">Obteniendo...</div>
+
                 <template v-if="examenIndiceEritrocitario">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -619,9 +639,12 @@ function realizarCategoria(categoryName) {
                     </div>
                     <div class="col md:col-4"> <Button
                             v-if="!examenQuimicoSanguineo && !loadingStates.quimico_sanguineo" label="Realizar"
-                            @click="() => fetchExamenData('quimico_sanguineo')" /></div>
+                            @click="() => fetchExamenData('quimico_sanguineo')" />
+                        <Button v-if="loadingStates.quimico_sanguineo" label="Obteniendo..."
+                            icon="pi pi-spin pi-spinner" disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.quimico_sanguineo">Obteniendo...</div>
+
                 <template v-if="examenQuimicoSanguineo">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -686,7 +709,7 @@ function realizarCategoria(categoryName) {
                                 <div class="col md:col-4">
                                     <p><strong>Fosfatasa Alcalina: </strong> {{
                                         examenQuimicoSanguineo.fosfatasa_alcalina
-                                        }}</p>
+                                    }}</p>
                                 </div>
                                 <div class="col md:col-4">
                                     <p><strong>Proteinas Totales: </strong> {{
@@ -699,7 +722,7 @@ function realizarCategoria(categoryName) {
                                 <div class="col md:col-4">
                                     <p><strong>Albumina: </strong> {{
                                         examenQuimicoSanguineo.albumina
-                                        }}</p>
+                                    }}</p>
                                 </div>
                                 <div class="col md:col-4">
                                     <p><strong>Globulina: </strong> {{
@@ -720,7 +743,7 @@ function realizarCategoria(categoryName) {
                                 <div class="col md:col-4">
                                     <p><strong>Trigliceridos: </strong> {{
                                         examenQuimicoSanguineo.trigliceridos
-                                        }}</p>
+                                    }}</p>
                                 </div>
                                 <div class="col md:col-4">
                                     <p><strong>HDL Colesterol: </strong> {{
@@ -733,7 +756,7 @@ function realizarCategoria(categoryName) {
                                 <div class="col md:col-4">
                                     <p><strong>LDL Colesterol: </strong> {{
                                         examenQuimicoSanguineo.ldl_colesterol
-                                        }}</p>
+                                    }}</p>
                                 </div>
                                 <div class="col md:col-4">
                                     <p><strong>VLDL Colesterol: </strong> {{
@@ -750,7 +773,7 @@ function realizarCategoria(categoryName) {
                                 <div class="col md:col-4">
                                     <p><strong>Hemoglobina Glicosilada: </strong> {{
                                         examenQuimicoSanguineo.hemoglobina_glicosilada
-                                        }}</p>
+                                    }}</p>
                                 </div>
                                 <div class="col md:col-4">
                                     <p><strong>Nitrogeno Ureico: </strong> {{
@@ -769,9 +792,12 @@ function realizarCategoria(categoryName) {
                     <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio Hemostasea Sanguinea</strong>
                     </div>
                     <div class="col md:col-4"> <Button v-if="!examenHemostasea && !loadingStates.hemostasea"
-                            label="Realizar" @click="() => fetchExamenData('hemostasea')" /></div>
+                            label="Realizar" @click="() => fetchExamenData('hemostasea')" />
+                        <Button v-if="loadingStates.hemostasea" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                            disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.hemostasea">Obteniendo...</div>
+
                 <template v-if="examenHemostasea">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -835,9 +861,12 @@ function realizarCategoria(categoryName) {
                     <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio Serologia Sanguinea</strong>
                     </div>
                     <div class="col md:col-4"> <Button v-if="!examenSerologia && !loadingStates.serologia"
-                            label="Realizar" @click="() => fetchExamenData('serologia')" /></div>
+                            label="Realizar" @click="() => fetchExamenData('serologia')" />
+                        <Button v-if="loadingStates.serologia" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                            disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.serologia">Obteniendo...</div>
+
                 <template v-if="examenSerologia">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -882,9 +911,12 @@ function realizarCategoria(categoryName) {
                     <div class="col md:col-8 text-lg pt-3"><strong>Laboratorio Electrolitos Sanguineos</strong>
                     </div>
                     <div class="col md:col-4"> <Button v-if="!examenElectrolitos && !loadingStates.electrolitos"
-                            label="Realizar" @click="() => fetchExamenData('electrolitos')" /></div>
+                            label="Realizar" @click="() => fetchExamenData('electrolitos')" />
+                        <Button v-if="loadingStates.electrolitos" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                            disabled />
+                    </div>
                 </div>
-                <div v-if="loadingStates.electrolitos">Obteniendo...</div>
+
                 <template v-if="examenElectrolitos">
                     <div class="data-wrapper">
                         <div class="data-section">
@@ -926,7 +958,7 @@ function realizarCategoria(categoryName) {
 
             </AccordionTab>
             <AccordionTab header="Imagenología">
-                <div v-for="(imagenologia, categoryName) in imagenologias" :key="categoryName">
+                <div v-for="(imagenologia, categoryName) in imagenologias" :key="categoryName" class="pt-4">
                     <div class="grid">
                         <div class="col md:col-4 pt-3 text-lg">{{ categoryName }}</div>
                         <div class="col md:col-4"></div>
@@ -937,7 +969,7 @@ function realizarCategoria(categoryName) {
                         </div>
                     </div>
                     <div v-if="selectedCategories.includes(categoryName)" class="card text-center">
-                        <Image :src="imagenologia.path" alt="" width="350" preview />
+                        <Image :src="imagenologia.path" alt="" width="250" preview />
                         <p>Interpretación: {{ imagenologia.interpretacion }}</p>
                     </div>
                 </div>

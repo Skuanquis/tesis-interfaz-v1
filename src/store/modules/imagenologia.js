@@ -14,6 +14,10 @@ const imagenologiaModule = {
       if (!state.selectedCategories.includes(categoryName)) {
         state.selectedCategories.push(categoryName)
       }
+    },
+    CLEAR_IMAGENOLOGIA(state) {
+      state.imagenologias = {}
+      state.selectedCategories = []
     }
   },
   actions: {
@@ -27,6 +31,9 @@ const imagenologiaModule = {
     },
     realizarCategoria({ commit }, categoryName) {
       commit('ADD_SELECTED_CATEGORY', categoryName)
+    },
+    limpiarImagenologia({ commit }) {
+      commit('CLEAR_IMAGENOLOGIA')
     }
   },
   getters: {

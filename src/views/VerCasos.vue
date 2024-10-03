@@ -41,7 +41,14 @@ import {
     obtenerCategoriasImagenologia, obtenerImagenesPorHistoriaClinica,
     actualizarImagenes, cargarImagen,
     obtenerTraspaso, actualizarTraspaso,
-    actualizarDiagnosticoFinal
+    actualizarDiagnosticoFinal,
+    actualizarPuntajeAnamnesis,
+    actualizarPuntajeExamen,
+    actualizarPuntajeDiferencial,
+    actualizarPuntajeIntervenir,
+    actualizarPuntajeExterna,
+    actualizarPuntajeLaboratorio,
+    actualizarPuntajeTraspaso
 
 
 } from '../services/casoService';
@@ -126,6 +133,122 @@ const traspaso = ref({});
 const diagnosticosDiferenciales = ref([]);
 const diagnosticoFinal = ref(null);
 
+
+function contarYPrepararPuntajes(anamnesis) {
+    let puntajeCount = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    for (let key in anamnesis) {
+        if (key.startsWith('puntaje_') || key.startsWith('score')) {
+            const puntaje = anamnesis[key];
+            if (hasOwnProperty.call(puntajeCount, puntaje)) {
+                puntajeCount[puntaje]++;
+            }
+        }
+    }
+    puntajeCount = {
+        A: puntajeCount.A || 0,
+        B: puntajeCount.B || 0,
+        C: puntajeCount.C || 0,
+        D: puntajeCount.D || 0,
+        E: puntajeCount.E || 0,
+    };
+    const data = {
+        puntaje_a: puntajeCount.A,
+        puntaje_b: puntajeCount.B,
+        puntaje_c: puntajeCount.C,
+        puntaje_d: puntajeCount.D,
+        puntaje_e: puntajeCount.E
+    };
+    return data;
+}
+
+function reunirPuntajes(...objetos) {
+    let puntajeCount = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    function contarPuntajes(obj) {
+        for (let key in obj) {
+            if (key.startsWith('puntaje_')) {
+                const puntaje = obj[key];
+                //console.log("aguii: ", puntaje)
+                if (hasOwnProperty.call(puntajeCount, puntaje)) {
+                    puntajeCount[puntaje]++;
+                }
+            }
+        }
+    }
+    objetos.forEach(obj => contarPuntajes(obj));
+    puntajeCount = {
+        A: puntajeCount.A || 0,
+        B: puntajeCount.B || 0,
+        C: puntajeCount.C || 0,
+        D: puntajeCount.D || 0,
+        E: puntajeCount.E || 0,
+    };
+    const data = {
+        puntaje_a: puntajeCount.A,
+        puntaje_b: puntajeCount.B,
+        puntaje_c: puntajeCount.C,
+        puntaje_d: puntajeCount.D,
+        puntaje_e: puntajeCount.E
+    };
+    return data
+}
+
+function contarYPrepararPuntajesVectores(objeto) {
+    let puntajeCount = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    for (let key in objeto) {
+        if (hasOwnProperty.call(objeto, key)) {
+            const puntaje = objeto[key].score;
+            if (hasOwnProperty.call(puntajeCount, puntaje)) {
+                puntajeCount[puntaje]++;
+            }
+        }
+    }
+    puntajeCount = {
+        A: puntajeCount.A || 0,
+        B: puntajeCount.B || 0,
+        C: puntajeCount.C || 0,
+        D: puntajeCount.D || 0,
+        E: puntajeCount.E || 0,
+    };
+    const data = {
+        puntaje_a: puntajeCount.A,
+        puntaje_b: puntajeCount.B,
+        puntaje_c: puntajeCount.C,
+        puntaje_d: puntajeCount.D,
+        puntaje_e: puntajeCount.E
+    };
+    return data;
+}
+
+function contarYPrepararPuntajesImagenologia(objeto) {
+    let puntajeCount = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+    const hasOwnProperty = Object.prototype.hasOwnProperty;
+    for (let key in objeto) {
+        if (hasOwnProperty.call(objeto, key)) {
+            const puntaje = objeto[key].puntaje_imagenologia;
+            if (hasOwnProperty.call(puntajeCount, puntaje)) {
+                puntajeCount[puntaje]++;
+            }
+        }
+    }
+    puntajeCount = {
+        A: puntajeCount.A || 0,
+        B: puntajeCount.B || 0,
+        C: puntajeCount.C || 0,
+        D: puntajeCount.D || 0,
+        E: puntajeCount.E || 0,
+    };
+    const data = {
+        puntaje_a: puntajeCount.A,
+        puntaje_b: puntajeCount.B,
+        puntaje_c: puntajeCount.C,
+        puntaje_d: puntajeCount.D,
+        puntaje_e: puntajeCount.E
+    };
+    return data;
+}
 
 const cerrarDialogo = () => {
     visible.value = false;
@@ -572,6 +695,7 @@ const guardarTodosLosCambiosPaciente = async () => {
         await actualizarAntecedentesNoPatologicos(paciente.value.id_historia_clinica, antecedentesNoPatologicos.value);
         await actualizarAntecedentesFamiliares(paciente.value.id_historia_clinica, antecedentesFamiliares.value);
         await actualizarAnamnesisSistemas(paciente.value.id_historia_clinica, anamnesisSistemas.value);
+        await actualizarPuntajeAnamnesis(paciente.value.id_historia_clinica, contarYPrepararPuntajes(anamnesisSistemas.value))
         await actualizarSignosVitales(paciente.value.id_historia_clinica, signosVitales.value);
         for (const motivo of motivosConsulta.value) {
             if (motivo.id_motivo_consulta) {
@@ -591,7 +715,6 @@ const guardarTodosLosCambiosPaciente = async () => {
 
 const guardarTodosLosCambiosExamen = async () => {
     try {
-
         await actualizarExamenFisicoGeneral(paciente.value.id_historia_clinica, examenFisico.value);
         await actualizarExamenFisicoSegmentario(paciente.value.id_historia_clinica, examenFisicoSegmentario.value);
         await actualizarExamenObstetrico(paciente.value.id_historia_clinica, examenObstetrico.value);
@@ -600,6 +723,7 @@ const guardarTodosLosCambiosExamen = async () => {
         await actualizarExamenCirculatorio(paciente.value.id_historia_clinica, examenCirculatorio.value);
         await actualizarExamenPiel(paciente.value.id_historia_clinica, examenDePiel.value);
         await actualizarExamenPsicologico(paciente.value.id_historia_clinica, examenPsicologico.value);
+        await actualizarPuntajeExamen(paciente.value.id_historia_clinica, reunirPuntajes(examenFisico.value, examenFisicoSegmentario.value, examenObstetrico.value, examenViaAerea.value, examenRespiratorio.value, examenCirculatorio.value, examenDePiel.value, examenPsicologico.value));
 
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Todos los cambios se han guardado correctamente', life: 3000 });
     } catch (error) {
@@ -698,11 +822,9 @@ const guardarDiagnosticosDiferenciales = async () => {
             feed_diagnostico_diferencial: diagnosticoDetails.value[diagnosisId].feedback,
             puntaje_diagnostico_diferencial: diagnosticoDetails.value[diagnosisId].score,
         }));
-
         await actualizarDiagnosticosDiferenciales(casoSeleccionado.value.id_historia_clinica, data);
-
+        await actualizarPuntajeDiferencial(casoSeleccionado.value.id_historia_clinica, contarYPrepararPuntajesVectores(diagnosticoDetails.value))
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Diagnósticos diferenciales guardados correctamente', life: 3000 });
-        visible.value = false;
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar diagnósticos diferenciales', life: 3000 });
     }
@@ -812,7 +934,7 @@ const guardarMedicamentosSuministrados = async () => {
         }));
 
         await actualizarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica, data);
-
+        await actualizarPuntajeIntervenir(casoSeleccionado.value.id_historia_clinica, contarYPrepararPuntajesVectores(medicamentoDetails.value))
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Medicamentos suministrados guardados correctamente', life: 3000 });
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar medicamentos suministrados', life: 3000 });
@@ -925,6 +1047,7 @@ watch(subespecialidades, (newVal, oldVal) => {
 const guardarSubespecialidades = async () => {
     try {
         await actualizarSubespecialidades(casoSeleccionado.value.id_historia_clinica, subsData.value);
+        await actualizarPuntajeExterna(casoSeleccionado.value.id_historia_clinica, contarYPrepararPuntajesVectores(subsData.value))
         toast.add({
             severity: 'success',
             summary: 'Éxito',
@@ -1043,8 +1166,6 @@ const cargarBiometriaHematica = async (id_historia_clinica) => {
 
 const guardarTodosLosCambiosLaboratorio = async () => {
     try {
-
-        console.log(labEspecial.value);
         await actualizarExamenFisicoOrina(paciente.value.id_historia_clinica, labOrina.value);
         await actualizarSedimentoUrinario(paciente.value.id_historia_clinica, labSed.value);
         await actualizarExamenQuimicoUrinario(paciente.value.id_historia_clinica, labQuimico.value);
@@ -1058,6 +1179,17 @@ const guardarTodosLosCambiosLaboratorio = async () => {
         await actualizarQuimicaSanguinea(paciente.value.id_historia_clinica, labQuimicoSanguineo.value);
         await actualizarBiometriaHematica(paciente.value.id_historia_clinica, labBiometriaHematica.value);
         await actualizarImagenes(casoSeleccionado.value.id_historia_clinica, imagenesData.value);
+
+        let ia = contarYPrepararPuntajesImagenologia(imagenesData.value)
+        let ii = reunirPuntajes(labOrina.value, labSed.value, labQuimico.value, labEspecial.value, labHematologico.value, labIndice.value, labRecuento.value, labHemostasea.value, labSerologia.value, labElectrolitos.value, labQuimicoSanguineo.value, labBiometriaHematica.value)
+        const datitos = {
+            puntaje_a: ia.puntaje_a + ii.puntaje_a,
+            puntaje_b: ia.puntaje_b + ii.puntaje_b,
+            puntaje_c: ia.puntaje_c + ii.puntaje_c,
+            puntaje_d: ia.puntaje_d + ii.puntaje_d,
+            puntaje_e: ia.puntaje_e + ii.puntaje_e
+        }
+        await actualizarPuntajeLaboratorio(paciente.value.id_historia_clinica, datitos)
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Examen físico general actualizado correctamente', life: 3000 });
     } catch (error) {
         console.log(error)
@@ -1192,6 +1324,7 @@ const guardarTodosLosCambiosTraspaso = async () => {
         await actualizarTraspaso(paciente.value.id_historia_clinica, traspaso.value);
         if (diagnosticoFinal.value) {
             await actualizarDiagnosticoFinal(casoSeleccionado.value.id_historia_clinica, diagnosticoFinal.value);
+            await actualizarPuntajeTraspaso(casoSeleccionado.value.id_historia_clinica, contarYPrepararPuntajes(traspaso.value))
             toast.add({
                 severity: 'success',
                 summary: 'Éxito',
