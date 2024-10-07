@@ -1,28 +1,28 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useLayout } from '@/layout/composables/layout';
-//import { getUserInfo } from '@/services/userService';
+import { getUserInfo } from '@/services/userService';
 
 
 const { onMenuToggle } = useLayout();
-const nombre = ref('');
+const usuario = ref('');
 const outsideClickListener = ref(null);
 const topbarMenuActive = ref(false);
-/*
+
 const info = async () => {
     try {
         const response = await getUserInfo();
-        const user = response.data;
-        nombre.value = user.nombre;
+        usuario.value = response.data;
+        //console.log(usuario.value)
     } catch (error) {
         console.error('Error fetching user info:', error);
         localStorage.removeItem('token');
     }
-};*/
+};
 
 onMounted(() => {
     bindOutsideClickListener();
-    //info();
+    info();
 });
 
 onBeforeUnmount(() => {
@@ -81,7 +81,10 @@ const isOutsideClicked = (event) => {
 
         </button>
         <div class="layout-topbar-menu mt-2">
-            <h5>{{ nombre }}</h5>
+            <h5 v-if="usuario && usuario.nombre && usuario.paterno && usuario.materno">
+                {{ usuario.nombre.toUpperCase() + " " + usuario.paterno.toUpperCase() + " " +
+                    usuario.materno.toUpperCase() }}
+            </h5>
         </div>
     </div>
 </template>

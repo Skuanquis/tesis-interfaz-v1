@@ -45,6 +45,27 @@ export const getExamenFisicoSegmentarioExtremidades = (id_historia_clinica) => {
 export const getExamenFisicoSegmentarioNeurologico = (id_historia_clinica) => {
   return api.get(`/examen-fisico-segmentario-neurologico/${id_historia_clinica}`)
 }
+
+export const getExamenFisicoSegmentarioPiel = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-segmentario-piel/${id_historia_clinica}`)
+}
+
+export const getExamenCirculatorio = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-circulatorio/${id_historia_clinica}`)
+}
+
+export const getExamenRespiratorio = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-respiratorio/${id_historia_clinica}`)
+}
+
+export const getExamenViaAerea = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-via-aerea/${id_historia_clinica}`)
+}
+
+export const getExamenPsicologico = (id_historia_clinica) => {
+  return api.get(`/examen-fisico-psicologico/${id_historia_clinica}`)
+}
+
 export const getExamenFisicoSegmentario = (id_historia_clinica) => {
   return api.get(`/examen-fisico-segmentario/${id_historia_clinica}`)
 }

@@ -791,9 +791,8 @@ onMounted(() => {
                                         </div>
                                     </div>
                                 </div>
-
-
                             </div>
+                            
                             <div class="grid">
                                 <div class="col md:col-5">
                                     <h5>Examen físico complemetario</h5>

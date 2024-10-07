@@ -1,0 +1,851 @@
+<!-- eslint-disable vue/multi-word-component-names -->
+<script setup>
+import { ref, onMounted } from 'vue';
+import {
+    obtenerCasosClinicos,
+    cambiarEstadoCaso,
+    obtenerCasoClinicoPorId,
+    obtenerPaciente,
+    obtenerAnamnesisSistemas, actualizarAnamnesisSistemas,
+    obtenerPuntaje, cargarImagen
+} from '../services/casoService';
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
+const casosClinicos = ref([]);
+const visible = ref(false);
+const casoSeleccionado = ref(null);
+const paciente = ref({});
+
+const anamnesisSistemas = ref({});
+const scoreAnamnesis = ref([]);
+
+const mostrarFileUpload = ref({
+    cardiovascular: false,
+    endocrino: false,
+    gastrointestinal: false,
+    genitourinario: false,
+    respiratorio: false,
+    neurologico: false,
+    locomotor: false,
+    hematico: false,
+    psiquiatrico: false,
+    tegumentario: false
+});
+
+const cerrarDialogo = () => {
+    visible.value = false;
+    localStorage.removeItem('id_historia_clinica');
+};
+
+const cargarCasosClinicos = async () => {
+    try {
+        const response = await obtenerCasosClinicos();
+        casosClinicos.value = response.data;
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al obtener los casos clínicos',
+            life: 3000
+        });
+    }
+};
+
+const toggleEstadoCaso = async (caso) => {
+    try {
+        const nuevoEstado = caso.estado === 'habilitado' ? 'deshabilitado' : 'habilitado';
+        await cambiarEstadoCaso(caso.id_caso_clinico, nuevoEstado);
+        caso.estado = nuevoEstado;
+        toast.add({
+            severity: caso.estado === 'habilitado' ? 'success' : 'warn',
+            summary: 'Éxito',
+            detail: `Se ha ${nuevoEstado} el caso clínico N°${caso.id_caso_clinico}`,
+            life: 3000
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo cambiar el estado del caso clínico',
+            life: 3000
+        });
+    }
+};
+
+const getDificultadSeverity = (dificultad) => {
+    switch (dificultad.toLowerCase()) {
+        case 'principiante':
+            return 'success';
+        case 'intermedio':
+            return 'warning';
+        case 'avanzado':
+            return 'danger';
+        default:
+            return 'info';
+    }
+};
+
+const cargarDatosPaciente = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPaciente(id_historia_clinica);
+        const data = response.data[0];
+        if (data.fecha_nacimiento) {
+            const fecha = new Date(data.fecha_nacimiento);
+            data.fecha_nacimiento = fecha.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+        paciente.value = data;
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener datos del paciente', life: 3000 });
+    }
+};
+
+const mostrarDetalleCaso = async (idCaso) => {
+    try {
+        const response = await obtenerCasoClinicoPorId(idCaso);
+        casoSeleccionado.value = response.data;
+        await cargarDatosPaciente(casoSeleccionado.value.id_historia_clinica);
+        await cargarAnamnesisSistemas(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntaje(casoSeleccionado.value.id_historia_clinica);
+
+        visible.value = true;
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el caso clínico o diagnósticos diferenciales', life: 3000 });
+    }
+};
+
+const cargarAnamnesisSistemas = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerAnamnesisSistemas(id_historia_clinica);
+        anamnesisSistemas.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener anamnesis por sistemas', life: 3000 });
+    }
+};
+
+
+const guardarTodosLosCambiosAnamnesis = async () => {
+    try {
+        console.log('Contenido de anamnesisSistemas antes de guardar:', anamnesisSistemas.value);
+
+        await actualizarAnamnesisSistemas(paciente.value.id_historia_clinica, anamnesisSistemas.value);
+
+        toast.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Todos los cambios en la anamnesis se han guardado correctamente',
+            life: 3000,
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al guardar los cambios en la anamnesis',
+            life: 3000,
+        });
+    }
+};
+
+
+
+const cargarPuntaje = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreAnamnesis.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
+const toggleFileUpload = (sistema) => {
+    if (anamnesisSistemas.value[`img_${sistema}`]) {
+
+        anamnesisSistemas.value[`img_${sistema}`] = '';
+        toast.add({
+            severity: 'info',
+            summary: 'Imagen eliminada',
+            detail: `Se ha eliminado la imagen del sistema ${sistema}`,
+            life: 3000,
+        });
+    } else {
+        mostrarFileUpload.value[sistema] = !mostrarFileUpload.value[sistema];
+        if (!mostrarFileUpload.value[sistema]) {
+            anamnesisSistemas.value[`img_${sistema}`] = '';
+            toast.add({
+                severity: 'info',
+                summary: 'Imagen removida',
+                detail: `Se ha removido la imagen del sistema ${sistema}`,
+                life: 3000,
+            });
+        }
+    }
+};
+
+const onFileSelect = (event, sistema) => {
+    const archivo = event.files[0];
+    subirImagen(sistema, archivo);
+};
+
+const subirImagen = async (sistema, archivo) => {
+    try {
+        const formData = new FormData();
+        formData.append('imagen', archivo);
+
+        const response = await cargarImagen(formData);
+        const rutaImagen = response.data.path;
+        anamnesisSistemas.value = {
+            ...anamnesisSistemas.value,
+            [`img_${sistema}`]: rutaImagen
+        };
+        toast.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Imagen cargada correctamente para ${sistema}`,
+            life: 3000,
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Error al cargar la imagen para ${sistema}`,
+            life: 3000,
+        });
+    }
+};
+
+
+
+
+onMounted(() => {
+    cargarCasosClinicos();
+});
+</script>
+
+
+<template>
+    <div class="grid">
+        <div v-for="caso in casosClinicos" :key="caso.id_caso_clinico" class="col md:col-4">
+            <Card style="overflow: hidden">
+                <template #title>Caso N° {{ caso.id_caso_clinico }}</template>
+                <template #subtitle>Autor: {{ caso.autor }}</template>
+                <template #content>
+                    <div class="grid">
+                        <div class="col md:col-12 capitalize"><strong>Nombre: </strong>{{ caso.nombre }} {{ caso.paterno
+                            }} {{
+                                caso.materno }}</div>
+                    </div>
+                    <div class="grid">
+                        <div class="col md:col-4"><strong>Peso: </strong>{{ caso.peso }} kg</div>
+                        <div class="col md:col-4"><strong>Talla: </strong>{{ caso.talla }} m</div>
+                        <div class="col md:col-4 capitalize"><strong>Sexo: </strong>{{ caso.sexo }}</div>
+                    </div>
+                    <p class="m-0 text-justify">
+                        {{ caso.descripcion }}
+                    </p>
+                    <div class="grid pt-2">
+                        <div class="col md:col-12"><strong>Categoría: </strong>
+                            <Tag :value="caso.categoria" severity="info" />
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div class="col md:col-12"><strong>Dificultad: </strong>
+                            <Tag :value="caso.difucultad" :severity="getDificultadSeverity(caso.difucultad)" />
+                        </div>
+                    </div>
+                </template>
+                <template #footer>
+                    <div class="flex gap-3 mt-1">
+                        <Button :label="caso.estado === 'deshabilitado' ? 'Habilitar' : 'Deshabilitar'"
+                            @click="toggleEstadoCaso(caso)"
+                            :severity="caso.estado === 'deshabilitado' ? 'contrast' : 'danger'" class="w-full" />
+                        <Button label="Ver" class="w-full" @click="mostrarDetalleCaso(caso.id_caso_clinico)" />
+                    </div>
+                </template>
+            </Card>
+        </div>
+        <Dialog v-model:visible="visible" modal header="Ver caso clínico" :style="{ width: '65rem' }">
+            <div class="justify-content-center">
+                <Stepper linear orientation="vertical">
+                    <StepperPanel header="Paciente">
+                        <template #content="{ prevCallback, nextCallback }">
+
+                            <div class="grid">
+                                <div class="col md:col-5">
+                                    <h5>Anamnesis por sistemas</h5>
+                                </div>
+                                <div class="col md:col-4">
+                                    <h5>Retroalimentación por sistemas</h5>
+                                </div>
+                                <div class="col md:col-3">
+                                    <h5>Puntaje asignado</h5>
+                                </div>
+                            </div>
+                            <div class="grid p-fluid">
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.cardiovascular" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaCardiovascular">Sistema Cardiovascular</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_cardiovascular" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="feed_Cardiovascular">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_cardiovascular"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_cardiovascular">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_cardiovascular ? 'Eliminar Imagen' : mostrarFileUpload.cardiovascular ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_cardiovascular ? 'pi pi-trash' : mostrarFileUpload.cardiovascular ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_cardiovascular ? 'danger' : mostrarFileUpload.cardiovascular ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('cardiovascular')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.cardiovascular || anamnesisSistemas.img_cardiovascular"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'cardiovascular')">
+
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_cardiovascular">
+                                                        <img :src="anamnesisSistemas.img_cardiovascular"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Endocrino -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.endocrino" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaEndocrino">Sistema Endocrino</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_endocrino" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="feed_endocrino">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_endocrino"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_endocrino">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_endocrino ? 'Eliminar Imagen' : mostrarFileUpload.endoimg_endocrino ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_endocrino ? 'pi pi-trash' : mostrarFileUpload.endoimg_endocrino ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_endocrino ? 'danger' : mostrarFileUpload.endoimg_endocrino ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('endocrino')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.endocrino || anamnesisSistemas.img_endocrino"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'endocrino')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_endocrino">
+                                                        <img :src="anamnesisSistemas.img_endocrino" class="img-preview"
+                                                            width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Gastrointestinal -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.gastrointestinal" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="sistemaGastrointestinal">Sistema Gastrointestinal</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_gastrointestinal" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="feed_gastrointestinal">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_gastrointestinal"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_gastrointestinal">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_gastrointestinal ? 'Eliminar Imagen' : mostrarFileUpload.img_gastrointestinal ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_gastrointestinal ? 'pi pi-trash' : mostrarFileUpload.img_gastrointestinal ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_gastrointestinal ? 'danger' : mostrarFileUpload.img_gastrointestinal ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('gastrointestinal')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.gastrointestinal || anamnesisSistemas.img_gastrointestinal"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'gastrointestinal')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_gastrointestinal">
+                                                        <img :src="anamnesisSistemas.img_gastrointestinal"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Genitourinario -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.genitourinario" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaGenitourinario">Sistema Genitourinario</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_genitourinario" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="feed_genitourinario">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_genitourinario"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_genitourinario">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_genitourinario ? 'Eliminar Imagen' : mostrarFileUpload.genitourinario ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_genitourinario ? 'pi pi-trash' : mostrarFileUpload.genitourinario ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_genitourinario ? 'danger' : mostrarFileUpload.genitourinario ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('genitourinario')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.genitourinario || anamnesisSistemas.img_genitourinario"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'genitourinario')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_genitourinario">
+                                                        <img :src="anamnesisSistemas.img_genitourinario"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Respiratorio -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.respiratorio" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaRespiratorio">Sistema Respiratorio</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_respiratorio" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="feed_respiratorio">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_respiratorio"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_respiratorio">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_respiratorio ? 'Eliminar Imagen' : mostrarFileUpload.img_respiratorio ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_respiratorio ? 'pi pi-trash' : mostrarFileUpload.img_respiratorio ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_respiratorio ? 'danger' : mostrarFileUpload.img_respiratorio ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('respiratorio')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.respiratorio || anamnesisSistemas.img_respiratorio"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'respiratorio')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_respiratorio">
+                                                        <img :src="anamnesisSistemas.img_respiratorio"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Neurológico -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.neurologico" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaNeurologico">Sistema Neurológico</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_neurologico" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="feed_neurologico">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_neurologico"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_neurologico">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_neurologico ? 'Eliminar Imagen' : mostrarFileUpload.img_neurologico ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_neurologico ? 'pi pi-trash' : mostrarFileUpload.img_neurologico ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_neurologico ? 'danger' : mostrarFileUpload.img_neurologico ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('neurologico')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.neurologico || anamnesisSistemas.img_neurologico"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'neurologico')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_neurologico">
+                                                        <img :src="anamnesisSistemas.img_neurologico"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Locomotor -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.locomotor" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaLocomotor">Sistema Locomotor</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_locomotor" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="feed_locomotor">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_locomotor"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_locomotor">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_locomotor ? 'Eliminar Imagen' : mostrarFileUpload.img_locomotor ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_locomotor ? 'pi pi-trash' : mostrarFileUpload.img_locomotor ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_locomotor ? 'danger' : mostrarFileUpload.img_locomotor ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('locomotor')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.locomotor || anamnesisSistemas.img_locomotor"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'locomotor')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_locomotor">
+                                                        <img :src="anamnesisSistemas.img_locomotor" class="img-preview"
+                                                            width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Hemático -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.hematico" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaHematico">Sistema Hemático</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_hematico" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="feed_Hematico">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_hematico"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_hematico">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_hematico ? 'Eliminar Imagen' : mostrarFileUpload.hematico ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_hematico ? 'pi pi-trash' : mostrarFileUpload.hematico ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_hematico ? 'danger' : mostrarFileUpload.hematico ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('hematico')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.hematico || anamnesisSistemas.img_hematico"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'hematico')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_hematico">
+                                                        <img :src="anamnesisSistemas.img_hematico" class="img-preview"
+                                                            width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Psiquiátrico -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.psiquiatrico" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaPsiquiatrico">Sistema Psiquiátrico</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_psiquiatrico" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="feed_psiquiatrico">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_psiquiatrico"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_psiquiatrico">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_psiquiatrico ? 'Eliminar Imagen' : mostrarFileUpload.img_psiquiatrico ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_psiquiatrico ? 'pi pi-trash' : mostrarFileUpload.img_psiquiatrico ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_psiquiatrico ? 'danger' : mostrarFileUpload.img_psiquiatrico ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('psiquiatrico')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.psiquiatrico || anamnesisSistemas.img_psiquiatrico"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'psiquiatrico')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_psiquiatrico">
+                                                        <img :src="anamnesisSistemas.img_psiquiatrico"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sistema Tegumentario -->
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-2">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.tegumentario" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="sistemaTegumentario">Sistema Tegumentario</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="anamnesisSistemas.feed_tegumentario" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="feed_tegumentario">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="anamnesisSistemas.puntaje_tegumentario"
+                                                    :options="scoreAnamnesis" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_tegumentario">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="anamnesisSistemas.img_tegumentario ? 'Eliminar Imagen' : mostrarFileUpload.img_tegumentario ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="anamnesisSistemas.img_tegumentario ? 'pi pi-trash' : mostrarFileUpload.img_tegumentario ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="anamnesisSistemas.img_tegumentario ? 'danger' : mostrarFileUpload.img_tegumentario ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('tegumentario')" />
+                                            </div>
+                                        </div>
+
+                                        <div v-if="mostrarFileUpload.tegumentario || anamnesisSistemas.img_tegumentario"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'tegumentario')">
+                                                <template #content>
+                                                    <div v-if="anamnesisSistemas.img_tegumentario">
+                                                        <img :src="anamnesisSistemas.img_tegumentario"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex py-4 gap-2">
+                                <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="prevCallback" />
+                                <Button label="Guardar" severity="success" icon="pi pi-save"
+                                    @click="guardarTodosLosCambiosAnamnesis" />
+                                <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
+                                    @click="nextCallback" />
+                            </div>
+                        </template>
+                    </StepperPanel>
+                </Stepper>
+
+                <div class="flex justify-content-end gap-2">
+                    <Button type="button" label="Cancel" severity="secondary" @click=cerrarDialogo></Button>
+                    <Button type=" button" label="Guardar" @click="visible = false"></Button>
+                </div>
+            </div>
+        </Dialog>
+    </div>
+</template>

@@ -204,6 +204,7 @@ function onDialogHide() {
                             <h5 class="case-data text-lg"><strong>Edad: </strong>{{ paciente.edad }} años</h5>
                             <h5 class="case-data text-lg"><strong>Peso: </strong>{{ paciente.peso }} Kg.</h5>
                             <h5 class="case-data text-lg"><strong>Talla: </strong>{{ paciente.talla }} m.</h5>
+                            <h5 class="case-data text-lg"><strong>Ocupación: </strong>{{ paciente.ocupacion }} </h5>
                         </div>
                     </div>
                 </div>

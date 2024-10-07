@@ -84,6 +84,14 @@ export const actualizarAntecedentesFamiliares = (id_historia_clinica, data) => {
   return api.put(`/antecedentes_familiares/${id_historia_clinica}`, data)
 }
 
+export const obtenerAntecedentesGinecoObstetricos = (id_historia_clinica) => {
+  return api.get(`/antecedentes_gineco_obstetricos/${id_historia_clinica}`)
+}
+
+export const actualizarAntecedentesGinecoObstetricos = (id_historia_clinica, data) => {
+  return api.put(`/antecedentes_gineco_obstetricos/${id_historia_clinica}`, data)
+}
+
 export const obtenerAnamnesisSistemas = (id_historia_clinica) => {
   return api.get(`/anamnesis_sistemas/${id_historia_clinica}`)
 }
@@ -116,24 +124,16 @@ export const obtenerExamenFisicoGeneral = (id_historia_clinica) => {
   return api.get(`/examen_fisico_general/${id_historia_clinica}`)
 }
 
-export const actualizarExamenFisicoGeneral = (id_examen_fisico_general, data) => {
-  return api.put(`/examen_fisico_general/${id_examen_fisico_general}`, data)
+export const actualizarExamenFisicoGeneral = (id_historia_clinica, data) => {
+  return api.put(`/examen_fisico_general/${id_historia_clinica}`, data)
 }
 
 export const obtenerExamenFisicoSegmentario = (id_historia_clinica) => {
   return api.get(`/examen_fisico_segmentario/${id_historia_clinica}`)
 }
 
-export const actualizarExamenFisicoSegmentario = (id_examen_fisico_segmentario, data) => {
-  return api.put(`/examen_fisico_segmentario/${id_examen_fisico_segmentario}`, data)
-}
-
-export const obtenerExamenPiel = (id_historia_clinica) => {
-  return api.get(`/examen_piel/${id_historia_clinica}`)
-}
-
-export const actualizarExamenPiel = (id_examen_piel, data) => {
-  return api.put(`/examen_piel/${id_examen_piel}`, data)
+export const actualizarExamenFisicoSegmentario = (id_historia_clinica, data) => {
+  return api.put(`/examen_fisico_segmentario/${id_historia_clinica}`, data)
 }
 
 export const obtenerExamenCirculatorio = (id_historia_clinica) => {
@@ -344,6 +344,14 @@ export const cargarImagen = (formData) => {
   })
 }
 
+export const cargarImagenCategoria = (formData) => {
+  return api.post(`/upload_imagen_categoria`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
 export const obtenerTraspaso = (id_historia_clinica) => {
   return api.get(`/traspaso/${id_historia_clinica}`)
 }
@@ -386,4 +394,12 @@ export const actualizarPuntajeExterna = (id_historia_clinica, data) => {
 
 export const actualizarPuntajeTraspaso = (id_historia_clinica, data) => {
   return api.put(`/traspaso-puntaje/${id_historia_clinica}`, data)
+}
+
+export const obtenerPuntajeTotal = (id_historia_clinica) => {
+  return api.get(`/puntaje-total/${id_historia_clinica}`)
+}
+
+export const obtenerPuntajeAccionSimulacion = (id_simulacion) => {
+  return api.get(`/puntaje-accion/${id_simulacion}`)
 }

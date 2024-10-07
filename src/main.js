@@ -44,6 +44,7 @@ import Textarea from 'primevue/textarea'
 import SelectButton from 'primevue/selectbutton'
 import FileUpload from 'primevue/fileupload'
 import InputMask from 'primevue/inputmask'
+import ProgressBar from 'primevue/progressbar'
 
 const app = createApp(App)
 
@@ -82,6 +83,7 @@ app.component('Textarea', Textarea)
 app.component('SelectButton', SelectButton)
 app.component('FileUpload', FileUpload)
 app.component('InputMask', InputMask)
+app.component('ProgressBar', ProgressBar)
 
 app.use(ConfirmationService)
 app.use(ToastService)

@@ -11,6 +11,11 @@ export default {
     examenSegmentarioGenitourinario: null,
     examenSegmentarioExtremidades: null,
     examenSegmentarioNeurologico: null,
+    examenSegmentarioPiel: null,
+    examenSegmentarioCirculatorio: null,
+    examenSegmentarioRespiratorio: null,
+    examenSegmentarioViaAerea: null,
+    examenSegmentarioPsicologico: null,
     examenObstetrico: null
   },
   mutations: {
@@ -44,6 +49,21 @@ export default {
     setExamenSegmentarioNeurologico(state, data) {
       state.examenSegmentarioNeurologico = data
     },
+    setExamenSegmentarioPiel(state, data) {
+      state.examenSegmentarioPiel = data
+    },
+    setExamenSegmentarioCirculatorio(state, data) {
+      state.examenSegmentarioCirculatorio = data
+    },
+    setExamenSegmentarioRespiratorio(state, data) {
+      state.examenSegmentarioRespiratorio = data
+    },
+    setExamenSegmentarioViaAerea(state, data) {
+      state.examenSegmentarioViaAerea = data
+    },
+    setExamenSegmentarioPsicologico(state, data) {
+      state.examenSegmentarioPsicologico = data
+    },
     setExamenObstetrico(state, data) {
       state.examenObstetrico = data
     },
@@ -59,7 +79,12 @@ export default {
       state.examenSegmentarioGenitourinario = null
       state.examenSegmentarioExtremidades = null
       state.examenSegmentarioNeurologico = null
-      state.examenObstetrico = null
+      state.examenSegmentarioPiel = null
+      state.examenSegmentarioCirculatorio = null
+      ;(state.examenSegmentarioRespiratorio = null),
+        (state.examenSegmentarioViaAerea = null),
+        (state.examenSegmentarioPsicologico = null),
+        (state.examenObstetrico = null)
     }
   },
   actions: {
@@ -93,6 +118,21 @@ export default {
     saveExamenSegmentarioNeurologico({ commit }, data) {
       commit('setExamenSegmentarioNeurologico', data)
     },
+    saveExamenSegmentarioPiel({ commit }, data) {
+      commit('setExamenSegmentarioPiel', data)
+    },
+    saveExamenSegmentarioCirculatorio({ commit }, data) {
+      commit('setExamenSegmentarioCirculatorio', data)
+    },
+    saveExamenSegmentarioRespiratorio({ commit }, data) {
+      commit('setExamenSegmentarioRespiratorio', data)
+    },
+    saveExamenSegmentarioViaAerea({ commit }, data) {
+      commit('setExamenSegmentarioViaAerea', data)
+    },
+    saveExamenSegmentarioPsicologico({ commit }, data) {
+      commit('setExamenSegmentarioPsicologico', data)
+    },
     saveExamenObstetrico({ commit }, data) {
       commit('setExamenObstetrico', data)
     },
@@ -112,6 +152,11 @@ export default {
     examenSegmentarioGenitourinario: (state) => state.examenSegmentarioGenitourinario,
     examenSegmentarioExtremidades: (state) => state.examenSegmentarioExtremidades,
     examenSegmentarioNeurologico: (state) => state.examenSegmentarioNeurologico,
+    examenSegmentarioPiel: (state) => state.examenSegmentarioPiel,
+    examenSegmentarioCirculatorio: (state) => state.examenSegmentarioCirculatorio,
+    examenSegmentarioRespiratorio: (state) => state.examenSegmentarioRespiratorio,
+    examenSegmentarioViaAerea: (state) => state.examenSegmentarioViaAerea,
+    examenSegmentarioPsicologico: (state) => state.examenSegmentarioPsicologico,
     examenObstetrico: (state) => state.examenObstetrico
   }
 }

@@ -15,10 +15,10 @@ import {
     obtenerExamenFisicoSegmentario, actualizarExamenFisicoSegmentario,
     obtenerExamenObstetrico, actualizarExamenObstetrico,
     obtenerExamenViaAerea, obtenerExamenRespiratorio,
-    obtenerExamenCirculatorio, obtenerExamenPiel,
+    obtenerExamenCirculatorio,
     obtenerExamenPsicologico, actualizarExamenViaAerea,
     actualizarExamenRespiratorio, actualizarExamenCirculatorio,
-    actualizarExamenPiel, actualizarExamenPsicologico,
+    actualizarExamenPsicologico,
     obtenerSignosVitales, actualizarSignosVitales,
     obtenerCategoriasDiferenciales, obtenerDiagnosticosPorCategoria,
     obtenerDiagnosticosDiferencialesPorHistoriaClinica, actualizarDiagnosticosDiferenciales,
@@ -48,7 +48,9 @@ import {
     actualizarPuntajeIntervenir,
     actualizarPuntajeExterna,
     actualizarPuntajeLaboratorio,
-    actualizarPuntajeTraspaso
+    actualizarPuntajeTraspaso,
+    cargarImagenCategoria,
+    obtenerAntecedentesGinecoObstetricos, actualizarAntecedentesGinecoObstetricos,
 
 
 } from '../services/casoService';
@@ -70,6 +72,7 @@ const paciente = ref({});
 const antecedentesPatologicos = ref({});
 const antecedentesNoPatologicos = ref({});
 const antecedentesFamiliares = ref({});
+const antecedentesGinecoObstetricos = ref({});
 const anamnesisSistemas = ref({});
 const motivosConsulta = ref([]);
 const scoreAnamnesis = ref([]);
@@ -82,7 +85,6 @@ const scoreExamenFisico = ref([]);
 const examenViaAerea = ref({})
 const examenRespiratorio = ref({})
 const examenCirculatorio = ref({})
-const examenDePiel = ref({})
 const examenPsicologico = ref({})
 
 const scoreSignosVitales = ref([]);
@@ -133,6 +135,18 @@ const traspaso = ref({});
 const diagnosticosDiferenciales = ref([]);
 const diagnosticoFinal = ref(null);
 
+const mostrarFileUpload = ref({
+    cabeza: false,
+    cuello: false,
+    torax: false,
+    corazon: false,
+    mamas: false,
+    genitourinario: false,
+    abdomen: false,
+    extremidades: false,
+    neurologico: false,
+    piel: false
+});
 
 function contarYPrepararPuntajes(anamnesis) {
     let puntajeCount = { A: 0, B: 0, C: 0, D: 0, E: 0 };
@@ -344,6 +358,7 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarAntecedentesPatologicos(casoSeleccionado.value.id_historia_clinica);
         await cargarAntecedentesNoPatologicos(casoSeleccionado.value.id_historia_clinica);
         await cargarAntecedentesFamiliares(casoSeleccionado.value.id_historia_clinica);
+        await cargarAntecedentesGinecoObstetricos(casoSeleccionado.value.id_historia_clinica);
         await cargarAnamnesisSistemas(casoSeleccionado.value.id_historia_clinica);
         await cargarMotivosConsulta(casoSeleccionado.value.id_historia_clinica);
         await cargarPuntajeExamen(casoSeleccionado.value.id_historia_clinica);
@@ -354,7 +369,6 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarExamenViaAerea(casoSeleccionado.value.id_historia_clinica);
         await cargarExamenRespiratorio(casoSeleccionado.value.id_historia_clinica);
         await cargarExamenCirculatorio(casoSeleccionado.value.id_historia_clinica);
-        await cargarExamenPiel(casoSeleccionado.value.id_historia_clinica);
         await cargarExamenPsicologico(casoSeleccionado.value.id_historia_clinica);
         await cargarSignosVitales(casoSeleccionado.value.id_historia_clinica)
         await cargarPuntajeSignosVitales(casoSeleccionado.value.id_historia_clinica);
@@ -395,7 +409,6 @@ const mostrarDetalleCaso = async (idCaso) => {
 const agregarPuntaje = async () => {
     const nuevoPuntaje = { id_valor_puntaje: null, rubrica: '', codigo: '', valor: 0 };
     puntajes.value.push(nuevoPuntaje);
-
     try {
         const response = await agregarNuevoPuntaje({
             id_historia_clinica: casoSeleccionado.value.id_historia_clinica,
@@ -426,7 +439,6 @@ const eliminarPuntaje = async (index) => {
 const agregarMensaje = async () => {
     const nuevoMensaje = { id_mensajes_simulacion: null, titulo: '', descripcion: '', tiempo: '' };
     mensajesSimulacion.value.push(nuevoMensaje);
-
     try {
         const response = await agregarNuevoMensaje({
             id_caso_clinico: casoSeleccionado.value.id_caso_clinico,
@@ -461,7 +473,6 @@ const guardarCambios = async () => {
             dificultad: dificultad.value,
             tiempo: tiempoAsignado.value
         });
-
         for (const puntaje of puntajes.value) {
             if (puntaje.id_valor_puntaje) {
                 await actualizarPuntaje(puntaje.id_valor_puntaje, {
@@ -471,7 +482,6 @@ const guardarCambios = async () => {
                 });
             }
         }
-
         for (const mensaje of mensajesSimulacion.value) {
             if (mensaje.id_mensajes_simulacion) {
                 await actualizarMensaje(mensaje.id_mensajes_simulacion, {
@@ -481,7 +491,6 @@ const guardarCambios = async () => {
                 });
             }
         }
-
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Cambios guardados correctamente', life: 3000 });
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron guardar los cambios', life: 3000 });
@@ -492,14 +501,6 @@ const cargarDatosPaciente = async (id_historia_clinica) => {
     try {
         const response = await obtenerPaciente(id_historia_clinica);
         const data = response.data[0];
-        if (data.fecha_nacimiento) {
-            const fecha = new Date(data.fecha_nacimiento);
-            data.fecha_nacimiento = fecha.toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-        }
         paciente.value = data;
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener datos del paciente', life: 3000 });
@@ -528,6 +529,17 @@ const cargarAntecedentesFamiliares = async (id_historia_clinica) => {
     try {
         const response = await obtenerAntecedentesFamiliares(id_historia_clinica);
         antecedentesFamiliares.value = response.data[0];
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener antecedentes familiares', life: 3000 });
+    }
+};
+
+const cargarAntecedentesGinecoObstetricos = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerAntecedentesGinecoObstetricos(id_historia_clinica);
+
+        antecedentesGinecoObstetricos.value = response.data[0];
+        console.log(antecedentesGinecoObstetricos.value)
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener antecedentes familiares', life: 3000 });
     }
@@ -639,14 +651,7 @@ const cargarExamenCirculatorio = async (id_historia_clinica) => {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico obstetrico', life: 3000 });
     }
 };
-const cargarExamenPiel = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerExamenPiel(id_historia_clinica);
-        examenDePiel.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico obstetrico', life: 3000 });
-    }
-};
+
 const cargarExamenPsicologico = async (id_historia_clinica) => {
     try {
         const response = await obtenerExamenPsicologico(id_historia_clinica);
@@ -694,6 +699,7 @@ const guardarTodosLosCambiosPaciente = async () => {
         await actualizarAntecedentesPatologicos(paciente.value.id_historia_clinica, antecedentesPatologicos.value);
         await actualizarAntecedentesNoPatologicos(paciente.value.id_historia_clinica, antecedentesNoPatologicos.value);
         await actualizarAntecedentesFamiliares(paciente.value.id_historia_clinica, antecedentesFamiliares.value);
+        await actualizarAntecedentesGinecoObstetricos(paciente.value.id_historia_clinica, antecedentesGinecoObstetricos.value)
         await actualizarAnamnesisSistemas(paciente.value.id_historia_clinica, anamnesisSistemas.value);
         await actualizarPuntajeAnamnesis(paciente.value.id_historia_clinica, contarYPrepararPuntajes(anamnesisSistemas.value))
         await actualizarSignosVitales(paciente.value.id_historia_clinica, signosVitales.value);
@@ -721,9 +727,8 @@ const guardarTodosLosCambiosExamen = async () => {
         await actualizarExamenViaAerea(paciente.value.id_historia_clinica, examenViaAerea.value);
         await actualizarExamenRespiratorio(paciente.value.id_historia_clinica, examenRespiratorio.value);
         await actualizarExamenCirculatorio(paciente.value.id_historia_clinica, examenCirculatorio.value);
-        await actualizarExamenPiel(paciente.value.id_historia_clinica, examenDePiel.value);
         await actualizarExamenPsicologico(paciente.value.id_historia_clinica, examenPsicologico.value);
-        await actualizarPuntajeExamen(paciente.value.id_historia_clinica, reunirPuntajes(examenFisico.value, examenFisicoSegmentario.value, examenObstetrico.value, examenViaAerea.value, examenRespiratorio.value, examenCirculatorio.value, examenDePiel.value, examenPsicologico.value));
+        await actualizarPuntajeExamen(paciente.value.id_historia_clinica, reunirPuntajes(examenFisico.value, examenFisicoSegmentario.value, examenObstetrico.value, examenViaAerea.value, examenRespiratorio.value, examenCirculatorio.value, examenPsicologico.value));
 
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Todos los cambios se han guardado correctamente', life: 3000 });
     } catch (error) {
@@ -978,12 +983,7 @@ const cargarSubespecialidadesDisponibles = async () => {
         const response = await obtenerSubespecialidades();
         subespecialidadesDisponibles.value = response.data;
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al obtener subespecialidades',
-            life: 3000
-        });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener subespecialidades', life: 3000 });
     }
 };
 
@@ -1002,12 +1002,7 @@ const cargarSubespecialidadesSeleccionadas = async (id_historia_clinica) => {
             score: sub.puntaje_subespecialidad || ''
         }));
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al obtener subespecialidades seleccionadas',
-            life: 3000
-        });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener subespecialidades seleccionadas', life: 3000 });
     } finally {
         isInitializing.value = false;
     }
@@ -1048,19 +1043,9 @@ const guardarSubespecialidades = async () => {
     try {
         await actualizarSubespecialidades(casoSeleccionado.value.id_historia_clinica, subsData.value);
         await actualizarPuntajeExterna(casoSeleccionado.value.id_historia_clinica, contarYPrepararPuntajesVectores(subsData.value))
-        toast.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Subespecialidades guardadas correctamente',
-            life: 3000
-        });
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Subespecialidades guardadas correctamente', life: 3000 });
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al guardar las subespecialidades',
-            life: 3000
-        });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar las subespecialidades', life: 3000 });
     }
 };
 
@@ -1285,9 +1270,10 @@ const onUpload = async (event, index) => {
     const file = event.files[0];
     const formData = new FormData();
     formData.append('imagen', file);
-
+    formData.append('id_categoria_imagenologia', imagenesData.value[index].categoria_nombre);
+    //console.log(imagenesData.value[index])
     try {
-        const response = await cargarImagen(formData);
+        const response = await cargarImagenCategoria(formData);
         const backendBaseUrl = 'http://localhost:3000';
         imagenesData.value[index].path = backendBaseUrl + response.data.path;
         imagenesData.value[index].path = response.data.path;
@@ -1297,7 +1283,6 @@ const onUpload = async (event, index) => {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar la imagen', life: 3000 });
     }
 };
-
 const cargarPuntajeTraspaso = async (id_historia_clinica) => {
     try {
         const response = await obtenerPuntaje(id_historia_clinica);
@@ -1325,19 +1310,9 @@ const guardarTodosLosCambiosTraspaso = async () => {
         if (diagnosticoFinal.value) {
             await actualizarDiagnosticoFinal(casoSeleccionado.value.id_historia_clinica, diagnosticoFinal.value);
             await actualizarPuntajeTraspaso(casoSeleccionado.value.id_historia_clinica, contarYPrepararPuntajes(traspaso.value))
-            toast.add({
-                severity: 'success',
-                summary: 'Éxito',
-                detail: 'El diagnóstico final se ha actualizado correctamente',
-                life: 3000
-            });
+            toast.add({ severity: 'success', summary: 'Éxito', detail: 'El diagnóstico final se ha actualizado correctamente', life: 3000 });
         } else {
-            toast.add({
-                severity: 'warn',
-                summary: 'Advertencia',
-                detail: 'Debe seleccionar un diagnóstico final antes de guardar',
-                life: 3000
-            });
+            toast.add({ severity: 'warn', summary: 'Advertencia', detail: 'Debe seleccionar un diagnóstico final antes de guardar', life: 3000 });
         }
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Todos los cambios se han guardado correctamente', life: 3000 });
     } catch (error) {
@@ -1365,6 +1340,56 @@ const cargarDiagnosticoFinal = async (idCaso) => {
     }
 };
 
+const toggleFileUpload = (sistema) => {
+    if (examenFisicoSegmentario.value[`img_${sistema}`]) {
+
+        examenFisicoSegmentario.value[`img_${sistema}`] = '';
+        toast.add({
+            severity: 'info', summary: 'Imagen eliminada', detail: `Se ha eliminado la imagen del sistema ${sistema}`, life: 3000,
+        });
+    } else {
+        mostrarFileUpload.value[sistema] = !mostrarFileUpload.value[sistema];
+        if (!mostrarFileUpload.value[sistema]) {
+            examenFisicoSegmentario.value[`img_${sistema}`] = '';
+            toast.add({
+                severity: 'info', summary: 'Imagen removida', detail: `Se ha removido la imagen del sistema ${sistema}`, life: 3000,
+            });
+        }
+    }
+};
+
+const onFileSelect = (event, sistema) => {
+    const archivo = event.files[0];
+    subirImagen(sistema, archivo);
+};
+
+const subirImagen = async (sistema, archivo) => {
+    try {
+        const formData = new FormData();
+        formData.append('imagen', archivo);
+        formData.append('sistema', sistema);
+
+        const response = await cargarImagen(formData);
+        const rutaImagen = response.data.path;
+        examenFisicoSegmentario.value = {
+            ...examenFisicoSegmentario.value,
+            [`img_${sistema}`]: rutaImagen
+        };
+        toast.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Imagen cargada correctamente para ${sistema}`,
+            life: 3000,
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Error al cargar la imagen para ${sistema}`,
+            life: 3000,
+        });
+    }
+};
 onMounted(() => {
     cargarCasosClinicos();
     cargarCategoriasSimulacion();
@@ -1561,9 +1586,8 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <Calendar v-model="paciente.fecha_nacimiento" dateFormat="dd/mm/yy">
-                                                </Calendar>
-                                                <label for="fecha_nacimiento">Fecha de nacimiento</label>
+                                                <InputText v-model="paciente.edad" />
+                                                <label for="materno">Edad</label>
                                             </FloatLabel>
                                         </div>
                                     </div>
@@ -1592,6 +1616,12 @@ onMounted(() => {
                                                     placeholder="Elige una opción" checkmark
                                                     class="w-full md:w-14rem" />
                                                 <label for="sexo">Sexo</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-6">
+                                            <FloatLabel>
+                                                <InputText v-model="paciente.ocupacion" />
+                                                <label for="materno">Ocupación</label>
                                             </FloatLabel>
                                         </div>
                                     </div>
@@ -2145,9 +2175,9 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenFC" v-model="examenFisico.fc"
+                                                <InputNumber id="examenPeso" v-model="examenFisico.peso"
                                                     inputId="locale-user" :minFractionDigits="2" />
-                                                <label for="examenFC">FC [pm.]</label>
+                                                <label for="examenPeso">Peso [kg.]</label>
                                             </FloatLabel>
                                         </div>
                                     </div>
@@ -2161,9 +2191,9 @@ onMounted(() => {
                                         </div>
                                         <div class="col md:col-6">
                                             <FloatLabel>
-                                                <InputNumber id="examenIMC" v-model="examenFisico.imc"
+                                                <InputNumber id="examenFC" v-model="examenFisico.fc"
                                                     inputId="locale-user" :minFractionDigits="2" />
-                                                <label for="examenIMC">IMC [kg/m2.]</label>
+                                                <label for="examenFC">FC [pm.]</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
@@ -2174,11 +2204,7 @@ onMounted(() => {
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputNumber id="examenPeso" v-model="examenFisico.peso"
-                                                    inputId="locale-user" :minFractionDigits="2" />
-                                                <label for="examenPeso">Peso [kg.]</label>
-                                            </FloatLabel>
+
                                         </div>
                                     </div>
                                 </div>
@@ -2210,6 +2236,7 @@ onMounted(() => {
                                     </div>
                                 </div>
                             </div>
+
                             <div class="grid">
                                 <div class="col md:col-5">
                                     <h5>Examen físico segmentario</h5>
@@ -2226,7 +2253,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenFisicoSegmentario.cabeza" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.cabeza" autoResize rows="4"
                                                     cols="30" />
                                                 <label for="examenSegmentarioCabeza">Cabeza</label>
                                             </FloatLabel>
@@ -2234,7 +2261,7 @@ onMounted(() => {
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_cabeza" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="feedSegmentarioCabeza">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2246,6 +2273,30 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_cabeza ? 'Eliminar Imagen' : mostrarFileUpload.cabeza ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_cabeza ? 'pi pi-trash' : mostrarFileUpload.cabeza ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_cabeza ? 'danger' : mostrarFileUpload.cabeza ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('cabeza')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.cabeza || examenFisicoSegmentario.img_cabeza"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'cabeza')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_cabeza">
+                                                        <img :src="examenFisicoSegmentario.img_cabeza"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
@@ -2253,7 +2304,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenFisicoSegmentario.cuello" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.cuello" autoResize rows="4"
                                                     cols="30" />
                                                 <label for="examenSegmentarioCuello">Cuello</label>
                                             </FloatLabel>
@@ -2261,7 +2312,7 @@ onMounted(() => {
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_cuello" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="feedSegmentarioCuello">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2273,6 +2324,30 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_cuello ? 'Eliminar Imagen' : mostrarFileUpload.cuello ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_cuello ? 'pi pi-trash' : mostrarFileUpload.cuello ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_cuello ? 'danger' : mostrarFileUpload.cuello ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('cuello')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.cuello || examenFisicoSegmentario.img_cuello"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'cuello')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_cuello">
+                                                        <img :src="examenFisicoSegmentario.img_cuello"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
@@ -2280,7 +2355,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenFisicoSegmentario.torax" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.torax" autoResize rows="4"
                                                     cols="30" />
                                                 <label for="examenSegmentarioTorax">Torax</label>
                                             </FloatLabel>
@@ -2288,7 +2363,7 @@ onMounted(() => {
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_torax" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="feedSegmentarioTorax">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2300,6 +2375,30 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_torax ? 'Eliminar Imagen' : mostrarFileUpload.torax ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_torax ? 'pi pi-trash' : mostrarFileUpload.torax ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_torax ? 'danger' : mostrarFileUpload.torax ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('torax')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.torax || examenFisicoSegmentario.img_torax"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'torax')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_torax">
+                                                        <img :src="examenFisicoSegmentario.img_torax"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
@@ -2307,7 +2406,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenFisicoSegmentario.corazon" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.corazon" autoResize rows="4"
                                                     cols="30" />
                                                 <label for="examenSegmentarioCorazon">Corazón</label>
                                             </FloatLabel>
@@ -2315,7 +2414,7 @@ onMounted(() => {
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_corazon" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="feedSegmentarioCorazon">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2327,6 +2426,30 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_corazon ? 'Eliminar Imagen' : mostrarFileUpload.corazon ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_corazon ? 'pi pi-trash' : mostrarFileUpload.corazon ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_corazon ? 'danger' : mostrarFileUpload.corazon ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('corazon')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.corazon || examenFisicoSegmentario.img_corazon"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'corazon')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_corazon">
+                                                        <img :src="examenFisicoSegmentario.img_corazon"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
@@ -2334,7 +2457,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenFisicoSegmentario.mamas" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.mamas" autoResize rows="4"
                                                     cols="30" />
                                                 <label for="examenSegmentarioMamas">Mamas</label>
                                             </FloatLabel>
@@ -2342,7 +2465,7 @@ onMounted(() => {
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_mamas" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="feedSegmentarioMamas">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2354,6 +2477,30 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_mamas ? 'Eliminar Imagen' : mostrarFileUpload.mamas ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_mamas ? 'pi pi-trash' : mostrarFileUpload.mamas ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_mamas ? 'danger' : mostrarFileUpload.mamas ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('mamas')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.mamas || examenFisicoSegmentario.img_mamas"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'mamas')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_mamas">
+                                                        <img :src="examenFisicoSegmentario.img_mamas"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
@@ -2361,7 +2508,7 @@ onMounted(() => {
                                     <div class="grid p-fluid pt-1">
                                         <div class="col md:col-5">
                                             <FloatLabel>
-                                                <Textarea v-model="examenFisicoSegmentario.abdomen" autoResize rows="3"
+                                                <Textarea v-model="examenFisicoSegmentario.abdomen" autoResize rows="4"
                                                     cols="30" />
                                                 <label for="examenSegmentarioAbdomen">Abdomen</label>
                                             </FloatLabel>
@@ -2369,7 +2516,7 @@ onMounted(() => {
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_abdomen" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="feedSegmentarioAbdomen">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2381,6 +2528,30 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_abdomen ? 'Eliminar Imagen' : mostrarFileUpload.abdomen ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_abdomen ? 'pi pi-trash' : mostrarFileUpload.abdomen ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_abdomen ? 'danger' : mostrarFileUpload.abdomen ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('abdomen')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.abdomen || examenFisicoSegmentario.img_abdomen"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'abdomen')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_abdomen">
+                                                        <img :src="examenFisicoSegmentario.img_abdomen"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
@@ -2389,14 +2560,14 @@ onMounted(() => {
                                         <div class="col md:col-5">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.genitourinario" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="examenSegmentarioGenitourinario">Genitourinario</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_genitourinario"
-                                                    autoResize rows="3" cols="30" />
+                                                    autoResize rows="4" cols="30" />
                                                 <label for="feedSegmentarioGenitoUrinario">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2408,6 +2579,30 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_genitourinario ? 'Eliminar Imagen' : mostrarFileUpload.genitourinario ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_genitourinario ? 'pi pi-trash' : mostrarFileUpload.genitourinario ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_genitourinario ? 'danger' : mostrarFileUpload.genitourinario ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('genitourinario')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.genitourinario || examenFisicoSegmentario.img_genitourinario"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'genitourinario')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_genitourinario">
+                                                        <img :src="examenFisicoSegmentario.img_genitourinario"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
@@ -2416,14 +2611,14 @@ onMounted(() => {
                                         <div class="col md:col-5">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.extremidades" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="examenSegmentarioExtremidades">Extremidades</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_extremidades" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="feedSegmentarioExtremidades">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2435,6 +2630,30 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_extremidades ? 'Eliminar Imagen' : mostrarFileUpload.extremidades ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_extremidades ? 'pi pi-trash' : mostrarFileUpload.extremidades ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_extremidades ? 'danger' : mostrarFileUpload.extremidades ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('extremidades')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.extremidades || examenFisicoSegmentario.img_extremidades"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'extremidades')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_extremidades">
+                                                        <img :src="examenFisicoSegmentario.img_extremidades"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
@@ -2443,14 +2662,14 @@ onMounted(() => {
                                         <div class="col md:col-5">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.neurologico" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="examenSegmentarioNeurologico">Neurológico</label>
                                             </FloatLabel>
                                         </div>
                                         <div class="col md:col-4">
                                             <FloatLabel>
                                                 <Textarea v-model="examenFisicoSegmentario.feed_neurologico" autoResize
-                                                    rows="3" cols="30" />
+                                                    rows="4" cols="30" />
                                                 <label for="feedSegmentarioNeurologico">Retroalimentación</label>
                                             </FloatLabel>
                                         </div>
@@ -2462,10 +2681,86 @@ onMounted(() => {
                                                     class="w-full md:w-14rem" />
                                                 <label for="puntajeExamenFisico">Puntaje Asignado</label>
                                             </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_neurologico ? 'Eliminar Imagen' : mostrarFileUpload.neurologico ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_neurologico ? 'pi pi-trash' : mostrarFileUpload.neurologico ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_neurologico ? 'danger' : mostrarFileUpload.neurologico ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('neurologico')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.neurologico || examenFisicoSegmentario.img_neurologico"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'neurologico')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_neurologico">
+                                                        <img :src="examenFisicoSegmentario.img_neurologico"
+                                                            class="img-preview" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="grid p-fluid pt-1">
+                                        <div class="col md:col-5">
+                                            <FloatLabel>
+                                                <Textarea v-model="examenFisicoSegmentario.piel" autoResize rows="4"
+                                                    cols="30" />
+                                                <label for="examenSegmentarioPiel">Piel</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="examenFisicoSegmentario.feed_piel" autoResize
+                                                    rows="4" cols="30" />
+                                                <label for="feedSegmentarioPiel">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="examenFisicoSegmentario.puntaje_piel"
+                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntajeExamenFisico">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                            <div class="pt-3">
+                                                <Button
+                                                    :label="examenFisicoSegmentario.img_piel ? 'Eliminar Imagen' : mostrarFileUpload.piel ? 'Cancelar' : 'Añadir Imagen'"
+                                                    :icon="examenFisicoSegmentario.img_piel ? 'pi pi-trash' : mostrarFileUpload.piel ? 'pi pi-times' : 'pi pi-plus'"
+                                                    :severity="examenFisicoSegmentario.img_piel ? 'danger' : mostrarFileUpload.piel ? 'warning' : 'info'"
+                                                    text raised @click="toggleFileUpload('piel')" />
+                                            </div>
+                                        </div>
+                                        <div v-if="mostrarFileUpload.piel || examenFisicoSegmentario.img_piel"
+                                            class="col md:col-12">
+                                            <FileUpload name="imagen" accept="image/*" :maxFileSize="1000000"
+                                                :customUpload="true" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false" :auto="true"
+                                                @select="onFileSelect($event, 'piel')">
+                                                <template #content>
+                                                    <div v-if="examenFisicoSegmentario.img_piel">
+                                                        <img :src="examenFisicoSegmentario.img_piel" class="img-preview"
+                                                            width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                             <div class="grid p-fluid">
                                 <div class="col-12">
                                     <h5>Examen Obstetrico</h5>
@@ -2704,33 +2999,6 @@ onMounted(() => {
                                         <div class="col md:col-3">
                                             <FloatLabel>
                                                 <Dropdown v-model="examenCirculatorio.puntaje_examen_circulatorio"
-                                                    :options="scoreExamenFisico" optionLabel="name" optionValue="value"
-                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                    class="w-full md:w-14rem" />
-                                                <label for="puntajeExamenFisico">Puntaje Asignado</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-5">
-                                            <FloatLabel>
-                                                <Textarea v-model="examenDePiel.descripcion" autoResize rows="3"
-                                                    cols="30" />
-                                                <label for="examenDePiel">Examen de Piel</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-4">
-                                            <FloatLabel>
-                                                <Textarea v-model="examenDePiel.feed_examen_piel" autoResize rows="3"
-                                                    cols="30" />
-                                                <label for="feedDePiel">Retroalimentación</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-3">
-                                            <FloatLabel>
-                                                <Dropdown v-model="examenDePiel.puntaje_examen_piel"
                                                     :options="scoreExamenFisico" optionLabel="name" optionValue="value"
                                                     placeholder="Elige una opción" checkmark :highlightOnSelect="false"
                                                     class="w-full md:w-14rem" />

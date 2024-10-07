@@ -8,8 +8,11 @@ import {
     getExamenFisicoGeneral, getExamenObstetrico,
     getExamenFisicoSegmentarioCabeza, getExamenFisicoSegmentarioCuello, getExamenFisicoSegmentarioTorax,
     getExamenFisicoSegmentarioCorazon, getExamenFisicoSegmentarioMamas, getExamenFisicoSegmentarioAbdomen,
-    getExamenFisicoSegmentarioGenitourinario, getExamenFisicoSegmentarioExtremidades, getExamenFisicoSegmentarioNeurologico
+    getExamenFisicoSegmentarioGenitourinario, getExamenFisicoSegmentarioExtremidades, getExamenFisicoSegmentarioNeurologico,
+    getExamenFisicoSegmentarioPiel, getExamenCirculatorio, getExamenRespiratorio,
+    getExamenViaAerea, getExamenPsicologico
 } from '@/services/historiaService';
+
 
 import { registrarAccion } from '@/services/simulacionService';
 
@@ -35,6 +38,11 @@ const loadingAbdomen = ref(false);
 const loadingGenitourinario = ref(false);
 const loadingExtremidades = ref(false);
 const loadingNeurologico = ref(false);
+const loadingPiel = ref(false);
+const loadingCirculatorio = ref(false);
+const loadingRespiratorio = ref(false);
+const loadingViaAerea = ref(false);
+const loadingPsicologico = ref(false);
 
 const examenSegmentarioCabeza = ref(store.getters['examenes/examenSegmentarioCabeza']);
 const examenSegmentarioCuello = ref(store.getters['examenes/examenSegmentarioCuello']);
@@ -45,6 +53,11 @@ const examenSegmentarioAbdomen = ref(store.getters['examenes/examenSegmentarioAb
 const examenSegmentarioGenitourinario = ref(store.getters['examenes/examenSegmentarioGenitourinario']);
 const examenSegmentarioExtremidades = ref(store.getters['examenes/examenSegmentarioExtremidades']);
 const examenSegmentarioNeurologico = ref(store.getters['examenes/examenSegmentarioNeurologico']);
+const examenSegmentarioPiel = ref(store.getters['examenes/examenSegmentarioPiel']);
+const examenSegmentarioCirculatorio = ref(store.getters['examenes/examenSegmentarioCirculatorio']);
+const examenSegmentarioRespiratorio = ref(store.getters['examenes/examenSegmentarioRespiratorio']);
+const examenSegmentarioViaAerea = ref(store.getters['examenes/examenSegmentarioViaAerea']);
+const examenSegmentarioPsicologico = ref(store.getters['examenes/examenSegmentarioPsicologico']);
 
 const id_simulacion = localStorage.getItem('id_simulacion');
 
@@ -59,8 +72,25 @@ const buttonsState = ref({
     abdomen: { loading: false, label: "Obtener" },
     genitourinario: { loading: false, label: "Obtener" },
     extremidades: { loading: false, label: "Obtener" },
-    neurologico: { loading: false, label: "Obtener" }
+    neurologico: { loading: false, label: "Obtener" },
+    piel: { loading: false, label: "Obtener" },
+    circulatorio: { loading: false, label: "Obtener" },
+    respiratorio: { loading: false, label: "Obtener" },
+    via: { loading: false, label: "Obtener" },
+    psicologico: { loading: false, label: "Obtener" }
 });
+
+const mostrarImagenCabeza = ref(false);
+const mostrarImagenCuello = ref(false);
+const mostrarImagenTorax = ref(false);
+const mostrarImagenCorazon = ref(false);
+const mostrarImagenMamas = ref(false);
+const mostrarImagenAbdomen = ref(false);
+const mostrarImagenGenitourinario = ref(false);
+const mostrarImagenExtremidades = ref(false);
+const mostrarImagenNeurologico = ref(false);
+const mostrarImagenPiel = ref(false);
+
 
 const registrarAccionSimulacion = async (descripcion, tipo_accion, puntaje, retroalimentacion, section) => {
     try {
@@ -116,6 +146,20 @@ const fetchData = async (type, section = null) => {
                 loadingObstetrico.value = false;
                 buttonsState.value.obstetrico.loading = false;
                 buttonsState.value.obstetrico.label = "Obtener";
+
+            }, 2000);
+        } else if (type === 'via' && !examenSegmentarioViaAerea.value) {
+            buttonsState.value.via.loading = true;
+            buttonsState.value.via.label = "Obteniendo...";
+            loadingViaAerea.value = true;
+            response = await getExamenViaAerea(id_historia_clinica);
+            await registrarAccionSimulacion('Se  realizo el complementario de via aerea', response.data[0].rubrica, response.data[0].puntaje_examen_via_aerea, response.data[0].feed_examen_via_aerea, type);
+            setTimeout(() => {
+                examenSegmentarioViaAerea.value = response.data[0];
+                store.dispatch('examenes/saveExamenSegmentarioViaAerea', examenSegmentarioViaAerea.value);
+                loadingViaAerea.value = false;
+                buttonsState.value.via.loading = false;
+                buttonsState.value.via.label = "Obtener";
 
             }, 2000);
         } else if (type === 'segmentario' && section) {
@@ -194,6 +238,38 @@ const fetchData = async (type, section = null) => {
                     response = await getExamenFisicoSegmentarioNeurologico(id_historia_clinica);
                     await registrarAccionSimulacion('Se  realizo el examen segmentario neurologico', response.data[0].rubrica, response.data[0].puntaje_neurologico, response.data[0].feed_neurologico, `segmentario ${section}`);
                     break;
+                case 'piel':
+                    buttonsState.value[section].loading = true;
+                    buttonsState.value[section].label = "Obteniendo...";
+                    loadingRef = loadingPiel;
+                    examenSegmentarioRef = examenSegmentarioPiel;
+                    response = await getExamenFisicoSegmentarioPiel(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen segmentario de piel', response.data[0].rubrica, response.data[0].puntaje_piel, response.data[0].feed_piel, `segmentario ${section}`);
+                    break;
+                case 'circulatorio':
+                    buttonsState.value[section].loading = true;
+                    buttonsState.value[section].label = "Obteniendo...";
+                    loadingRef = loadingCirculatorio;
+                    examenSegmentarioRef = examenSegmentarioCirculatorio;
+                    response = await getExamenCirculatorio(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen complementario circulatorio', response.data[0].rubrica, response.data[0].puntaje_examen_circulatorio, response.data[0].feed_examen_circulatorio, `complementario ${section}`);
+                    break;
+                case 'respiratorio':
+                    buttonsState.value[section].loading = true;
+                    buttonsState.value[section].label = "Obteniendo...";
+                    loadingRef = loadingRespiratorio;
+                    examenSegmentarioRef = examenSegmentarioRespiratorio;
+                    response = await getExamenRespiratorio(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen complementario respiratorio', response.data[0].rubrica, response.data[0].puntaje_examen_respiratorio, response.data[0].feed_examen_respiratorio, `complementario ${section}`);
+                    break;
+                case 'psicologico':
+                    buttonsState.value[section].loading = true;
+                    buttonsState.value[section].label = "Obteniendo...";
+                    loadingRef = loadingPsicologico;
+                    examenSegmentarioRef = examenSegmentarioPsicologico;
+                    response = await getExamenPsicologico(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo el examen complementario psicologico', response.data[0].rubrica, response.data[0].puntaje_examen_psicologico, response.data[0].feed_examen_psicologico, `complementario ${section}`);
+                    break;
                 default:
                     throw new Error('Sección no válida');
             }
@@ -215,7 +291,8 @@ const fetchData = async (type, section = null) => {
         loadingGeneral.value = loadingObstetrico.value = loadingCabeza.value =
             loadingCuello.value = loadingTorax.value = loadingCorazon.value =
             loadingMamas.value = loadingAbdomen.value = loadingGenitourinario.value =
-            loadingExtremidades.value = loadingNeurologico.value = false;
+            loadingExtremidades.value = loadingNeurologico.value = loadingPiel.value =
+            loadingCirculatorio.value = loadingRespiratorio.value = loadingViaAerea.value = loadingPsicologico.value = false;
         buttonsState.value[type].loading = false;
         buttonsState.value[type].label = "Obtener";
     }
@@ -315,6 +392,15 @@ function onDialogHide() {
             <div class="col">
                 <p v-if="loadingCabeza"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioCabeza?.cabeza || '' }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioCabeza?.img_cabeza && !mostrarImagenCabeza" icon="pi pi-image"
+                        severity="warning" rounded @click="mostrarImagenCabeza = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenCabeza">
+                    <Image :src="examenSegmentarioCabeza.img_cabeza" alt="Imagen de Cabeza" width="250" preview />
+                </div>
             </div>
         </div>
 
@@ -329,6 +415,15 @@ function onDialogHide() {
             <div class="col">
                 <p v-if="loadingCuello"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioCuello?.cuello || '' }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioCuello?.img_cuello && !mostrarImagenCuello" icon="pi pi-image"
+                        severity="warning" rounded @click="mostrarImagenCuello = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenCuello">
+                    <Image :src="examenSegmentarioCuello.img_cuello" alt="Imagen de Cuello" width="250" preview />
+                </div>
             </div>
         </div>
 
@@ -343,6 +438,15 @@ function onDialogHide() {
             <div class="col">
                 <p v-if="loadingTorax"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioTorax?.torax || '' }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioTorax?.img_torax && !mostrarImagenTorax" icon="pi pi-image"
+                        severity="warning" rounded @click="mostrarImagenTorax = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenTorax">
+                    <Image :src="examenSegmentarioTorax.img_torax" alt="Imagen de Torax" width="250" preview />
+                </div>
             </div>
         </div>
 
@@ -357,6 +461,15 @@ function onDialogHide() {
             <div class="col">
                 <p v-if="loadingCorazon"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioCorazon?.corazon || '' }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioCorazon?.img_corazon && !mostrarImagenCorazon" icon="pi pi-image"
+                        severity="warning" rounded @click="mostrarImagenCorazon = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenCorazon">
+                    <Image :src="examenSegmentarioCorazon.img_corazon" alt="Imagen de Corazon" width="250" preview />
+                </div>
             </div>
         </div>
 
@@ -371,6 +484,15 @@ function onDialogHide() {
             <div class="col">
                 <p v-if="loadingMamas"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioMamas?.mamas || '' }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioMamas?.img_mamas && !mostrarImagenMamas" icon="pi pi-image"
+                        severity="warning" rounded @click="mostrarImagenMamas = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenMamas">
+                    <Image :src="examenSegmentarioMamas.img_mamas" alt="Imagen de Mamas" width="250" preview />
+                </div>
             </div>
         </div>
 
@@ -385,6 +507,15 @@ function onDialogHide() {
             <div class="col">
                 <p v-if="loadingAbdomen"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioAbdomen?.abdomen || '' }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioAbdomen?.img_abdomen && !mostrarImagenAbdomen" icon="pi pi-image"
+                        severity="warning" rounded @click="mostrarImagenAbdomen = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenAbdomen">
+                    <Image :src="examenSegmentarioAbdomen.img_abdomen" alt="Imagen de Abdomen" width="250" preview />
+                </div>
             </div>
         </div>
 
@@ -400,6 +531,16 @@ function onDialogHide() {
                 <p v-if="loadingGenitourinario"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioGenitourinario?.genitourinario || ''
                     }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioGenitourinario?.img_genitourinario && !mostrarImagenGenitourinario"
+                        icon="pi pi-image" severity="warning" rounded @click="mostrarImagenGenitourinario = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenGenitourinario">
+                    <Image :src="examenSegmentarioGenitourinario.img_genitourinario" alt="Imagen de Genitourinario"
+                        width="250" preview />
+                </div>
             </div>
         </div>
 
@@ -415,6 +556,16 @@ function onDialogHide() {
                 <p v-if="loadingExtremidades"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioExtremidades?.extremidades || '' }}
                 </p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioExtremidades?.img_extremidades && !mostrarImagenExtremidades"
+                        icon="pi pi-image" severity="warning" rounded @click="mostrarImagenExtremidades = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenExtremidades">
+                    <Image :src="examenSegmentarioExtremidades.img_extremidades" alt="Imagen de Extremidades"
+                        width="250" preview />
+                </div>
             </div>
         </div>
 
@@ -429,11 +580,52 @@ function onDialogHide() {
             <div class="col">
                 <p v-if="loadingNeurologico"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioNeurologico?.neurologico || '' }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioNeurologico?.img_neurologico && !mostrarImagenNeurologico"
+                        icon="pi pi-image" severity="warning" rounded @click="mostrarImagenNeurologico = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenNeurologico">
+                    <Image :src="examenSegmentarioNeurologico.img_neurologico" alt="Imagen de Neurologico" width="250"
+                        preview />
+                </div>
             </div>
         </div>
 
         <div class="grid">
-            <div class="col md:col-8 text-lg">
+            <div class="col md:col-4 pt-3 text-lg"><strong>Piel:</strong></div>
+            <div class="col md:col-4"></div>
+            <div class="col md:col-4">
+                <Button v-if="!examenSegmentarioPiel" :label="buttonsState.piel.label"
+                    @click="() => fetchData('segmentario', 'piel')" icon="pi pi-search"
+                    :loading="buttonsState.piel.loading" type="button" />
+            </div>
+            <div class="col">
+                <p v-if="loadingPiel"></p>
+                <p class="text-justify text-lg" v-else>{{ examenSegmentarioPiel?.piel || '' }}</p>
+
+                <div class="text-center">
+                    <Button v-if="examenSegmentarioPiel?.img_piel && !mostrarImagenPiel" icon="pi pi-image"
+                        severity="warning" rounded @click="mostrarImagenPiel = true" />
+                </div>
+
+                <div class="card flex justify-content-center" v-if="mostrarImagenPiel">
+                    <Image :src="examenSegmentarioPiel.img_piel" alt="Imagen de Piel" width="250" preview />
+                </div>
+            </div>
+        </div>
+
+        <div class="grid p-fluid">
+            <div class="col md:col-12">
+                <h5 class="examen-titulo">Examenes Físicos Complementarios</h5>
+                <div class="data-section-main"></div>
+                <div></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="col md:col-8 text-lg pt-3">
                 <strong>Obstetrico:</strong>
             </div>
             <div class=" col md:col-4">
@@ -442,6 +634,7 @@ function onDialogHide() {
                     :loading="buttonsState.obstetrico.loading" type="button" />
             </div>
         </div>
+
         <template v-if="examenObstetrico">
             <div class="data-section">
                 <div class="grid">
@@ -499,6 +692,64 @@ function onDialogHide() {
                 </div>
             </div>
         </template>
+
+        <div class="grid pt-3">
+            <div class="col md:col-4 pt-3 text-lg"><strong>Circulatorio:</strong></div>
+            <div class="col md:col-4"></div>
+            <div class="col md:col-4">
+                <Button v-if="!examenSegmentarioCirculatorio" :label="buttonsState.circulatorio.label"
+                    @click="() => fetchData('segmentario', 'circulatorio')" icon="pi pi-search"
+                    :loading="buttonsState.circulatorio.loading" type="button" />
+            </div>
+            <div class="col">
+                <p v-if="loadingCirculatorio"></p>
+                <p class="text-justify text-lg" v-else>{{ examenSegmentarioCirculatorio?.descripcion || '' }}</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="col md:col-4 pt-3 text-lg"><strong>Respiratorio:</strong></div>
+            <div class="col md:col-4"></div>
+            <div class="col md:col-4">
+                <Button v-if="!examenSegmentarioRespiratorio" :label="buttonsState.respiratorio.label"
+                    @click="() => fetchData('segmentario', 'respiratorio')" icon="pi pi-search"
+                    :loading="buttonsState.respiratorio.loading" type="button" />
+            </div>
+            <div class="col">
+                <p v-if="loadingRespiratorio"></p>
+                <p class="text-justify text-lg" v-else>{{ examenSegmentarioRespiratorio?.descripcion || '' }}</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="col md:col-4 pt-3 text-lg"><strong>Via Aerea:</strong></div>
+            <div class="col md:col-4"></div>
+            <div class="col md:col-4">
+                <Button v-if="!examenSegmentarioViaAerea" :label="buttonsState.via.label"
+                    @click="() => fetchData('via')" icon="pi pi-search" :loading="buttonsState.via.loading"
+                    type="button" />
+            </div>
+            <div class="col">
+                <p v-if="loadingViaAerea"></p>
+                <p class="text-justify text-lg" v-else>{{ examenSegmentarioViaAerea?.descripcion || '' }}</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="col md:col-4 pt-3 text-lg"><strong>Psicologico:</strong></div>
+            <div class="col md:col-4"></div>
+            <div class="col md:col-4">
+                <Button v-if="!examenSegmentarioPsicologico" :label="buttonsState.psicologico.label"
+                    @click="() => fetchData('segmentario', 'psicologico')" icon="pi pi-search"
+                    :loading="buttonsState.psicologico.loading" type="button" />
+            </div>
+            <div class="col">
+                <p v-if="loadingPsicologico"></p>
+                <p class="text-justify text-lg" v-else>{{ examenSegmentarioPsicologico?.descripcion || '' }}</p>
+            </div>
+        </div>
+
+
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
