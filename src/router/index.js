@@ -122,6 +122,12 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: ['administrador', 'medico'] }
         },
         {
+          path: 'configuracion',
+          name: 'configuracion',
+          component: () => import('@/views/Configuracion.vue'),
+          meta: { requiresAuth: true, roles: ['administrador', 'medico'] }
+        },
+        {
           path: 'test',
           name: 'test',
           component: () => import('@/views/Test.vue'),

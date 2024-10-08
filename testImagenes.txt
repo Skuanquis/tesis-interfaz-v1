@@ -345,3 +345,239 @@ onMounted(() => {
         </Dialog>
     </div>
 </template>
+
+
+
+
+
+
+
+<!-- eslint-disable vue/multi-word-component-names -->
+<script setup>
+import { ref, onMounted } from 'vue';
+import {
+    obtenerDiagnosticosDiferencialesPorCategoria, eliminarDiagnostico, agregarDiagnostico,
+    actualizarDiagnostico, agregarCategoriaConDiagnosticos,
+
+} from '@/services/configuracionService';
+import { useToast } from 'primevue/usetoast';
+import FloatLabel from 'primevue/floatlabel';
+
+const toast = useToast();
+const diagnosticosPorCategoria = ref({});
+const Medicamento = ref(false);
+const nuevaCategoria = ref({
+    categoria: '',
+    diagnosticos: [{ nombre: '' }]
+});
+
+const eliminarRegistro = async (id_diagnostico) => {
+    try {
+        await eliminarDiagnostico(id_diagnostico);
+        for (const categoria in diagnosticosPorCategoria.value) {
+            const categoriaData = diagnosticosPorCategoria.value[categoria];
+            categoriaData.diagnosticos = categoriaData.diagnosticos.filter(d => d.id_diagnostico !== id_diagnostico);
+        }
+        toast.add({ severity: "success", summary: 'Éxito', detail: `Se eliminó el diagnóstico diferencial`, life: 3000 });
+    } catch (error) {
+        console.error("Error al eliminar diagnóstico", error);
+        const errorMsg = error.response?.data?.error || 'No se pudo eliminar el diagnóstico diferencial';
+        toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
+    }
+};
+
+
+const agregarNuevoCampo = (categoria) => {
+    const categoriaData = diagnosticosPorCategoria.value[categoria];
+    if (!categoriaData.diagnosticos) {
+        categoriaData.diagnosticos = [];
+    }
+    categoriaData.diagnosticos.push({ id_diagnostico: null, diagnostico: '' });
+    toast.add({ severity: "info", summary: 'Nuevo', detail: `Campo agregado para nueva entrada de diagnóstico en ${categoria}`, life: 3000 });
+};
+
+const guardarCambios = async () => {
+    try {
+        for (const categoria in diagnosticosPorCategoria.value) {
+            const categoriaData = diagnosticosPorCategoria.value[categoria];
+            const id_categoria_diferencial = categoriaData.id_categoria_diferencial;
+            const diagnosticos = categoriaData.diagnosticos;
+
+            for (const diagnostico of diagnosticos) {
+                console.log("Datos enviados para actualizar o agregar:", diagnostico);
+
+                if (!diagnostico.diagnostico || diagnostico.diagnostico.trim() === "") {
+                    console.warn("El diagnóstico está vacío, no se procesará.");
+                    continue;
+                }
+
+                if (diagnostico.id_diagnostico) {
+                    // Actualizar diagnóstico existente
+                    await actualizarDiagnostico(diagnostico.id_diagnostico, { diagnostico: diagnostico.diagnostico });
+                } else {
+                    // Agregar nuevo diagnóstico y actualizar el id_diagnostico en el estado local
+                    const response = await agregarDiagnostico({ id_categoria_diferencial, diagnostico: diagnostico.diagnostico });
+                    diagnostico.id_diagnostico = response.data.id; // Actualizar el ID en el estado local
+                }
+            }
+        }
+
+        toast.add({ severity: "success", summary: 'Éxito', detail: `Se guardaron los cambios correctamente`, life: 3000 });
+    } catch (error) {
+        console.error("Error al guardar cambios", error);
+        toast.add({ severity: "error", summary: 'Error', detail: `No se pudieron guardar los cambios`, life: 3000 });
+    }
+};
+
+const abrirDialogoCategoria = () => {
+    nuevaCategoria.value = {
+        categoria: '',
+        diagnosticos: [{ nombre: '' }]
+    };
+    Medicamento.value = true;
+};
+
+const agregarDiagnosticoEnDialogo = () => {
+    nuevaCategoria.value.diagnosticos.push({ nombre: '' });
+};
+
+const eliminarDiagnosticoEnDialogo = (index) => {
+    if (nuevaCategoria.value.diagnosticos.length > 1) {
+        nuevaCategoria.value.diagnosticos.splice(index, 1);
+    } else {
+        toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe tener al menos un diagnóstico', life: 3000 });
+    }
+};
+
+const guardarNuevaCategoria = async () => {
+    try {
+        const diagnosticosNombres = nuevaCategoria.value.diagnosticos.map(d => d.nombre.trim()).filter(n => n !== '');
+        if (!nuevaCategoria.value.categoria.trim()) {
+            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'El nombre de la categoría es requerido', life: 3000 });
+            return;
+        }
+        if (diagnosticosNombres.length === 0) {
+            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe proporcionar al menos un diagnóstico válido', life: 3000 });
+            return;
+        }
+        const data = {
+            categoria: nuevaCategoria.value.categoria.trim(),
+            diagnosticos: diagnosticosNombres
+        };
+        const response = await agregarCategoriaConDiagnosticos(data);
+        const id_categoria_diferencial = response.data.id_categoria_diferencial;
+        diagnosticosPorCategoria.value[nuevaCategoria.value.categoria.trim()] = {
+            id_categoria_diferencial,
+            diagnosticos: diagnosticosNombres.map((nombre, index) => ({
+                id_diagnostico: response.data.ids_diagnosticos[index],
+                diagnostico: nombre
+            }))
+        };
+
+        Medicamento.value = false;
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría y diagnósticos agregados correctamente', life: 3000 });
+    } catch (error) {
+        console.error("Error al agregar categoría y diagnósticos", error);
+        const errorMsg = error.response?.data?.error || 'No se pudo agregar la categoría y diagnósticos';
+        toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
+    }
+};
+
+onMounted(async () => {
+    try {
+        const response = await obtenerDiagnosticosDiferencialesPorCategoria();
+        diagnosticosPorCategoria.value = response.data;
+    } catch (error) {
+        console.error("Error al obtener los diagnósticos por categoría", error);
+        toast.add({ severity: "error", summary: 'Error', detail: `No se pudo cargar los diagnósticos diferenciales`, life: 3000 });
+    }
+});
+
+
+
+</script>
+
+<template>
+    <div class="card flex justify-content-center">
+        <Stepper>
+            <StepperPanel header="Diagnósticos Diferenciales">
+                <template #content="{ nextCallback }">
+                    <Accordion :activeIndex="0">
+                        <!-- Iterar sobre las categorías para crear una pestaña por cada categoría -->
+                        <AccordionTab v-for="(categoriaData, categoria) in diagnosticosPorCategoria" :key="categoria"
+                            :header="categoria">
+                            <div class="grid p-fluid">
+                                <!-- Iterar sobre los diagnósticos dentro de cada categoría -->
+                                <div v-for="(diagnostico, index) in categoriaData.diagnosticos" :key="index"
+                                    class="col-12">
+                                    <div class="grid">
+                                        <div class="col md:col-10">
+                                            <InputText v-model="diagnostico.diagnostico" />
+                                        </div>
+                                        <div class="col md:col-2 text-center">
+                                            <Button icon="pi pi-times" severity="danger" text raised rounded
+                                                aria-label="Eliminar"
+                                                @click="eliminarRegistro(diagnostico.id_diagnostico)" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 text-center">
+                                    <Button icon="pi pi-plus" text raised rounded aria-label="Agregar"
+                                        @click="agregarNuevoCampo(categoria)" />
+                                </div>
+                            </div>
+                        </AccordionTab>
+                    </Accordion>
+
+                    <!-- Dialog para añadir nueva categoría -->
+                    <Dialog v-model:visible="Medicamento" modal header="Añadir Categoría" :style="{ width: '25rem' }"
+                        class="p-fluid">
+                        <div>
+                            <FloatLabel>
+                                <InputText id="categoria" v-model="nuevaCategoria.categoria" autocomplete="off" />
+                                <Label for="categoria">Categoría</Label>
+                            </FloatLabel>
+                        </div>
+                        <h6>Diagnósticos</h6>
+                        <div v-for="(diagnostico, index) in nuevaCategoria.diagnosticos" :key="index"
+                            class="grid align-items-center">
+                            <div class="col md:col-10">
+                                <InputText v-model="diagnostico.nombre" autocomplete="off" />
+                            </div>
+                            <div class="col md:col-2">
+                                <Button icon="pi pi-times" severity="danger" text raised rounded aria-label="Eliminar"
+                                    @click="eliminarDiagnosticoEnDialogo(index)" />
+                            </div>
+                        </div>
+                        <div class="col-12 text-center">
+                            <Button icon="pi pi-plus" text raised rounded aria-label="Agregar Diagnóstico"
+                                @click="agregarDiagnosticoEnDialogo" />
+                        </div>
+                        <div class="col-12 text-center" style="margin-top: 1rem;">
+                            <Button label="Guardar" icon="pi pi-save" text raised @click="guardarNuevaCategoria" />
+                        </div>
+                    </Dialog>
+
+                    <!-- Botones para Guardar cambios y Añadir categoría -->
+                    <div class="col-12 p-3" style="margin-top: 2rem;">
+                        <div class="grid  align-items-center justify-content-center">
+                            <div class="px-2 w-15rem m-3 border-round">
+                                <Button label="Guardar Cambios" icon="pi pi-save" severity="success" raised
+                                    @click="guardarCambios" />
+                            </div>
+                            <div class="px-2 w-15rem m-3 border-round">
+                                <Button label="Añadir Categoría" icon="pi pi-plus" severity="help" raised
+                                    @click="abrirDialogoCategoria" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón para pasar al siguiente paso del Stepper -->
+                    <div class="flex py-4 gap-2">
+                        <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" @click="nextCallback" />
+                    </div>
+                </template>
+            </StepperPanel>
+        </Stepper>
+    </div>
+</template>

@@ -4692,8 +4692,7 @@ onMounted(() => {
                 </Stepper>
 
                 <div class="flex justify-content-end gap-2">
-                    <Button type="button" label="Cancel" severity="secondary" @click=cerrarDialogo></Button>
-                    <Button type=" button" label="Guardar" @click="visible = false"></Button>
+                    <Button type="button" label="Cerrar" severity="secondary" @click=cerrarDialogo></Button>
                 </div>
             </div>
         </Dialog>

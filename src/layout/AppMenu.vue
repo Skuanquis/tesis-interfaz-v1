@@ -45,6 +45,7 @@ const modelAdminitrador = [
             { label: 'Pruebita Crud', icon: 'pi pi-fs pi-eye', to: '/dashboard/test' },
             { label: 'Crear Caso', icon: 'pi pi-fs pi-plus', to: '/dashboard/crear-caso' },
             { label: 'Iniciar Simulación', icon: 'pi pi-fs pi-play', to: '/elegir-caso' },
+            { label: 'Configuración', icon: 'pi pi-fs pi-cog', to: '/dashboard/configuracion' },
             { label: 'Cerrar Sesión', icon: 'pi pi-fw pi-sign-out', command: () => cerrarSesion() }
         ]
     }
