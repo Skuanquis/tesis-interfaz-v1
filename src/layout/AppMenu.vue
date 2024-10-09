@@ -5,7 +5,7 @@ import { useStore } from 'vuex';
 import { getUserInfo } from '@/services/userService';
 import AppMenuItem from './AppMenuItem.vue';
 
-const modelPasante = [
+const modelEstudiante = [
     {
         label: 'Home',
         items: [
@@ -16,10 +16,8 @@ const modelPasante = [
     {
         label: 'Acciones',
         items: [
-            { label: 'Registrar Atención', icon: 'pi pi-fw pi-pencil', to: '/dashboard/registrar-atencion' },
-            { label: 'Ver Atenciones', icon: 'pi pi-fw pi-book', to: '/dashboard/ver-atenciones' },
-            { label: 'Actividades Asignadas', icon: 'pi pi-fw pi-file-edit', to: '/dashboard/ver-actividades' },
-            { label: 'Preguntas Frecuentes', icon: 'pi pi-fw pi-question-circle', to: '/dashboard/preguntas-frecuentes' },
+            { label: 'Grupos', icon: 'pi pi-fs pi-sitemap', to: '/dashboard/ver-grupos' },
+            { label: 'Iniciar Simulación', icon: 'pi pi-fs pi-play', to: '/elegir-caso' },
             { label: 'Cerrar Sesión', icon: 'pi pi-fw pi-sign-out', command: () => cerrarSesion() }
         ]
     }
@@ -41,6 +39,7 @@ const modelAdminitrador = [
             { label: 'Ver Usuarios', icon: 'pi pi-fw pi-users', to: '/dashboard/ver-usuarios' },
             //{ label: 'Asignar Actividad', icon: 'pi pi-fw pi-plus', to: '/dashboard/actividades' },
             //{ label: 'OVT en Números', icon: 'pi pi-fw pi-database', to: '/dashboard/numeros' },
+            { label: 'Grupos', icon: 'pi pi-fs pi-sitemap', to: '/dashboard/grupos' },
             { label: 'Ver Casos', icon: 'pi pi-fs pi-eye', to: '/dashboard/ver-casos' },
             { label: 'Pruebita Crud', icon: 'pi pi-fs pi-eye', to: '/dashboard/test' },
             { label: 'Crear Caso', icon: 'pi pi-fs pi-plus', to: '/dashboard/crear-caso' },
@@ -51,7 +50,7 @@ const modelAdminitrador = [
     }
 ];
 
-const modelSupervisor = [
+const modelMedico = [
     {
         label: 'Home',
         items: [
@@ -62,11 +61,11 @@ const modelSupervisor = [
     {
         label: 'Acciones',
         items: [
-            { label: 'Registrar Atención', icon: 'pi pi-fw pi-pencil', to: '/dashboard/registrar-atencion' },
-            { label: 'Ver Atenciones', icon: 'pi pi-fw pi-book', to: '/dashboard/ver-atenciones' },
-            { label: 'Asignar Actividad', icon: 'pi pi-fw pi-plus', to: '/dashboard/actividades' },
-            { label: 'Actividades Asignadas', icon: 'pi pi-fw pi-file-edit', to: '/dashboard/ver-actividades' },
-            { label: 'Preguntas Frecuentes', icon: 'pi pi-fw pi-question-circle', to: '/dashboard/preguntas-frecuentes' },
+            { label: 'Registrar Usuario', icon: 'pi pi-fw pi-user-plus', to: '/dashboard/registrar-usuario' },
+            { label: 'Grupos', icon: 'pi pi-fs pi-sitemap', to: '/dashboard/grupos' },
+            { label: 'Ver Casos', icon: 'pi pi-fs pi-eye', to: '/dashboard/ver-casos' },
+            { label: 'Crear Caso', icon: 'pi pi-fs pi-plus', to: '/dashboard/crear-caso' },
+            { label: 'Iniciar Simulación', icon: 'pi pi-fs pi-play', to: '/elegir-caso' },
             { label: 'Cerrar Sesión', icon: 'pi pi-fw pi-sign-out', command: () => cerrarSesion() }
         ]
     }
@@ -98,10 +97,10 @@ const loadUserInfo = async () => {
 const updateMenu = (user) => {
     if (user.rol === 'administrador') {
         model.value = modelAdminitrador;
-    } else if (user.rol === 'operador') {
-        model.value = modelPasante;
-    } else if (user.rol === 'supervisor') {
-        model.value = modelSupervisor;
+    } else if (user.rol === 'estudiante') {
+        model.value = modelEstudiante;
+    } else if (user.rol === 'medico') {
+        model.value = modelMedico;
     }
 };
 

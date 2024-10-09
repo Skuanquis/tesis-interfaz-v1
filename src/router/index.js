@@ -132,6 +132,18 @@ const router = createRouter({
           name: 'test',
           component: () => import('@/views/Test.vue'),
           meta: { requiresAuth: true, roles: ['administrador', 'medico'] }
+        },
+        {
+          path: 'grupos',
+          name: 'grupos',
+          component: () => import('@/views/Grupos.vue'),
+          meta: { requiresAuth: true, roles: ['administrador', 'medico'] }
+        },
+        {
+          path: 'ver-grupos',
+          name: 'ver-grupos',
+          component: () => import('@/views/GruposEstudiante.vue'),
+          meta: { requiresAuth: true, roles: ['estudiante'] }
         }
       ]
     },
