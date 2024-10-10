@@ -52,16 +52,16 @@ const position = ref('bottom');
 
 const getSeverity = (status) => {
     switch (status) {
-        case 'Inutil':
-            return 'danger';
-        case 'Util':
+        case 'A':
             return 'success';
-        case 'Critico':
+        case 'B':
+            return 'primary';
+        case 'C':
             return 'info';
-        case 'Innecesaria':
-            return 'secondary';
+        case 'D':
+            return 'warning';
         default:
-            return 'secondary';
+            return 'danger';
     }
 };
 
@@ -73,6 +73,7 @@ const fetchAcciones = async () => {
             acciones.value = [];// No hay acciones
         } else {
             acciones.value = response.data; // Guardar las acciones en el estado
+            //console.log("Esta: ", acciones.value)
         }
         display.value = true;
     } catch (error) {
@@ -109,7 +110,7 @@ const fetchPuntajeAccion = async () => {
         const response = await obtenerPuntajeAccionSimulacion(id_simulacion);
         if (response.data && response.data.length > 0) {
             puntajeAccion.value = response.data;
-            console.log("Accion: ", puntajeAccion.value[0].cantidad)
+            //console.log("Accion: ", puntajeAccion.value[0].cantidad)
         } else {
             puntajeAccion.value = [{}]; // En caso de que no haya datos
         }
@@ -148,10 +149,6 @@ function onDialogHide() {
         <div>
             <h1 class="text-center"> {{ formattedTime }} </h1>
         </div>
-        <!--
-        <button @click="start">Start</button>
-        <button @click="stop">Stop</button>
-        <button @click="reset">Reset</button>-->
         <div>
             <h4 class="text-center"> Historial de eventos </h4>
         </div>
@@ -193,7 +190,7 @@ function onDialogHide() {
             <Column field="descripcion" header="Descripción" style="width: 50%"></Column>
             <Column field="tipo_accion" header="Tipo de Acción" style="width: 25%" class="text-center">
                 <template #body="slotProps">
-                    <Tag :severity="getSeverity(slotProps.data.tipo_accion)" :value="slotProps.data.tipo_accion"
+                    <Tag :severity="getSeverity(slotProps.data.puntaje)" :value="slotProps.data.tipo_accion"
                         class="text-sm" />
                 </template>
             </Column>

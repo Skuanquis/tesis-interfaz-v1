@@ -153,7 +153,7 @@ const fetchData = async (type, section = null) => {
             buttonsState.value.via.label = "Obteniendo...";
             loadingViaAerea.value = true;
             response = await getExamenViaAerea(id_historia_clinica);
-            await registrarAccionSimulacion('Se  realizo el complementario de via aerea', response.data[0].rubrica, response.data[0].puntaje_examen_via_aerea, response.data[0].feed_examen_via_aerea, type);
+            await registrarAccionSimulacion('Se  realizo el examen complementario de via aerea', response.data[0].rubrica, response.data[0].puntaje_examen_via_aerea, response.data[0].feed_examen_via_aerea, type);
             setTimeout(() => {
                 examenSegmentarioViaAerea.value = response.data[0];
                 store.dispatch('examenes/saveExamenSegmentarioViaAerea', examenSegmentarioViaAerea.value);

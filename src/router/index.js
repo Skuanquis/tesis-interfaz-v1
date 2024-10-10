@@ -92,6 +92,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
       children: [
         {
+          path: '',
+          name: 'dashboard',
+          component: () => import('@/views/Dashboard.vue'),
+          meta: { requiresAuth: true, roles: ['administrador', 'operador', 'supervisor'] }
+        },
+        {
           path: 'perfil',
           name: 'perfil',
           component: () => import('@/views/Perfil.vue'),

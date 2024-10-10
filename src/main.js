@@ -45,6 +45,7 @@ import SelectButton from 'primevue/selectbutton'
 import FileUpload from 'primevue/fileupload'
 import InputMask from 'primevue/inputmask'
 import ProgressBar from 'primevue/progressbar'
+import Knob from 'primevue/knob'
 
 const app = createApp(App)
 
@@ -84,6 +85,7 @@ app.component('SelectButton', SelectButton)
 app.component('FileUpload', FileUpload)
 app.component('InputMask', InputMask)
 app.component('ProgressBar', ProgressBar)
+app.component('Knob', Knob)
 
 app.use(ConfirmationService)
 app.use(ToastService)

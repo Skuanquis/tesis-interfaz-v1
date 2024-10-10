@@ -37,3 +37,25 @@ export const obtenerMensaje = (id_caso_clinico) => {
 export const enviarDiagnosticoFinal = (id_simulacion, diagnostico_final) => {
   return api.put(`/enviar-diagnostico/${id_simulacion}`, { diagnostico_final })
 }
+
+export const actualizarPuntajePorcentaje = (id_simulacion, puntaje_porcentaje) => {
+  return api.put(`/realiza-simulacion/${id_simulacion}`, { puntaje_porcentaje })
+}
+
+export const obtenerSimulaciones = (id_usuario, id_grupo) => {
+  const params = {}
+  if (id_grupo && id_grupo !== '0') {
+    params.id_grupo = id_grupo
+  }
+  return api.get(`/simulaciones/${id_usuario}`, { params })
+}
+
+export const obtenerDetallesSimulacion = async (id_realiza_simulacion) => {
+  try {
+    const response = await api.get(`/info-simulaciones/${id_realiza_simulacion}`)
+    return response.data
+  } catch (error) {
+    console.error('Error al obtener detalles de la simulación:', error)
+    throw error
+  }
+}

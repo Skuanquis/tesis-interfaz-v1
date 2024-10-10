@@ -86,61 +86,61 @@ const fetchPacienteData = async (type, section = null) => {
                     loadingRef = loadingCardiovascular;
                     anamnesisRef = anamnesisCardiovascular;
                     responseAnamnesis = await getAnamnesisCardiovascular(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario cardiovascular', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_cardiovascular, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis cardiovascular', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_cardiovascular, section);
                     break;
                 case 'endocrino':
                     loadingRef = loadingEndocrino;
                     anamnesisRef = anamnesisEndocrino;
                     responseAnamnesis = await getAnamnesisEndocrino(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario endocrino', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_endocrino, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema endocrino', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_endocrino, section);
                     break;
                 case 'gastrointestinal':
                     loadingRef = loadingGastrointestinal;
                     anamnesisRef = anamnesisGastrointestinal;
                     responseAnamnesis = await getAnamnesisGastrointestinal(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario gastrointestinal', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_gastrointestinal, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis gastrointestinal', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_gastrointestinal, section);
                     break;
                 case 'genitourinario':
                     loadingRef = loadingGenitourinario;
                     anamnesisRef = anamnesisGenitourinario;
                     responseAnamnesis = await getAnamnesisGenitourinario(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario genitourinario', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_genitourinario, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema genitourinario', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_genitourinario, section);
                     break;
                 case 'hematico':
                     loadingRef = loadingHematico;
                     anamnesisRef = anamnesisHematico;
                     responseAnamnesis = await getAnamnesisHematico(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario hematico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_hematico, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema hematico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_hematico, section);
                     break;
                 case 'locomotor':
                     loadingRef = loadingLocomotor;
                     anamnesisRef = anamnesisLocomotor;
                     responseAnamnesis = await getAnamnesisLocomotor(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario locomotor', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_locomotor, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema locomotor', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_locomotor, section);
                     break;
                 case 'neurologico':
                     loadingRef = loadingNeurologico;
                     anamnesisRef = anamnesisNeurologico;
                     responseAnamnesis = await getAnamnesisNeurologico(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario neurologico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_neurologico, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema neurologico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_neurologico, section);
                     break;
                 case 'psiquiatrico':
                     loadingRef = loadingPsiquiatrico;
                     anamnesisRef = anamnesisPsiquiatrico;
                     responseAnamnesis = await getAnamnesisPsiquiatrico(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario psiquiatrico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_psiquiatrico, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema psiquiatrico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_psiquiatrico, section);
                     break;
                 case 'respiratorio':
                     loadingRef = loadingRespiratorio;
                     anamnesisRef = anamnesisRespiratorio;
                     responseAnamnesis = await getAnamnesisRespiratorio(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario respiratorio', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_respiratorio, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema respiratorio', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_respiratorio, section);
                     break;
                 case 'tegumentario':
                     loadingRef = loadingTegumentario;
                     anamnesisRef = anamnesisTegumentario;
                     responseAnamnesis = await getAnamnesisTegumentario(id_historia_clinica);
-                    await registrarAccionSimulacion('Se  realizo el examen segmentario tegumentario', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_tegumentario, section);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema tegumentario', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_tegumentario, section);
                     break;
                 default:
                     throw new Error('Sección no válida');

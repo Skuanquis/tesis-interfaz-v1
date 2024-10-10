@@ -3,8 +3,8 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-import { obtenerSimulacion } from '@/services/simulacionService';
-import { obtenerAccionesSimulacion } from '@/services/simulacionService';
+import { obtenerSimulacion, obtenerAccionesSimulacion, actualizarPuntajePorcentaje } from '@/services/simulacionService';
+import { obtenerPuntajes, obtenerPuntajeTotal, obtenerPuntajeAccionSimulacion } from '@/services/casoService'
 const store = useStore();
 const router = useRouter();
 const display = ref(false);
@@ -12,6 +12,12 @@ const tiempoEmpleado = ref('');
 const position = ref('top');
 const acciones = ref([]);
 const id_simulacion = localStorage.getItem('id_simulacion');
+const id_historia_clinica = localStorage.getItem('id_historia_clinica');
+const puntajeTotal = ref([]);
+const puntajes = ref([{}]);
+const puntajeAccion = ref([{}]);
+const puntajePorcentaje = ref(null);
+
 const fetchSimulacionData = async () => {
     try {
         const id_simulacion = localStorage.getItem('id_simulacion');
@@ -27,16 +33,16 @@ const fetchSimulacionData = async () => {
 
 const getSeverity = (status) => {
     switch (status) {
-        case 'Inutil':
-            return 'danger';
-        case 'Util':
+        case 'A':
             return 'success';
-        case 'Critico':
+        case 'B':
+            return 'primary';
+        case 'C':
             return 'info';
-        case 'Innecesaria':
-            return 'secondary';
+        case 'D':
+            return 'warning';
         default:
-            return 'secondary';
+            return 'danger';
     }
 };
 
@@ -55,9 +61,82 @@ const fetchAcciones = async () => {
     }
 };
 
+const fetchPuntajeSimulacion = async () => {
+    try {
+        const response = await obtenerPuntajeTotal(id_historia_clinica);
+        puntajeTotal.value = response.data[0]
+        console.log(puntajeTotal.value)
+    } catch (error) {
+        console.error('Error al obtener el puntaje total', error)
+    }
+}
+
+
+const fetchPuntaje = async () => {
+    try {
+        const response = await obtenerPuntajes(id_historia_clinica);
+        if (response.data && response.data.length > 0) {
+            puntajes.value = response.data;
+        } else {
+            puntajes.value = [{}]; // En caso de que no haya datos
+        }
+    } catch (error) {
+        console.error('Error al obtener el puntaje', error);
+    }
+};
+
+const fetchPuntajeAccion = async () => {
+    try {
+        const response = await obtenerPuntajeAccionSimulacion(id_simulacion);
+        if (response.data && response.data.length > 0) {
+            puntajeAccion.value = response.data;
+            console.log("Accion: ", puntajeAccion.value[0].cantidad)
+        } else {
+            puntajeAccion.value = [{}]; // En caso de que no haya datos
+        }
+    } catch (error) {
+        console.error('Error al obtener el puntaje', error);
+    }
+};
+
+const calcularYActualizarPuntaje = async () => {
+    try {
+        const totalPuntajesResponse = await obtenerPuntajeTotal(id_historia_clinica);
+        const totalPuntajes = totalPuntajesResponse.data[0];
+
+        const puntajesAccionResponse = await obtenerPuntajeAccionSimulacion(id_simulacion);
+        const puntajesAccion = puntajesAccionResponse.data;
+
+        const totalA = totalPuntajes.total_puntaje_a || 1;
+        const totalB = totalPuntajes.total_puntaje_b || 1;
+        const totalC = totalPuntajes.total_puntaje_c || 1;
+
+        const obtenidosA = puntajesAccion.find(p => p.puntaje === 'A')?.cantidad || 0;
+        const obtenidosB = puntajesAccion.find(p => p.puntaje === 'B')?.cantidad || 0;
+        const obtenidosC = puntajesAccion.find(p => p.puntaje === 'C')?.cantidad || 0;
+
+        const porcentajeA = (obtenidosA / totalA) * 100;
+        const porcentajeB = (obtenidosB / totalB) * 100;
+        const porcentajeC = (obtenidosC / totalC) * 100;
+
+        // Calcular el porcentaje total
+        puntajePorcentaje.value = ((porcentajeA + porcentajeB + porcentajeC) / 3).toFixed(2);
+
+        // Actualizar el porcentaje en el backend
+        await actualizarPuntajePorcentaje(id_simulacion, puntajePorcentaje.value);
+        console.log('Puntaje porcentaje actualizado exitosamente:', puntajePorcentaje.value);
+    } catch (error) {
+        console.error('Error al calcular o actualizar el puntaje porcentaje:', error);
+    }
+};
+
 onMounted(() => {
     fetchSimulacionData();
     fetchAcciones();
+    fetchPuntajeSimulacion();
+    fetchPuntaje();
+    fetchPuntajeAccion();
+    calcularYActualizarPuntaje();
 });
 
 // Función para eliminar los datos del localStorage al finalizar la simulación
@@ -96,13 +175,44 @@ function onDialogHide() {
             <h4 class="text-center"> Tiempo Transcurrido </h4>
             <h4 class="text-center"> {{ tiempoEmpleado }}</h4>
         </div>
-        <!--
-        <button @click="start">Start</button>
-        <button @click="stop">Stop</button>
-        <button @click="reset">Reset</button>-->
+        <div class="text-center">
+            <Knob v-model="puntajePorcentaje" :valueTemplate="puntajePorcentaje !== null ? '{value}%' : 'Calculando...'"
+                :size="130" readonly />
+
+        </div>
         <div>
             <h4 class="text-center"> Historial de eventos </h4>
         </div>
+
+        <div class="grid">
+            <div class="col md:col-3 text-right">
+                <h6><strong>{{ puntajes[0]?.rubrica || 'Sin rubrica' }}</strong></h6>
+            </div>
+            <div class="col md:col-8">
+                <div class="progress-container">
+                    <div class="progress-bar-a"
+                        :style="{ width: ((puntajeAccion[0]?.cantidad || 0) / (puntajeTotal?.total_puntaje_a || 1)) * 100 + '%' }">
+                        <span class="progress-text">{{ (puntajeAccion[0]?.cantidad || 0) }} / {{
+                            puntajeTotal?.total_puntaje_a || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col md:col-1"></div>
+            <div class="col md:col-3 text-right">
+                <h6><strong>{{ puntajes[1]?.rubrica || 'Sin rubrica' }}</strong></h6>
+            </div>
+            <div class="col md:col-8">
+                <div class="progress-container">
+                    <div class="progress-bar-b"
+                        :style="{ width: ((puntajeAccion[1]?.cantidad || 0) / (puntajeTotal?.total_puntaje_b || 1)) * 100 + '%' }">
+                        <span class="progress-text">{{ (puntajeAccion[1]?.cantidad || 0) }} / {{
+                            puntajeTotal?.total_puntaje_b || 0 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col md:col-1"></div>
+        </div>
+
         <DataTable :value="acciones" paginator :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]"
             tableStyle="min-width: 30rem"
             paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
@@ -110,7 +220,7 @@ function onDialogHide() {
             <Column field="descripcion" header="Descripción" style="width: 50%"></Column>
             <Column field="tipo_accion" header="Tipo de Acción" style="width: 25%" class="text-center">
                 <template #body="slotProps">
-                    <Tag :severity="getSeverity(slotProps.data.tipo_accion)" :value="slotProps.data.tipo_accion"
+                    <Tag :severity="getSeverity(slotProps.data.puntaje)" :value="slotProps.data.tipo_accion"
                         class="text-sm" />
                 </template>
             </Column>
@@ -197,5 +307,56 @@ h5 {
     background-color: #333;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.progress-container {
+    width: 100%;
+    max-width: 400px;
+    /* Ancho máximo para la barra */
+    background-color: #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    /* Para evitar que el contenido se salga del borde */
+    margin: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-a {
+    height: 20px;
+    /* Ajusta la altura */
+    background-color: #4caf50;
+    /* Color verde */
+    border-radius: 12px 0 0 12px;
+    /* Bordes redondeados solo en la izquierda */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.4s ease;
+    color: white;
+    /* Texto blanco dentro de la barra */
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.progress-bar-b {
+    height: 20px;
+    /* Ajusta la altura */
+    background-color: #1f4de6;
+    /* Color verde */
+    border-radius: 12px 0 0 12px;
+    /* Bordes redondeados solo en la izquierda */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.4s ease;
+    color: white;
+    /* Texto blanco dentro de la barra */
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.progress-text {
+    padding: 0 10px;
+    /* Espacio interno para el texto */
 }
 </style>

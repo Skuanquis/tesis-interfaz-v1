@@ -286,3 +286,953 @@ onMounted(() => {
         </Dialog>
     </div>
 </template>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- eslint-disable vue/multi-word-component-names -->
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { getInfoHistoria } from '@/services/historiaService';
+import { useToast } from 'primevue/usetoast';
+import { useStore } from 'vuex';
+import {
+    getAnamnesisCardiovascular, getAnamnesisEndocrino,
+    getAnamnesisGastrointestinal, getAnamnesisGenitourinario, getAnamnesisHematico,
+    getAnamnesisLocomotor, getAnamnesisNeurologico, getAnamnesisPsiquiatrico,
+    getAnamnesisRespiratorio, getAnamnesisTegumentario
+} from '@/services/historiaService';
+
+import { registrarAccion } from '@/services/simulacionService';
+const store = useStore();
+
+const display = ref(false);
+const router = useRouter();
+const toast = useToast();
+const paciente = ref(null);
+const position = ref('left');
+
+const loadingGeneral = ref(false);
+
+const loadingCardiovascular = ref(false);
+const loadingEndocrino = ref(false);
+const loadingGastrointestinal = ref(false);
+const loadingGenitourinario = ref(false);
+const loadingHematico = ref(false);
+const loadingLocomotor = ref(false);
+const loadingNeurologico = ref(false);
+const loadingPsiquiatrico = ref(false);
+const loadingRespiratorio = ref(false);
+const loadingTegumentario = ref(false);
+
+const anamnesisCardiovascular = ref(store.getters['anamnesis/anamnesisCardiovascular']);
+const anamnesisEndocrino = ref(store.getters['anamnesis/anamnesisEndocrino']);
+const anamnesisGastrointestinal = ref(store.getters['anamnesis/anamnesisGastrointestinal']);
+const anamnesisGenitourinario = ref(store.getters['anamnesis/anamnesisGenitourinario']);
+const anamnesisHematico = ref(store.getters['anamnesis/anamnesisHematico']);
+const anamnesisLocomotor = ref(store.getters['anamnesis/anamnesisLocomotor']);
+const anamnesisNeurologico = ref(store.getters['anamnesis/anamnesisNeurologico']);
+const anamnesisPsiquiatrico = ref(store.getters['anamnesis/anamnesisPsiquiatrico']);
+const anamnesisRespiratorio = ref(store.getters['anamnesis/anamnesisRespiratorio']);
+const anamnesisTegumentario = ref(store.getters['anamnesis/anamnesisTegumentario']);
+
+const id_simulacion = localStorage.getItem('id_simulacion');
+
+const registrarAccionSimulacion = async (descripcion, rubrica, puntaje, retroalimentacion, section) => {
+    try {
+        const accionData = {
+            id_simulacion: id_simulacion,
+            descripcion: descripcion,
+            tipo_accion: rubrica,
+            puntaje: puntaje,
+            retroalimentacion: retroalimentacion
+        };
+        await registrarAccion(accionData);
+        toast.add({ severity: 'info', summary: `Examen ${section} realizado.`, detail: `${accionData.retroalimentacion}`, life: 3000 });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al registrar la acción', life: 3000 });
+        console.error('Error al registrar la acción:', error);
+    }
+};
+
+const fetchPacienteData = async (type, section = null) => {
+    const id_historia_clinica = localStorage.getItem('id_historia_clinica');
+    if (!id_historia_clinica) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se encontro el id de la historia clinica', life: 3000 });
+        return;
+    }
+    try {
+        const response = await getInfoHistoria(id_historia_clinica);
+        paciente.value = response.data[0];
+        display.value = true;
+
+        let responseAnamnesis;
+        console.log(`Fetching data for type: ${type}, section: ${section}`);
+
+        if (type === 'anamnesis' && section) {
+            let loadingRef;
+            let anamnesisRef;
+            switch (section) {
+                case 'cardiovascular':
+                    loadingRef = loadingCardiovascular;
+                    anamnesisRef = anamnesisCardiovascular;
+                    responseAnamnesis = await getAnamnesisCardiovascular(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis cardiovascular', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_cardiovascular, section);
+                    break;
+                case 'endocrino':
+                    loadingRef = loadingEndocrino;
+                    anamnesisRef = anamnesisEndocrino;
+                    responseAnamnesis = await getAnamnesisEndocrino(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema endocrino', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_endocrino, section);
+                    break;
+                case 'gastrointestinal':
+                    loadingRef = loadingGastrointestinal;
+                    anamnesisRef = anamnesisGastrointestinal;
+                    responseAnamnesis = await getAnamnesisGastrointestinal(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis gastrointestinal', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_gastrointestinal, section);
+                    break;
+                case 'genitourinario':
+                    loadingRef = loadingGenitourinario;
+                    anamnesisRef = anamnesisGenitourinario;
+                    responseAnamnesis = await getAnamnesisGenitourinario(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema genitourinario', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_genitourinario, section);
+                    break;
+                case 'hematico':
+                    loadingRef = loadingHematico;
+                    anamnesisRef = anamnesisHematico;
+                    responseAnamnesis = await getAnamnesisHematico(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema hematico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_hematico, section);
+                    break;
+                case 'locomotor':
+                    loadingRef = loadingLocomotor;
+                    anamnesisRef = anamnesisLocomotor;
+                    responseAnamnesis = await getAnamnesisLocomotor(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema locomotor', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_locomotor, section);
+                    break;
+                case 'neurologico':
+                    loadingRef = loadingNeurologico;
+                    anamnesisRef = anamnesisNeurologico;
+                    responseAnamnesis = await getAnamnesisNeurologico(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema neurologico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_neurologico, section);
+                    break;
+                case 'psiquiatrico':
+                    loadingRef = loadingPsiquiatrico;
+                    anamnesisRef = anamnesisPsiquiatrico;
+                    responseAnamnesis = await getAnamnesisPsiquiatrico(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema psiquiatrico', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_psiquiatrico, section);
+                    break;
+                case 'respiratorio':
+                    loadingRef = loadingRespiratorio;
+                    anamnesisRef = anamnesisRespiratorio;
+                    responseAnamnesis = await getAnamnesisRespiratorio(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema respiratorio', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_respiratorio, section);
+                    break;
+                case 'tegumentario':
+                    loadingRef = loadingTegumentario;
+                    anamnesisRef = anamnesisTegumentario;
+                    responseAnamnesis = await getAnamnesisTegumentario(id_historia_clinica);
+                    await registrarAccionSimulacion('Se  realizo la anamnesis del sistema tegumentario', responseAnamnesis.data[0].rubrica, responseAnamnesis.data[0].codigo, responseAnamnesis.data[0].feed_tegumentario, section);
+                    break;
+                default:
+                    throw new Error('Sección no válida');
+            }
+
+            loadingRef.value = true;
+            setTimeout(() => {
+                anamnesisRef.value = responseAnamnesis.data[0];
+                store.dispatch(`anamnesis/saveAnamnesis${section.charAt(0).toUpperCase() + section.slice(1)}`, anamnesisRef.value);
+                loadingRef.value = false;
+                console.log(`${section} segmentario data:`, anamnesisRef.value);
+            }, 2000);
+
+        }
+
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener la información del paciente', life: 3000 });
+        console.error(error);
+        loadingGeneral.value = loadingCardiovascular.value = loadingEndocrino.value =
+            loadingGastrointestinal.value = loadingGenitourinario.value = loadingHematico.value =
+            loadingLocomotor.value = loadingNeurologico.value = loadingPsiquiatrico.value =
+            loadingPsiquiatrico.value = loadingTegumentario.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchPacienteData();
+});
+
+function closeDialog() {
+    display.value = false;
+    router.push('/app');
+}
+
+function onDialogHide() {
+    if (!display.value) {
+        router.push('/app');
+    }
+}
+</script>
+
+<template>
+    <Dialog header="Paciente" v-model:visible="display" :style="{ width: '40rem', height: '100%' }" :modal="true"
+        @hide="onDialogHide" class="p-fluid" :position="position" :draggable="false">
+        <template v-if="paciente">
+            <h5 class="text-center datos-paciente">Datos del Paciente</h5>
+            <div class="data-wrapper">
+                <div class="data-section">
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Nombre: </strong>{{ paciente.nombre.toUpperCase() }}
+                            </h5>
+                            <h5 class="case-data text-lg"><strong>Apellido Paterno: </strong>{{
+                                paciente.paterno.toUpperCase() }}
+                            </h5>
+                            <h5 class="case-data text-lg"><strong>Apellido Materno: </strong>{{
+                                paciente.materno.toUpperCase() }}
+                            </h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Edad: </strong>{{ paciente.edad }} años</h5>
+                            <h5 class="case-data text-lg"><strong>Peso: </strong>{{ paciente.peso }} Kg.</h5>
+                            <h5 class="case-data text-lg"><strong>Talla: </strong>{{ paciente.talla }} m.</h5>
+                            <h5 class="case-data text-lg"><strong>Ocupación: </strong>{{ paciente.ocupacion }} </h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <p class="text-lg text-justify">{{ paciente.descripcion }}</p>
+                </div>
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Motivo de Consulta</h5>
+                    <div class="grid">
+                        <div class="col md:col-12">
+                            <h5 class="case-data text-lg">{{ paciente.motivo }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Historia de la enfermedad actual</h5>
+                    <p class="text-lg text-justify">{{ paciente.historia_enfermedad_actual }}</p>
+                </div>
+                <div v-if="paciente.sexo === 'femenino'" class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes Gineco Obstetricos</h5>
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Menarca:</strong> {{ paciente.menarca }}</h5>
+                            <h5 class="case-data text-lg"><strong>FUM:</strong> {{ new
+                                Date(paciente.fum).toLocaleDateString() }}</h5>
+                            <h5 class="case-data text-lg"><strong>FPP:</strong> {{ new
+                                Date(paciente.fpp).toLocaleDateString() }}</h5>
+                            <h5 class="case-data text-lg"><strong>CPN:</strong> {{ paciente.cpn }}</h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>G:</strong> {{ paciente.gestaciones }}</h5>
+                            <h5 class="case-data text-lg"><strong>P:</strong> {{ paciente.partos }}</h5>
+                            <h5 class="case-data text-lg"><strong>AB:</strong> {{ paciente.abortos }}</h5>
+                            <h5 class="case-data text-lg"><strong>C:</strong> {{ paciente.cesarias }}</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes Patológicos</h5>
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Alergias:</strong> {{ paciente.alergias }}</h5>
+                            <h5 class="case-data text-lg"><strong>Cirugias:</strong> {{ paciente.cirugias }}</h5>
+                            <h5 class="case-data text-lg"><strong>Traumatismos:</strong> {{ paciente.traumas }}</h5>
+                            <h5 class="case-data text-lg"><strong>Intoxicaciones:</strong> {{ paciente.intoxicaciones }}
+                            </h5>
+                            <h5 class="case-data text-lg"><strong>Hospitalizaciones:</strong> {{
+                                paciente.hospitalizaciones }}</h5>
+                            <h5 class="case-data text-lg"><strong>Enfermedades:</strong> {{ paciente.enfermedades }}
+                            </h5>
+                            <h5 class="case-data text-lg"><strong>Patologia Asociada:</strong> {{
+                                paciente.patologia_asociada }}</h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Enfermedades Congenitas:</strong> {{
+                                paciente.enfermedades_congenitas }}</h5>
+                            <h5 class="case-data text-lg"><strong>Enfermedades de Infancia:</strong> {{
+                                paciente.enfermedades_infancia }}</h5>
+                            <h5 class="case-data text-lg"><strong>Enfermedades de Adolescencia:</strong> {{
+                                paciente.enfermedades_adolescencia }}</h5>
+                            <h5 class="case-data text-lg"><strong>Enfermedades de Adulto:</strong> {{
+                                paciente.enfermedades_adulto }}</h5>
+                            <h5 class="case-data text-lg"><strong>Transfusiones:</strong> {{ paciente.trasfusiones }}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes No Patológicos</h5>
+                    <div class="grid">
+                        <div class="col md:col-12">
+                            <h5 class="case-data text-lg text-justify"><strong>Antecedentes de Nacimiento:</strong> {{
+                                paciente.antecedentes_nacimiento }}</h5>
+                            <h5 class="case-data text-lg text-justify"><strong>Habitos:</strong> {{ paciente.habitos }}
+                            </h5>
+                            <h5 class="case-data text-lg text-justify"><strong>Factores de Riesgo:</strong> {{
+                                paciente.factores_de_riesgo }}</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h5 class="info-data-dialog text-lg">Antecedentes Familiares</h5>
+                    <div class="grid">
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Padre:</strong> {{
+                                paciente.padre }}</h5>
+                            <h5 class="case-data text-lg"><strong>Madre:</strong> {{ paciente.madre }}</h5>
+                            <h5 class="case-data text-lg"><strong>Hermanos:</strong> {{ paciente.hermanos }}</h5>
+                        </div>
+                        <div class="col md:col-6">
+                            <h5 class="case-data text-lg"><strong>Hijos:</strong> {{
+                                paciente.hijos }}</h5>
+                            <h5 class="case-data text-lg"><strong>Conyugue:</strong> {{
+                                paciente.conyugue }}</h5>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h5>Anamnesis por Sistemas</h5>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Cardiovascular:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisCardiovascular && !loadingCardiovascular" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'cardiovascular')" />
+                    <Button v-if="loadingCardiovascular" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisCardiovascular">{{
+                        anamnesisCardiovascular?.cardiovascular || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Endocrino:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisEndocrino && !loadingEndocrino" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'endocrino')" />
+                    <Button v-if="loadingEndocrino" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisEndocrino">{{ anamnesisEndocrino?.endocrino || '' }}
+                    </p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Gastrointestinal:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisGastrointestinal && !loadingGastrointestinal" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'gastrointestinal')" />
+                    <Button v-if="loadingGastrointestinal" label="Obteniendo..." icon="pi pi-spin pi-spinner"
+                        disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisGastrointestinal">{{
+                        anamnesisGastrointestinal?.gastrointestinal || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Genitourinario:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisGenitourinario && !loadingGenitourinario" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'genitourinario')" />
+                    <Button v-if="loadingGenitourinario" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisGenitourinario">{{
+                        anamnesisGenitourinario?.genitourinario || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Respiratorio:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisRespiratorio && !loadingRespiratorio" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'respiratorio')" />
+                    <Button v-if="loadingRespiratorio" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisRespiratorio">{{ anamnesisRespiratorio?.respiratorio
+                        || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Neurologico:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisNeurologico && !loadingNeurologico" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'neurologico')" />
+                    <Button v-if="loadingNeurologico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisNeurologico">{{ anamnesisNeurologico?.neurologico ||
+                        '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Locomotor:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisLocomotor && !loadingLocomotor" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'locomotor')" />
+                    <Button v-if="loadingLocomotor" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisLocomotor">{{ anamnesisLocomotor?.locomotor || '' }}
+                    </p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Hematico:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisHematico && !loadingHematico" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'hematico')" />
+                    <Button v-if="loadingHematico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisHematico">{{ anamnesisHematico?.hematico || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Psiquiatrico:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisPsiquiatrico && !loadingPsiquiatrico" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'psiquiatrico')" />
+                    <Button v-if="loadingPsiquiatrico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisPsiquiatrico">{{ anamnesisPsiquiatrico?.psiquiatrico
+                        || '' }}</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Tegumentario:</strong></div>
+                <div class="col md:col-4">
+                    <Button v-if="!anamnesisTegumentario && !loadingTegumentario" label="Realizar"
+                        @click="() => fetchPacienteData('anamnesis', 'tegumentario')" />
+                    <Button v-if="loadingTegumentario" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                </div>
+                <div class="col">
+                    <p class="text-justify text-lg" v-if="anamnesisTegumentario">{{ anamnesisTegumentario?.tegumentario
+                        || '' }}</p>
+                </div>
+            </div>
+            <div class="grid ">
+                <div class="col md:col-3"></div>
+                <div class="col md:col-3"></div>
+                <div class="col md:col-3"></div>
+                <div class="col md:col-3">
+                    <Button label="Ok" @click="closeDialog" icon="pi pi-check" />
+                </div>
+            </div>
+        </template>
+        <template v-else>
+            <h4 class="text-center">No hay datos disponibles de la histria clínica.</h4>
+        </template>
+    </Dialog>
+</template>
+
+
+<style scoped>
+.gestion-title {
+    font-size: 2em;
+    font-weight: bold;
+    color: #bb86fc;
+}
+
+.total-casos {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #e0e0e0;
+}
+
+.info-data,
+.case-data {
+    font-size: 1em;
+    color: #fff9e3;
+}
+
+.info-data-dialog {
+    font-size: 1.2em;
+    color: #cfcfcf;
+}
+
+.case-data {
+    font-weight: normal;
+    padding-bottom: 0.5em;
+}
+
+.info-data {
+    font-weight: bold;
+    padding-bottom: 0.3em;
+}
+
+.month-name {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #bb86fc;
+    margin-bottom: 0.3em;
+}
+
+.datos-paciente {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #bb86fc;
+    margin-bottom: 0.3em;
+}
+
+.data-section {
+    padding: 2px 0;
+    border-bottom: 1px solid #444;
+    margin: 0 10px;
+}
+
+.data-section:last-child {
+    border-bottom: none;
+}
+
+h5 {
+    margin: 0;
+    padding: 2px 0;
+}
+
+.data-text {
+    font-size: 0.85em;
+    color: #b0b0b0;
+}
+
+.card-mes:hover {
+    background-color: #333;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- eslint-disable vue/multi-word-component-names -->
+<!-- src/components/SimulacionDetalle.vue -->
+<template>
+    <div>
+        <!-- Condicional para mostrar el dropdown solo si el rol no es estudiante -->
+        <div v-if="usuarioRol !== 'estudiante'" class="card">
+            <div class="grid p-fluid">
+                <div class="col md:col-6 flex align-content-center flex-wrap text-2xl">Datos Importantes</div>
+                <div v-if="mostrarDropdown" class="col md:col-4">
+                    <Dropdown v-model="selectedGroup" :options="grupos" optionLabel="nombre"
+                        placeholder="Seleccione un grupo" class="p-column-filter" showClear />
+                </div>
+                <div class="col md:col-2">
+                    <Button label="Aplicar" icon="pi pi-check" iconPos="right" @click="cargarSimulaciones" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Simulaciones -->
+        <div class="card">
+            <DataTable v-model:filters="filters" stripedRows :value="simulaciones" paginator showGridlines :rows="10"
+                dataKey="id_realiza_simulacion" filterDisplay="menu" :loading="loading"
+                :globalFilterFields="['nombre_completo', 'id_historia_clinica', 'tiempo_empleado', 'fecha_simulacion', 'puntaje_porcentaje']">
+                <template #header>
+                    <div class="flex justify-content-between">
+                        <Button type="button" icon="pi pi-filter-slash" label="Limpiar" outlined
+                            @click="clearFilter()" />
+                        <div class="p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <InputText v-model="filters.global.value" placeholder="Palabra clave" />
+                        </div>
+                    </div>
+                </template>
+                <template #empty> No se encontraron registros. </template>
+
+                <!-- Columnas de la Tabla -->
+                <Column field="nombre_completo" header="Nombre" style="min-width: 12rem">
+                    <template #filter="{ filterModel }">
+                        <InputText v-model="filterModel.value" type="text" class="p-column-filter"
+                            placeholder="Buscar por nombre" />
+                    </template>
+                </Column>
+                <Column field="id_historia_clinica" header="Historia Clínica" style="min-width: 12rem">
+                    <template #filter="{ filterModel }">
+                        <InputText v-model="filterModel.value" type="text" class="p-column-filter"
+                            placeholder="Buscar por historia" />
+                    </template>
+                </Column>
+                <Column field="tiempo_empleado" header="Tiempo Empleado" style="min-width: 10rem">
+                    <template #filter="{ filterModel }">
+                        <InputText v-model="filterModel.value" type="text" class="p-column-filter"
+                            placeholder="Buscar por tiempo" />
+                    </template>
+                </Column>
+                <Column field="fecha_simulacion" header="Fecha Simulación" dataType="date" style="min-width: 12rem">
+                    <template #body="{ data }">
+                        {{ formatDate(data.fecha_simulacion) }}
+                    </template>
+                    <template #filter="{ filterModel }">
+                        <Calendar v-model="filterModel.value" dateFormat="dd/mm/yy" placeholder="dd/mm/yyyy"
+                            mask="99/99/9999" />
+                    </template>
+                </Column>
+                <Column field="puntaje_porcentaje" header="Puntaje Porcentaje" dataType="numeric"
+                    style="min-width: 10rem">
+                    <template #body="{ data }">
+                        <Tag :value="formatPercentage(data.puntaje_porcentaje)"
+                            :severity="getSeverity(data.puntaje_porcentaje)" v-if="data.puntaje_porcentaje !== null" />
+                        <Tag value="N/A" severity="warning" v-else />
+                    </template>
+                    <template #filter="{ filterModel }">
+                        <InputNumber v-model="filterModel.value" mode="decimal" minFractionDigits="0"
+                            maxFractionDigits="2" class="p-column-filter" placeholder="Buscar por puntaje" :min="0"
+                            :max="100" />
+                    </template>
+                </Column>
+                <Column class="text-center" header="Acciones" style="min-width: 8rem">
+                    <template #body="{ data }">
+                        <Button icon="pi pi-eye" class="p-button-rounded p-button-success mr-2"
+                            @click="verDetalle(data)" />
+                    </template>
+                </Column>
+            </DataTable>
+        </div>
+
+        <!-- Diálogo para ver los detalles de la simulación -->
+        <Dialog v-model:visible="dialogoVerAcciones" modal header="Simulación" :style="{ width: '70vw' }"
+            :breakpoints="{ '1199px': '75vw', '575px': '90vw' }" :closable="true">
+            <template #header>
+                <div class="text-center">
+                    <h5 class="text-2xl">Datos de la Simulación</h5>
+                </div>
+            </template>
+            <div class="grid">
+                <!-- Información General de la Simulación -->
+                <div class="col md:col-4">
+                    <div class="card">
+                        <h5 class="text-center text-5xl">{{ formatPercentage(selectedSimulation.puntaje_porcentaje) }}
+                        </h5>
+                        <h6 class="text-left"><strong>Fecha Inicio: </strong>{{
+                            formatDate(selectedSimulation.fecha_inicio) }}
+                        </h6>
+                        <h6 class="text-left"><strong>Fecha Fin: </strong>{{ formatDate(selectedSimulation.fecha_fin) }}
+                        </h6>
+                        <h6 class="text-left"><strong>Tiempo Empleado: </strong>{{ selectedSimulation.tiempo_empleado }}
+                        </h6>
+                        <h6 class="text-left"><strong>Diagnóstico Final: </strong>{{
+                            selectedSimulation.diagnostico_final }}
+                        </h6>
+                    </div>
+                </div>
+                <!-- Resumen Detallado -->
+                <div class="col md:col-8">
+                    <div class="card">
+                        <h6 class="text-center">Resumen Detallado</h6>
+                        <div class="grid">
+                            <!-- Total de Acciones -->
+                            <div class="col md:col-4">
+                                <h5>{{ totalAcciones }}</h5>
+                                <p>Total de acciones</p>
+                            </div>
+                            <!-- Decisiones Tipo A (Anamnesis) -->
+                            <div class="col md:col-4">
+                                <h5>{{ puntajes.puntaje_anamnesis.puntaje_a }}/{{
+                                    puntajes.puntaje_anamnesis.puntaje_a_max }}
+                                </h5>
+                                <p>Decisiones para Anamnesis</p>
+                                <ProgressBar
+                                    :value="(puntajes.puntaje_anamnesis.puntaje_a / puntajes.puntaje_anamnesis.puntaje_a_max) * 100" />
+                            </div>
+                            <!-- Decisiones Tipo B (Examen) -->
+                            <div class="col md:col-4">
+                                <h5>{{ puntajes.puntaje_examen.puntaje_a }}/{{ puntajes.puntaje_examen.puntaje_a_max }}
+                                </h5>
+                                <p>Decisiones de tipo Examen</p>
+                                <ProgressBar
+                                    :value="(puntajes.puntaje_examen.puntaje_a / puntajes.puntaje_examen.puntaje_a_max) * 100" />
+                            </div>
+                            <!-- Decisiones Tipo C (Diagnóstico Diferencial) -->
+                            <div class="col md:col-4">
+                                <h5>{{ puntajes.puntaje_diferencial.puntaje_a }}/{{
+                                    puntajes.puntaje_diferencial.puntaje_a_max
+                                }}</h5>
+                                <p>Decisiones de tipo Diagnóstico Diferencial</p>
+                                <ProgressBar
+                                    :value="(puntajes.puntaje_diferencial.puntaje_a / puntajes.puntaje_diferencial.puntaje_a_max) * 100" />
+                            </div>
+                            <!-- Decisiones Tipo D (Laboratorio) -->
+                            <div class="col md:col-4">
+                                <h5>{{ puntajes.puntaje_laboratorio.puntaje_a }}/{{
+                                    puntajes.puntaje_laboratorio.puntaje_a_max
+                                }}</h5>
+                                <p>Decisiones de tipo Laboratorio</p>
+                                <ProgressBar
+                                    :value="(puntajes.puntaje_laboratorio.puntaje_a / puntajes.puntaje_laboratorio.puntaje_a_max) * 100" />
+                            </div>
+                            <!-- Decisiones Tipo E (Intervenir) -->
+                            <div class="col md:col-4">
+                                <h5>{{ puntajes.puntaje_intervenir.puntaje_a }}/{{
+                                    puntajes.puntaje_intervenir.puntaje_a_max }}
+                                </h5>
+                                <p>Decisiones de tipo Intervenir</p>
+                                <ProgressBar
+                                    :value="(puntajes.puntaje_intervenir.puntaje_a / puntajes.puntaje_intervenir.puntaje_a_max) * 100" />
+                            </div>
+                            <!-- Paciente y Exámenes -->
+                            <div class="col md:col-4">
+                                <p>Paciente: {{ calcularPorcentaje('a', 'puntaje_anamnesis') }}</p>
+                                <p>Exámenes: {{ calcularPorcentaje('a', 'puntaje_examen') }}</p>
+                            </div>
+                            <!-- Investigar y Diagnósticos Diferenciales -->
+                            <div class="col md:col-4">
+                                <p>Investigar: {{ calcularPorcentaje('a', 'puntaje_intervenir') }}</p>
+                                <p>Diagnósticos Diferenciales: {{ calcularPorcentaje('a', 'puntaje_diferencial') }}</p>
+                            </div>
+                            <!-- Intervenir y Consulta Externa -->
+                            <div class="col md:col-4">
+                                <p>Intervenir: {{ calcularPorcentaje('a', 'puntaje_intervenir') }}</p>
+                                <p>Consulta Externa: {{ calcularPorcentaje('a', 'puntaje_externa') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <DataTable :value="acciones" showGridlines tableStyle="min-width: 50rem">
+                    <Column field="descripcion" header="Descripción"></Column>
+                    <Column field="tipo_accion" header="Tipo de Acción"></Column>
+                    <Column field="hora_accion" header="Tiempo"></Column>
+                    <Column field="puntaje" header="Puntaje"></Column>
+                    <Column field="retroalimentacion" header="Retroalimentación"></Column>
+                </DataTable>
+            </div>
+        </Dialog>
+    </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { obtenerGrupos } from '@/services/grupoService';
+import { obtenerSimulaciones, obtenerDetallesSimulacion } from '@/services/simulacionService';
+import { jwtDecode } from "jwt-decode";
+import { FilterMatchMode, FilterOperator } from 'primevue/api';
+
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
+
+const grupos = ref([]);
+const simulaciones = ref([]);
+const loading = ref(true);
+const usuarioRol = ref('');
+const mostrarDropdown = computed(() => usuarioRol.value !== 'estudiante');
+const selectedGroup = ref(null);
+
+const dialogoVerAcciones = ref(false);
+
+const selectedSimulation = ref({
+    puntaje_porcentaje: null,
+    fecha_inicio: null,
+    fecha_fin: null,
+    tiempo_empleado: null,
+    diagnostico_final: null
+});
+const acciones = ref([]);
+const puntajes = ref({
+    puntaje_anamnesis: { puntaje_a: 0, puntaje_a_max: 0, puntaje_b: 0, puntaje_b_max: 0, puntaje_c: 0, puntaje_c_max: 0, puntaje_d: 0, puntaje_d_max: 0, puntaje_e: 0, puntaje_e_max: 0 },
+    puntaje_examen: { puntaje_a: 0, puntaje_a_max: 0, puntaje_b: 0, puntaje_b_max: 0, puntaje_c: 0, puntaje_c_max: 0, puntaje_d: 0, puntaje_d_max: 0, puntaje_e: 0, puntaje_e_max: 0 },
+    puntaje_diferencial: { puntaje_a: 0, puntaje_a_max: 0, puntaje_b: 0, puntaje_b_max: 0, puntaje_c: 0, puntaje_c_max: 0, puntaje_d: 0, puntaje_d_max: 0, puntaje_e: 0, puntaje_e_max: 0 },
+    puntaje_laboratorio: { puntaje_a: 0, puntaje_a_max: 0, puntaje_b: 0, puntaje_b_max: 0, puntaje_c: 0, puntaje_c_max: 0, puntaje_d: 0, puntaje_d_max: 0, puntaje_e: 0, puntaje_e_max: 0 },
+    puntaje_intervenir: { puntaje_a: 0, puntaje_a_max: 0, puntaje_b: 0, puntaje_b_max: 0, puntaje_c: 0, puntaje_c_max: 0, puntaje_d: 0, puntaje_d_max: 0, puntaje_e: 0, puntaje_e_max: 0 },
+    puntaje_externa: { puntaje_a: 0, puntaje_a_max: 0, puntaje_b: 0, puntaje_b_max: 0, puntaje_c: 0, puntaje_c_max: 0, puntaje_d: 0, puntaje_d_max: 0, puntaje_e: 0, puntaje_e_max: 0 }
+});
+
+const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    nombre_completo: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+    id_historia_clinica: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+    tiempo_empleado: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+    fecha_simulacion: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
+    puntaje_porcentaje: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+});
+
+const token = localStorage.getItem('token');
+let decodedToken = {};
+try {
+    decodedToken = jwtDecode(token);
+} catch (error) {
+    console.error('Token inválido:', error);
+}
+const idUsuario = ref(decodedToken.id || null);
+usuarioRol.value = decodedToken.role || 'estudiante'; // Valor por defecto
+
+const cargarGrupos = async () => {
+    try {
+        if (usuarioRol.value === 'administrador') {
+            const response = await obtenerGrupos(idUsuario.value, 'administrador');
+            grupos.value = [{ nombre: 'Todos', id_grupo: 0 }, ...response.data];
+        } else if (usuarioRol.value === 'medico') {
+            const response = await obtenerGrupos(idUsuario.value, 'medico');
+            grupos.value = response.data;
+        }
+    } catch (error) {
+        console.error('Error al cargar los grupos:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los grupos.', life: 3000 });
+    }
+};
+
+const cargarSimulaciones = async () => {
+    try {
+        loading.value = true;
+        const id_grupo = selectedGroup.value ? selectedGroup.value.id_grupo : null;
+        const response = await obtenerSimulaciones(idUsuario.value, id_grupo);
+        simulaciones.value = response.data.map(simulacion => {
+            let puntaje = parseFloat(simulacion.puntaje_porcentaje.replace('%', ''));
+            if (isNaN(puntaje)) {
+                puntaje = null;
+            }
+            return {
+                ...simulacion,
+                fecha_simulacion: simulacion.fecha_simulacion ? new Date(simulacion.fecha_simulacion) : null,
+                puntaje_porcentaje: puntaje
+            };
+        });
+    } catch (error) {
+        console.error('Error al cargar las simulaciones:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las simulaciones.', life: 3000 });
+    } finally {
+        loading.value = false;
+    }
+};
+
+const initFilters = () => {
+    filters.value = {
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        nombre_completo: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        id_historia_clinica: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        tiempo_empleado: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        fecha_simulacion: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
+        puntaje_porcentaje: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+    };
+};
+
+const clearFilter = () => {
+    initFilters();
+};
+
+const formatPercentage = (value) => {
+    if (value === null || value === undefined || isNaN(value)) {
+        return 'N/A';
+    }
+    return `${value}%`;
+};
+
+const formatDate = (value) => {
+    if (!value) return '';
+    const day = String(value.getDate()).padStart(2, '0');
+    const month = String(value.getMonth() + 1).padStart(2, '0'); // Los meses son 0-indexados
+    const year = value.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
+const getSeverity = (value) => {
+    if (value === null || isNaN(value)) return 'warning';
+    if (value < 50) return 'danger';
+    if (value < 75) return 'warning';
+    return 'success';
+};
+
+
+const obtenerDetalles = async (id_realiza_simulacion) => {
+    try {
+        const detalles = await obtenerDetallesSimulacion(id_realiza_simulacion);
+        selectedSimulation.value = {
+            ...detalles.simulacion,
+            fecha_inicio: detalles.simulacion.fecha_inicio ? new Date(detalles.simulacion.fecha_inicio) : null,
+            fecha_fin: detalles.simulacion.fecha_fin ? new Date(detalles.simulacion.fecha_fin) : null,
+        };
+        acciones.value = detalles.acciones;
+        puntajes.value = detalles.puntajes;
+
+        console.log('Selected Simulation:', selectedSimulation.value);
+        console.log('Acciones:', acciones.value);
+        console.log('Puntajes:', puntajes.value);
+    } catch (error) {
+        console.error('Error al obtener los detalles de la simulación:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los detalles de la simulación.', life: 3000 });
+    }
+};
+
+const totalAcciones = computed(() => {
+    return acciones.value.length;
+});
+
+const calcularPorcentaje = (tipo, seccion) => {
+    const tipoLower = tipo.toLowerCase();
+    const total_puntaje = puntajes.value[seccion][`puntaje_${tipoLower}_max`] || 1; // Evitar división por cero
+    const puntaje_obtenido = puntajes.value[seccion][`puntaje_${tipoLower}`] || 0;
+    const porcentaje = ((puntaje_obtenido / total_puntaje) * 100).toFixed(2);
+    return `${porcentaje}%`;
+};
+
+const verDetalle = async (data) => {
+    await obtenerDetalles(data.id_realiza_simulacion);
+    dialogoVerAcciones.value = true;
+};
+
+onMounted(() => {
+    initFilters();
+    cargarGrupos();
+    cargarSimulaciones();
+});
+</script>
+
+<style scoped></style>
