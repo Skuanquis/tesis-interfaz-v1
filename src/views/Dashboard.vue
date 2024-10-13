@@ -3,12 +3,12 @@
 import { ref, onMounted, computed } from 'vue';
 import { obtenerGrupos } from '@/services/grupoService';
 import { obtenerSimulaciones, obtenerDetallesSimulacion } from '@/services/simulacionService';
+import { getUserById } from '@/services/userService';
 import { jwtDecode } from "jwt-decode";
 import { FilterMatchMode, FilterOperator } from 'primevue/api';
 import { useToast } from 'primevue/usetoast';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-
 
 const toast = useToast();
 
@@ -58,6 +58,7 @@ try {
 }
 const idUsuario = ref(decodedToken.id || null);
 usuarioRol.value = decodedToken.role || 'estudiante';
+
 
 const cargarGrupos = async () => {
     try {
@@ -182,74 +183,98 @@ const calcularPorcentaje = (tipo, seccion) => {
 
 const verDetalle = async (data) => {
     await obtenerDetalles(data.id_realiza_simulacion);
+    console.log("datitos: ", data)
     dialogoVerAcciones.value = true;
 };
 
-const generatePDF = () => {
+const generatePDF = async () => {
     if (!selectedSimulation.value.id_realiza_simulacion) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'No hay una simulación seleccionada.', life: 3000 });
         return;
     }
 
-    console.log('Acciones para PDF:', acciones.value);
+    try {
 
-    const doc = new jsPDF();
+        const userId = selectedSimulation.value.id_usuario;
+        const response = await getUserById(userId);
+        const userData = response.data;
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("Detalles de la Simulación", 14, 20);
+        console.log('Acciones para PDF:', selectedSimulation.value);
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.text(`Fecha Inicio: ${formatDateTime(selectedSimulation.value.fecha_inicio)}`, 14, 30);
-    doc.text(`Fecha Fin: ${formatDateTime(selectedSimulation.value.fecha_fin)}`, 14, 36);
-    doc.text(`Tiempo Empleado: ${selectedSimulation.value.tiempo_empleado}`, 14, 42);
-    doc.text(`Diagnóstico Final: ${selectedSimulation.value.diagnostico_final}`, 14, 48);
-    doc.text(`Diagnóstico Acertado: ${selectedSimulation.value.diagnosticoAcertado ? 'Sí' : 'No'}`, 14, 54);
-    doc.text(`Última Acción Correcta: ${selectedSimulation.value.ultimaAccionCorrecta ? 'Sí' : 'No'}`, 14, 60);
+        const doc = new jsPDF();
+        const logo1 = new Image();
+        logo1.src = '/layout/images/logo.png';
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("Resumen Detallado", 14, 70);
+        doc.addImage(logo1, 'PNG', 14, 11, 15, 15);
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    const resumenText = `
-Total de Acciones: ${totalAcciones.value}
-Decisiones para Anamnesis: ${puntajes.value.puntaje_anamnesis.puntaje_a}/${puntajes.value.puntaje_anamnesis.puntaje_a_max}
-Decisiones de tipo Examen: ${puntajes.value.puntaje_examen.puntaje_a}/${puntajes.value.puntaje_examen.puntaje_a_max}
-Decisiones de tipo Diagnóstico Diferencial: ${puntajes.value.puntaje_diferencial.puntaje_a}/${puntajes.value.puntaje_diferencial.puntaje_a_max}
-Decisiones de tipo Laboratorio: ${puntajes.value.puntaje_laboratorio.puntaje_a}/${puntajes.value.puntaje_laboratorio.puntaje_a_max}
-Decisiones de tipo Intervenir: ${puntajes.value.puntaje_intervenir.puntaje_a}/${puntajes.value.puntaje_intervenir.puntaje_a_max}
-    `;
-    doc.text(resumenText, 14, 80);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("SIMULADOR MEDICO", 32, 17);
+        doc.text("DE HISTORIAS CLÍNICAS", 32, 21);
 
-    // Tabla de Acciones Realizadas
-    const headers = ['Descripción', 'Tipo de Acción', 'Tiempo', 'Puntaje', 'Retroalimentación'];
-    const accionesData = acciones.value.map(accion => [
-        accion.descripcion || 'N/D',
-        accion.tipo_accion || 'N/D',
-        accion.hora_accion || 'N/D',
-        accion.puntaje || 'N/D',
-        accion.retroalimentacion || 'N/D'
-    ]);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        const text1 = "DETALLES DE LA SIMULACIÓN";
+        const textWidth1 = doc.getTextWidth(text1);
+        const pageWidth1 = doc.internal.pageSize.getWidth();
+        const x1 = (pageWidth1 - textWidth1) / 2;
+        doc.text(text1, x1, 35);
 
-    doc.autoTable({
-        head: [headers],
-        body: accionesData,
-        startY: 90,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [22, 160, 133] },
-        margin: { top: 10 },
-        theme: 'striped'
-    });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        doc.text(`Nombre: ${(userData.nombre + " " + userData.paterno + " " + userData.materno) || 'N/D'}`, 14, 45);
 
-    const fechaActual = new Date();
-    const year = fechaActual.getFullYear();
-    const month = String(fechaActual.getMonth() + 1).padStart(2, '0');
-    const day = String(fechaActual.getDate()).padStart(2, '0');
-    const fechaActualDoc = `${year}-${month}-${day}`;
-    doc.save(`Detalles_Simulacion_${fechaActualDoc}.pdf`);
+        doc.text(`Fecha de Inicio: ${formatDateTime(selectedSimulation.value.fecha_inicio)}`, 14, 52);
+        doc.text(`Fecha de Finalización: ${formatDateTime(selectedSimulation.value.fecha_fin)}`, 105, 52);
+        doc.text(`Tiempo Empleado: ${selectedSimulation.value.tiempo_empleado}`, 14, 59);
+        doc.text(`Diagnóstico Final: ${selectedSimulation.value.diagnostico_final}`, 105, 59);
+        doc.text(`¿El diagnostico es correcto?: ${selectedSimulation.value.diagnosticoAcertado ? 'Sí' : 'No'}`, 14, 66);
+        doc.text(`¿La decisión final es correcta?: ${selectedSimulation.value.ultimaAccionCorrecta ? 'Sí' : 'No'}`, 105, 66);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("Resumen Detallado", 14, 75);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+
+        doc.text(`Total de Acciones: ${totalAcciones.value}`, 14, 82);
+        doc.text(`Decisiones para Anamnesis: ${puntajes.value.puntaje_anamnesis.puntaje_a}/${puntajes.value.puntaje_anamnesis.puntaje_a_max}`, 105, 82);
+        doc.text(`Decisiones para Examen: ${puntajes.value.puntaje_examen.puntaje_a}/${puntajes.value.puntaje_examen.puntaje_a_max}`, 14, 89);
+        doc.text(`Decisiones para Diagnóstico Diferencial: ${puntajes.value.puntaje_diferencial.puntaje_a}/${puntajes.value.puntaje_diferencial.puntaje_a_max}`, 105, 89);
+        doc.text(`Decisiones para Laboratorio: ${puntajes.value.puntaje_laboratorio.puntaje_a}/${puntajes.value.puntaje_laboratorio.puntaje_a_max}`, 14, 96);
+        doc.text(`Decisiones para Intervenir: ${puntajes.value.puntaje_intervenir.puntaje_a}/${puntajes.value.puntaje_intervenir.puntaje_a_max}`, 105, 96);
+
+        const headers = ['Descripción', 'Tipo de Acción', 'Tiempo', 'Puntaje', 'Retroalimentación'];
+        const accionesData = acciones.value.map(accion => [
+            accion.descripcion || 'N/D',
+            accion.tipo_accion || 'N/D',
+            accion.hora_accion || 'N/D',
+            accion.puntaje || 'N/D',
+            accion.retroalimentacion || 'N/D'
+        ]);
+
+        doc.autoTable({
+            head: [headers],
+            body: accionesData,
+            startY: 103,
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [22, 160, 133] },
+            margin: { top: 10 },
+            theme: 'striped'
+        });
+
+        const fechaActual = new Date();
+        const year = fechaActual.getFullYear();
+        const month = String(fechaActual.getMonth() + 1).padStart(2, '0');
+        const day = String(fechaActual.getDate()).padStart(2, '0');
+        const fechaActualDoc = `${year}-${month}-${day}`;
+        doc.save(`Detalles Simulacion ${(userData.nombre + " " + userData.paterno + " " + userData.materno)} ${fechaActualDoc}.pdf`);
+
+    } catch (error) {
+        console.error('Error al generar el PDF:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo generar el PDF.', life: 3000 });
+    }
 };
 
 onMounted(() => {
@@ -274,7 +299,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Tabla de Simulaciones -->
         <div class="card">
             <DataTable v-model:filters="filters" stripedRows :value="simulaciones" paginator showGridlines :rows="10"
                 dataKey="id_realiza_simulacion" filterDisplay="menu" :loading="loading"
@@ -283,10 +307,15 @@ onMounted(() => {
                     <div class="flex justify-content-between">
                         <Button type="button" icon="pi pi-filter-slash" label="Limpiar" outlined
                             @click="clearFilter()" />
-                        <div class="p-input-icon-left">
-                            <i class="pi pi-search"></i>
+                        <IconField iconPosition="left">
+                            <InputIcon>
+                                <i class="pi pi-search" />
+                            </InputIcon>
                             <InputText v-model="filters.global.value" placeholder="Palabra clave" />
-                        </div>
+                        </IconField>
+
+
+
                     </div>
                 </template>
                 <template #empty> No se encontraron registros. </template>
@@ -298,19 +327,21 @@ onMounted(() => {
                             placeholder="Buscar por nombre" />
                     </template>
                 </Column>
-                <Column field="id_historia_clinica" header="Historia Clínica" style="min-width: 12rem">
+                <Column class="text-center" field="id_historia_clinica" header="Historia Clínica"
+                    style="min-width: 12rem">
                     <template #filter="{ filterModel }">
                         <InputText v-model="filterModel.value" type="text" class="p-column-filter"
                             placeholder="Buscar por historia" />
                     </template>
                 </Column>
-                <Column field="tiempo_empleado" header="Tiempo Empleado" style="min-width: 10rem">
+                <Column class="text-center" field="tiempo_empleado" header="Tiempo Empleado" style="min-width: 10rem">
                     <template #filter="{ filterModel }">
                         <InputText v-model="filterModel.value" type="text" class="p-column-filter"
                             placeholder="Buscar por tiempo" />
                     </template>
                 </Column>
-                <Column field="fecha_simulacion" header="Fecha Simulación" dataType="date" style="min-width: 12rem">
+                <Column class="text-center" field="fecha_simulacion" header="Fecha Simulación" dataType="date"
+                    style="min-width: 12rem">
                     <template #body="{ data }">
                         {{ formatDate(data.fecha_simulacion) }}
                     </template>
@@ -319,7 +350,7 @@ onMounted(() => {
                             mask="99/99/9999" />
                     </template>
                 </Column>
-                <Column field="puntaje_porcentaje" header="Puntaje Porcentaje" dataType="numeric"
+                <Column class="text-center" field="puntaje_porcentaje" header="Puntaje Porcentaje" dataType="numeric"
                     style="min-width: 10rem">
                     <template #body="{ data }">
                         <Tag :value="formatPercentage(data.puntaje_porcentaje)"
@@ -461,8 +492,8 @@ onMounted(() => {
                 <DataTable :value="acciones" showGridlines tableStyle="min-width: 50rem">
                     <Column field="descripcion" header="Descripción"></Column>
                     <Column field="tipo_accion" header="Tipo de Acción"></Column>
-                    <Column field="hora_accion" header="Tiempo"></Column>
-                    <Column field="puntaje" header="Puntaje"></Column>
+                    <Column class="text-center" field="hora_accion" header="Tiempo"></Column>
+                    <Column class="text-center" field="puntaje" header="Puntaje"></Column>
                     <Column field="retroalimentacion" header="Retroalimentación"></Column>
                 </DataTable>
             </div>

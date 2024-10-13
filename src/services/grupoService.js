@@ -39,3 +39,7 @@ export const obtenerGruposNoMatriculados = (id_usuario_estudiante) => {
 export const validarCodigoAcceso = (id_grupo, codigo_acceso) => {
   return api.post('/validar-codigo', { id_grupo, codigo_acceso })
 }
+
+export const obtenerEstudiantesPorGrupo = (id_grupo) => {
+  return api.get(`/estudiantes/${id_grupo}`)
+}

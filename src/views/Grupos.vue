@@ -3,7 +3,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-import { obtenerGrupos, crearGrupo, actualizarGrupo, eliminarGrupo } from '@/services/grupoService';
+import { obtenerGrupos, crearGrupo, actualizarGrupo, eliminarGrupo, obtenerEstudiantesPorGrupo, desvincularEstudiante } from '@/services/grupoService';
 import { jwtDecode } from "jwt-decode";
 
 const confirm = useConfirm();
@@ -19,6 +19,7 @@ const nuevoGrupo = reactive({
     descripcion: '',
     codigo_acceso: ''
 });
+const estudiantes = ref([]);
 
 const cargarGrupos = async () => {
     try {
@@ -112,6 +113,71 @@ const eliminarGrupoConfirmado = (id_grupo) => {
     });
 };
 
+
+const verEstudiantesDelGrupo = async (id_grupo) => {
+    try {
+        grupoSeleccionado.id_grupo = id_grupo;
+        const response = await obtenerEstudiantesPorGrupo(id_grupo);
+        estudiantes.value = response.data;
+        dialogoVerGrupo.value = true;
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar los estudiantes del grupo', life: 3000 });
+    }
+};
+
+const formatearFecha = (fecha) => {
+    console.log("Fecha recibida:", fecha);
+    const fechaObj = new Date(fecha);
+    const dia = String(fechaObj.getDate()).padStart(2, '0');
+    const mes = String(fechaObj.getMonth() + 1).padStart(2, '0'); // Los meses comienzan en 0
+    const año = String(fechaObj.getFullYear()).slice(-2);
+    const horas = String(fechaObj.getHours()).padStart(2, '0');
+    const minutos = String(fechaObj.getMinutes()).padStart(2, '0');
+    const segundos = String(fechaObj.getSeconds()).padStart(2, '0');
+
+    return `${dia}/${mes}/${año} ${horas}:${minutos}:${segundos}`;
+};
+
+// Función para confirmar la desmatriculación
+const confirmarDesmatricular = (id_usuario_estudiante) => {
+    console.log('Confirmar desmatriculación para estudiante ID:', id_usuario_estudiante);
+    confirm.require({
+        message: '¿Estás seguro que quieres desmatricular a este estudiante?',
+        header: 'Confirmar Desmatriculación',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí',
+        rejectLabel: 'No',
+        acceptClass: 'p-button-danger',
+        rejectClass: 'p-button-secondary',
+        accept: () => {
+            desmatricularEstudiante(grupoSeleccionado.id_grupo, id_usuario_estudiante);
+        },
+        reject: () => {
+            toast.add({ severity: 'info', summary: 'Cancelado', detail: 'Acción cancelada', life: 3000 });
+        }
+    });
+};
+
+const desmatricularEstudiante = async (id_grupo, id_usuario_estudiante) => {
+    console.log('Desmatricular estudiante:', id_grupo, id_usuario_estudiante);
+    try {
+        await desvincularEstudiante(id_grupo, id_usuario_estudiante);
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Estudiante desmatriculado exitosamente', life: 3000 });
+        // Actualizar la lista de estudiantes
+        verEstudiantesDelGrupo(id_grupo);
+    } catch (error) {
+        console.error('Error al desmatricular al estudiante:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.response && error.response.data && error.response.data.error
+                ? error.response.data.error
+                : 'Error al desmatricular al estudiante',
+            life: 3000
+        });
+    }
+};
+
 onMounted(() => {
     cargarGrupos();
 });
@@ -141,7 +207,7 @@ onMounted(() => {
                     </div>
                     <div class="flex gap-3 mt-1 pt-2">
                         <Button icon="pi pi-eye" label="Ver" severity="info" class="w-full"
-                            @click="dialogoVerGrupo = true" />
+                            @click="verEstudiantesDelGrupo(grupo.id_grupo)" />
                     </div>
                 </template>
             </Card>
@@ -201,6 +267,24 @@ onMounted(() => {
 
     <Dialog v-model:visible="dialogoVerGrupo" maximizable modal header="Información del grupo"
         :style="{ width: '80rem' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+        <DataTable :value="estudiantes" paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
+            tableStyle="min-width: 50rem">
+            <Column field="nom" header="Nombre" style="width: 20%"></Column>
+            <Column field="apellido_paterno" header="Apellido Paterno" style="width: 20%"></Column>
+            <Column field="apellido_materno" header="Apellido Materno" style="width: 20%"></Column>
+            <Column header="Fecha de Matriculación" style="width: 20%">
+                <template #body="data">
+                    {{ formatearFecha(data.data.fecha_matriculacion) }}
+                </template>
+            </Column>
+            <Column header="Acción" style="width: 20%">
+                <template #body="data">
+                    <Button icon="pi pi-times" class="p-button-rounded p-button-danger"
+                        @click="confirmarDesmatricular(data.data.id_usuario)" tooltip="Desmatricular"
+                        tooltipOptions="{ position: 'top' }" />
+                </template>
+            </Column>
+        </DataTable>
         <div class="flex justify-content-end gap-2">
             <Button icon="pi pi-times" type="button" label="Cerrar" severity="secondary"
                 @click="dialogoVerGrupo = false"></Button>
