@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watchEffect, computed, watch } from 'vue';
+import { ref, onMounted, watchEffect, computed, watch, reactive } from 'vue';
 import {
     obtenerCasosClinicos, cambiarEstadoCaso, obtenerCategoriasSimulacion,
     obtenerCasoClinicoPorId, obtenerPuntajes, obtenerMensajes,
@@ -25,29 +25,21 @@ import {
     obtenerCategoriasMedicamentos, obtenerMedicamentosPorCategoria,
     obtenerMedicamentosSuministradosPorHistoriaClinica, actualizarMedicamentosSuministrados,
     obtenerSubespecialidades, obtenerSubespecialidadesPorHistoriaClinica,
-    actualizarSubespecialidades,
-    obtenerExamenFisicoOrina, actualizarExamenFisicoOrina,
-    obtenerSedimentoUrinario, actualizarSedimentoUrinario,
-    obtenerExamenQuimicoUrinario, actualizarExamenQuimicoUrinario,
-    obtenerExamenEspecialOrina, actualizarExamenEspecialOrina,
-    obtenerExamenHematologico, actualizarExamenHematologico,
-    obtenerIndicesEritrocitarios, actualizarIndicesEritrocitarios,
-    obtenerRecuentoDiferencialHematico, actualizarRecuentoDiferencialHematico,
-    obtenerHemostasiaSanguinea, actualizarHemostasiaSanguinea,
-    obtenerSerologiaSanguinea, actualizarSerologiaSanguinea,
-    obtenerElectrolitosSanguineos, actualizarElectrolitosSanguineos,
-    obtenerQuimicaSanguinea, actualizarQuimicaSanguinea,
-    obtenerBiometriaHematica, actualizarBiometriaHematica,
-    obtenerCategoriasImagenologia, obtenerImagenesPorHistoriaClinica,
-    actualizarImagenes, cargarImagen,
+    actualizarSubespecialidades, cargarImagen,
+    obtenerCategoriasAnalisis, obtenerSubcategoriasPorCategoria,
+    obtenerSolicitudesAnalisisPorHistoriaClinica, actualizarSolicitudesAnalisis,
+    obtenerCategoriasConImagenologias, obtenerEstudiosImagenologiaPorHistoriaClinica,
+    actualizarEstudiosImagenologia,
     obtenerTraspaso, actualizarTraspaso,
+    obtenerCategoriasProcedimientos, obtenerProcedimientosPorCategoria,
+    obtenerProcedimientosAsignadosPorHistoriaClinica, actualizarProcedimientosAsignados,
     actualizarDiagnosticoFinal,
     actualizarPuntajeAnamnesis,
     actualizarPuntajeExamen,
     actualizarPuntajeDiferencial,
     actualizarPuntajeIntervenir,
-    actualizarPuntajeExterna,
     actualizarPuntajeLaboratorio,
+    actualizarPuntajeExterna,
     actualizarPuntajeTraspaso,
     cargarImagenCategoria,
     obtenerAntecedentesGinecoObstetricos, actualizarAntecedentesGinecoObstetricos,
@@ -104,30 +96,31 @@ const selectedMedicamentosPorCategoria = ref({});
 const medicamentoDetails = ref({});
 const medicamentosMap = ref({});
 
+const scoreProcedimientos = ref([]);
+const categoriasProcedimientos = ref([]);
+const procedimientosPorCategoria = ref({});
+const selectedProcedimientosPorCategoria = ref({});
+const procedimientoDetails = ref({});
+const procedimientosMap = ref({});
+
 const subespecialidadesDisponibles = ref([]);
 const subespecialidades = ref([]);
 const subsData = ref([]);
 const scoreSubespecialidad = ref([]);
 const isInitializing = ref(false);
 
-const labOrina = ref({});
-const labSed = ref({});
-const labQuimico = ref({});
-const labEspecial = ref({});
-const labHematologico = ref({});
-const labBiometriaHematica = ref({});
-const labIndice = ref({});
-const labRecuento = ref({});
-const labHemostasea = ref({});
-const labSerologia = ref({});
-const labElectrolitos = ref({});
-const labQuimicoSanguineo = ref({});
-const scoreLaboratorioOrina = ref([]);
+const scoreAnalisis = ref([]);
+const categoriasAnalisis = ref([]);
+const subcategoriasPorCategoria = ref({});
+const selectedSubcategoriasPorCategoria = ref({});
+const analisisDetails = ref({});
+const subcategoriasMap = ref({});
+
 
 const scoreImagenologia = ref([]);
 const categoriasImagenologia = ref([]);
-const categoriasSeleccionadas = ref([]);
 const imagenesData = ref([]);
+const selectedImagenologiasByCategory = reactive({});
 
 const scoreTraspaso = ref([]);
 const traspaso = ref({});
@@ -236,33 +229,6 @@ function contarYPrepararPuntajesVectores(objeto) {
     return data;
 }
 
-function contarYPrepararPuntajesImagenologia(objeto) {
-    let puntajeCount = { A: 0, B: 0, C: 0, D: 0, E: 0 };
-    const hasOwnProperty = Object.prototype.hasOwnProperty;
-    for (let key in objeto) {
-        if (hasOwnProperty.call(objeto, key)) {
-            const puntaje = objeto[key].puntaje_imagenologia;
-            if (hasOwnProperty.call(puntajeCount, puntaje)) {
-                puntajeCount[puntaje]++;
-            }
-        }
-    }
-    puntajeCount = {
-        A: puntajeCount.A || 0,
-        B: puntajeCount.B || 0,
-        C: puntajeCount.C || 0,
-        D: puntajeCount.D || 0,
-        E: puntajeCount.E || 0,
-    };
-    const data = {
-        puntaje_a: puntajeCount.A,
-        puntaje_b: puntajeCount.B,
-        puntaje_c: puntajeCount.C,
-        puntaje_d: puntajeCount.D,
-        puntaje_e: puntajeCount.E
-    };
-    return data;
-}
 
 const cerrarDialogo = () => {
     visible.value = false;
@@ -381,25 +347,18 @@ const mostrarDetalleCaso = async (idCaso) => {
         await cargarPuntajeSubespecialidad(casoSeleccionado.value.id_historia_clinica);
         await cargarSubespecialidadesDisponibles();
         await cargarSubespecialidadesSeleccionadas(casoSeleccionado.value.id_historia_clinica);
-        await cargarExamenFisicoOrina(casoSeleccionado.value.id_historia_clinica);
-        await cargarSedimentoUrinario(casoSeleccionado.value.id_historia_clinica);
-        await cargarExamenQuimicoUrinario(casoSeleccionado.value.id_historia_clinica);
-        await cargarExamenEspecialOrina(casoSeleccionado.value.id_historia_clinica);
-        await cargarExamenHematologico(casoSeleccionado.value.id_historia_clinica);
-        await cargarIndicesEritrocitarios(casoSeleccionado.value.id_historia_clinica);
-        await cargarRecuentoDiferencialHematico(casoSeleccionado.value.id_historia_clinica);
-        await cargarHemostasiaSanguinea(casoSeleccionado.value.id_historia_clinica);
-        await cargarSerologiaSanguinea(casoSeleccionado.value.id_historia_clinica);
-        await cargarElectrolitosSanguineos(casoSeleccionado.value.id_historia_clinica);
-        await cargarQuimicaSanguinea(casoSeleccionado.value.id_historia_clinica);
-        await cargarBiometriaHematica(casoSeleccionado.value.id_historia_clinica);
-        await cargarPuntajeInvestigar(casoSeleccionado.value.id_historia_clinica)
-        await cargarPuntajeImagenologia(casoSeleccionado.value.id_historia_clinica);
-        await cargarCategoriasImagenologia();
-        await cargarImagenes(casoSeleccionado.value.id_historia_clinica);
         await cargarTraspaso(casoSeleccionado.value.id_historia_clinica);
         await cargarPuntajeTraspaso(casoSeleccionado.value.id_historia_clinica);
         await cargarDiagnosticoFinal(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeAnalisis(casoSeleccionado.value.id_historia_clinica);
+        await cargarCategoriasYSubcategorias();
+        await cargarSolicitudesAnalisis(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeImagenologia(casoSeleccionado.value.id_historia_clinica);
+        await cargarCategoriasImagenologia();
+        await cargarEstudiosImagenes(casoSeleccionado.value.id_historia_clinica);
+        await cargarPuntajeProcedimiento(casoSeleccionado.value.id_historia_clinica);
+        await cargarCategoriasYProcedimientos();
+        await cargarProcedimientosAsignados(casoSeleccionado.value.id_historia_clinica);
         visible.value = true;
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el caso clínico', life: 3000 });
@@ -856,6 +815,294 @@ watchEffect(() => {
     });
 });
 
+const cargarPuntajeAnalisis = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreAnalisis.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
+const cargarCategoriasYSubcategorias = async () => {
+    try {
+        const response = await obtenerCategoriasAnalisis();
+        categoriasAnalisis.value = response.data;
+        categoriasAnalisis.value.forEach(categoria => {
+            selectedSubcategoriasPorCategoria.value[categoria.id_categoria_analisis] = [];
+        });
+        for (let categoria of categoriasAnalisis.value) {
+            const resSubcategorias = await obtenerSubcategoriasPorCategoria(categoria.id_categoria_analisis);
+            const subcategorias = resSubcategorias.data.map(s => ({
+                ...s,
+                name: s.nombre_subcategoria,
+                value: s.id_subcategoria_analisis,
+            }));
+            subcategoriasPorCategoria.value[categoria.id_categoria_analisis] = subcategorias;
+            subcategorias.forEach(subcategoria => {
+                subcategoriasMap.value[subcategoria.id_subcategoria_analisis] = subcategoria;
+            });
+        }
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar categorías y subcategorías', life: 3000 });
+    }
+};
+
+const cargarSolicitudesAnalisis = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerSolicitudesAnalisisPorHistoriaClinica(id_historia_clinica);
+        const data = response.data;
+        data.forEach(sa => {
+            const categoriaId = sa.id_categoria_analisis;
+            analisisDetails.value[categoriaId] = {
+                id_solicitud_analisis: sa.id_solicitud_analisis,
+                puntaje_analisis: sa.puntaje_analisis,
+                feed_analisis: sa.feed_analsis,
+                detalles: {},
+            };
+            selectedSubcategoriasPorCategoria.value[categoriaId] = [];
+            if (sa.detalles && sa.detalles.length > 0) {
+                sa.detalles.forEach(detalle => {
+                    selectedSubcategoriasPorCategoria.value[categoriaId].push(detalle.id_subcategoria_analisis);
+                    analisisDetails.value[categoriaId].detalles[detalle.id_subcategoria_analisis] = {
+                        id_detalle_subanalisis: detalle.id_detalle_subanalisis,
+                        resultado: detalle.resultado,
+                        nombre_subcategoria: detalle.nombre_subcategoria,
+                    };
+                });
+            }
+        });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar solicitudes de análisis', life: 3000 });
+    }
+};
+
+watchEffect(() => {
+    for (let categoriaId in selectedSubcategoriasPorCategoria.value) {
+        const selectedIds = selectedSubcategoriasPorCategoria.value[categoriaId];
+        if (!analisisDetails.value[categoriaId]) {
+            analisisDetails.value[categoriaId] = {
+                id_solicitud_analisis: null,
+                puntaje_analisis: null,
+                feed_analisis: '',
+                detalles: {},
+            };
+        }
+        const detalles = analisisDetails.value[categoriaId].detalles;
+        selectedIds.forEach(subcatId => {
+            if (!detalles[subcatId]) {
+                detalles[subcatId] = {
+                    id_detalle_subanalisis: null,
+                    resultado: '',
+                    nombre_subcategoria: subcategoriasMap.value[subcatId]?.nombre_subcategoria || '',
+                };
+            }
+        });
+        for (let subcatId in detalles) {
+            if (!selectedIds.includes(parseInt(subcatId))) {
+                delete detalles[subcatId];
+            }
+        }
+    }
+});
+
+const cargarPuntajeImagenologia = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreImagenologia.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
+const cargarCategoriasImagenologia = async () => {
+    try {
+        const response = await obtenerCategoriasConImagenologias();
+        categoriasImagenologia.value = response.data;
+        categoriasImagenologia.value.forEach(category => {
+            if (!selectedImagenologiasByCategory[category.id_categoria_imagenologia]) {
+                selectedImagenologiasByCategory[category.id_categoria_imagenologia] = [];
+            }
+        });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener categorías de imagenología', life: 3000 });
+    }
+};
+
+const cargarEstudiosImagenes = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerEstudiosImagenologiaPorHistoriaClinica(id_historia_clinica);
+        const estudios = response.data;
+        imagenesData.value = estudios.map(estudio => ({
+            id_estudios_imagenologia: estudio.id_estudios_imagenologia,
+            id_imagenologia: estudio.id_imagenologia,
+            nombre: estudio.imagenologia_nombre,
+            categoria_nombre: estudio.categoria_nombre,
+            interpretacion: estudio.interpretacion,
+            path: estudio.path,
+            feed_estudios_imagenologia: estudio.feed_estudios_imagenologia,
+            puntaje_estudios_imagenologia: estudio.puntaje_estudios_imagenologia
+        }));
+
+        estudios.forEach(estudio => {
+            const categoryId = categoriasImagenologia.value.find(category => category.nombre === estudio.categoria_nombre)?.id_categoria_imagenologia;
+            if (categoryId) {
+                if (!selectedImagenologiasByCategory[categoryId]) {
+                    selectedImagenologiasByCategory[categoryId] = [];
+                }
+                if (!selectedImagenologiasByCategory[categoryId].includes(estudio.id_imagenologia)) {
+                    selectedImagenologiasByCategory[categoryId].push(estudio.id_imagenologia);
+                }
+            }
+        });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener estudios de imagenología', life: 3000 });
+    }
+};
+
+// eslint-disable-next-line no-unused-vars
+const onImagenologiaSelectionChange = (categoryId) => {
+    const selectedIds = Object.values(selectedImagenologiasByCategory).flat();
+    const previousIds = imagenesData.value.map(img => img.id_imagenologia);
+    const addedIds = selectedIds.filter(id => !previousIds.includes(id));
+    const removedIds = previousIds.filter(id => !selectedIds.includes(id));
+    addedIds.forEach(id_imagenologia => {
+        const imagenologia = categoriasImagenologia.value.flatMap(cat => cat.imagenologias)
+            .find(img => img.id_imagenologia === id_imagenologia);
+        if (imagenologia) {
+            const category = categoriasImagenologia.value.find(cat => cat.imagenologias.some(img => img.id_imagenologia === id_imagenologia));
+            imagenesData.value.push({
+                id_estudios_imagenologia: null,
+                id_imagenologia: id_imagenologia,
+                nombre: imagenologia.nombre,
+                categoria_nombre: category.nombre,
+                interpretacion: '',
+                path: '',
+                feed_estudios_imagenologia: '',
+                puntaje_estudios_imagenologia: ''
+            });
+        }
+    });
+    removedIds.forEach(id_imagenologia => {
+        const index = imagenesData.value.findIndex(img => img.id_imagenologia === id_imagenologia);
+        if (index !== -1) {
+            imagenesData.value.splice(index, 1);
+        }
+    });
+};
+
+const onUpload = async (event, index) => {
+    const file = event.files[0];
+    const formData = new FormData();
+    let categoria = imagenesData.value[index].categoria_nombre + "-" + imagenesData.value[index].nombre
+    console.log(categoria)
+    console.log(imagenesData.value[index])
+    formData.append('imagen', file);
+    formData.append('id_imagenologia', categoria);
+    try {
+        const response = await cargarImagenCategoria(formData);
+        imagenesData.value[index].path = response.data.path;
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Imagen cargada correctamente', life: 3000 });
+    } catch (error) {
+        console.log(error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar la imagen', life: 3000 });
+    }
+};
+
+
+function contarPuntajesImagenologia(imagenesData) {
+    let puntajeCount = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+
+    imagenesData.forEach(imagen => {
+        const puntaje = imagen.puntaje_estudios_imagenologia;
+        // eslint-disable-next-line no-prototype-builtins
+        if (puntaje && puntajeCount.hasOwnProperty(puntaje)) {
+            puntajeCount[puntaje]++;
+        }
+    });
+    return {
+        puntaje_a: puntajeCount.A || 0,
+        puntaje_b: puntajeCount.B || 0,
+        puntaje_c: puntajeCount.C || 0,
+        puntaje_d: puntajeCount.D || 0,
+        puntaje_e: puntajeCount.E || 0
+    };
+}
+
+function contarPuntajesAnalisis(analisisDetails) {
+    let puntajeCount = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+    for (let categoriaId in analisisDetails) {
+        const puntaje = analisisDetails[categoriaId].puntaje_analisis;
+        // eslint-disable-next-line no-prototype-builtins
+        if (puntaje && puntajeCount.hasOwnProperty(puntaje)) {
+            puntajeCount[puntaje]++;
+        }
+    }
+    return {
+        puntaje_a: puntajeCount.A || 0,
+        puntaje_b: puntajeCount.B || 0,
+        puntaje_c: puntajeCount.C || 0,
+        puntaje_d: puntajeCount.D || 0,
+        puntaje_e: puntajeCount.E || 0
+    };
+}
+
+function sumarPuntajes(puntajes1, puntajes2) {
+    return {
+        puntaje_a: (puntajes1.puntaje_a || 0) + (puntajes2.puntaje_a || 0),
+        puntaje_b: (puntajes1.puntaje_b || 0) + (puntajes2.puntaje_b || 0),
+        puntaje_c: (puntajes1.puntaje_c || 0) + (puntajes2.puntaje_c || 0),
+        puntaje_d: (puntajes1.puntaje_d || 0) + (puntajes2.puntaje_d || 0),
+        puntaje_e: (puntajes1.puntaje_e || 0) + (puntajes2.puntaje_e || 0)
+    };
+}
+
+function prepararDatosAnalisis() {
+    const data = [];
+    for (let categoriaId in analisisDetails.value) {
+        const analisis = analisisDetails.value[categoriaId];
+        const detallesArray = [];
+        for (let subcatId in analisis.detalles) {
+            detallesArray.push({
+                id_subcategoria_analisis: subcatId,
+                resultado: analisis.detalles[subcatId].resultado,
+            });
+        }
+        data.push({
+            id_categoria_analisis: categoriaId,
+            puntaje_analisis: analisis.puntaje_analisis,
+            feed_analsis: analisis.feed_analisis,
+            detalles: detallesArray,
+        });
+    }
+    return data;
+}
+
+const guardarTodosLosCambiosLaboratorio = async () => {
+    try {
+        await actualizarEstudiosImagenologia(casoSeleccionado.value.id_historia_clinica, imagenesData.value);
+        await actualizarSolicitudesAnalisis(casoSeleccionado.value.id_historia_clinica, prepararDatosAnalisis());
+        let puntajesImagenologia = contarPuntajesImagenologia(imagenesData.value);
+        let puntajesAnalisis = contarPuntajesAnalisis(analisisDetails.value);
+        let puntajesTotales = sumarPuntajes(puntajesImagenologia, puntajesAnalisis);
+        await actualizarPuntajeLaboratorio(casoSeleccionado.value.id_historia_clinica, puntajesTotales);
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Laboratorio actualizado correctamente', life: 3000 });
+    } catch (error) {
+        console.error(error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar el laboratorio', life: 3000 });
+    }
+};
+
+
+
+
+
+
+
 const cargarPuntajeMedicamentos = async (id_historia_clinica) => {
     try {
         const response = await obtenerPuntaje(id_historia_clinica);
@@ -930,7 +1177,7 @@ const allSelectedMedicamentos = computed(() => {
     return allMedicamentos;
 });
 
-const guardarMedicamentosSuministrados = async () => {
+const guardarSeccionIntervenir = async () => {
     try {
         const data = allSelectedMedicamentos.value.map(medicamentoId => ({
             id_medicamento: medicamentoId,
@@ -938,8 +1185,18 @@ const guardarMedicamentosSuministrados = async () => {
             puntaje_medicamento_diferencial: medicamentoDetails.value[medicamentoId].score,
         }));
 
+        const dataUno = allSelectedProcedimientos.value.map(procedimientoId => ({
+            id_procedimiento: procedimientoId,
+            feed_procedimiento_asignado: procedimientoDetails.value[procedimientoId].feedback,
+            puntaje_procedimiento_asignado: procedimientoDetails.value[procedimientoId].score,
+        }));
+
+        let puntajeMedicamento = contarYPrepararPuntajesVectores(medicamentoDetails.value)
+        let puntajeProcedimiento = contarYPrepararPuntajesVectores(procedimientoDetails.value)
+        console.log(sumarPuntajes(puntajeMedicamento, puntajeProcedimiento))
+        await actualizarProcedimientosAsignados(casoSeleccionado.value.id_historia_clinica, dataUno);
         await actualizarMedicamentosSuministrados(casoSeleccionado.value.id_historia_clinica, data);
-        await actualizarPuntajeIntervenir(casoSeleccionado.value.id_historia_clinica, contarYPrepararPuntajesVectores(medicamentoDetails.value))
+        await actualizarPuntajeIntervenir(casoSeleccionado.value.id_historia_clinica, sumarPuntajes(puntajeMedicamento, puntajeProcedimiento))
         toast.add({ severity: 'success', summary: 'Éxito', detail: 'Medicamentos suministrados guardados correctamente', life: 3000 });
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al guardar medicamentos suministrados', life: 3000 });
@@ -966,6 +1223,100 @@ watchEffect(() => {
     });
 });
 
+
+const cargarPuntajeProcedimiento = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerPuntaje(id_historia_clinica);
+        scoreProcedimientos.value = response.data.map(item => ({
+            name: `${item.codigo}: ${item.valor}`, value: item.codigo
+        }));
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
+    }
+};
+
+const cargarCategoriasYProcedimientos = async () => {
+    try {
+        const response = await obtenerCategoriasProcedimientos();
+        categoriasProcedimientos.value = response.data;
+        categoriasProcedimientos.value.forEach(categoria => {
+            selectedProcedimientosPorCategoria.value[categoria.id_categoria_procedimiento] = [];
+        });
+        for (let categoria of categoriasProcedimientos.value) {
+            const resProcedimientos = await obtenerProcedimientosPorCategoria(categoria.id_categoria_procedimiento);
+            const procedimientos = resProcedimientos.data.map(p => ({
+                ...p,
+                name: p.nombre,
+                value: p.id_procedimiento,
+            }));
+            procedimientosPorCategoria.value[categoria.id_categoria_procedimiento] = procedimientos;
+            procedimientos.forEach(procedimiento => {
+                procedimientosMap.value[procedimiento.id_procedimiento] = procedimiento;
+            });
+        }
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar categorías y procedimientos', life: 3000 });
+    }
+};
+
+const cargarProcedimientosAsignados = async (id_historia_clinica) => {
+    try {
+        const response = await obtenerProcedimientosAsignadosPorHistoriaClinica(id_historia_clinica);
+        const data = response.data;
+        for (let categoriaId in selectedProcedimientosPorCategoria.value) {
+            selectedProcedimientosPorCategoria.value[categoriaId] = [];
+        }
+        data.forEach(pa => {
+            const procedimiento = procedimientosMap.value[pa.id_procedimiento];
+            if (procedimiento) {
+                const categoriaId = procedimiento.id_categoria_procedimiento;
+                if (!selectedProcedimientosPorCategoria.value[categoriaId]) {
+                    selectedProcedimientosPorCategoria.value[categoriaId] = [];
+                }
+                selectedProcedimientosPorCategoria.value[categoriaId].push(pa.id_procedimiento);
+                procedimientoDetails.value[pa.id_procedimiento] = {
+                    feedback: pa.feed_procedimiento_asignado,
+                    score: pa.puntaje_procedimiento_asignado,
+                    nombre: pa.nombre,
+                };
+            }
+        });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar procedimientos asignados', life: 3000 });
+    }
+};
+
+const getProcedimientoNameById = (procedimientoId) => {
+    return procedimientosMap.value[procedimientoId]?.name || '';
+};
+
+const allSelectedProcedimientos = computed(() => {
+    let allProcedimientos = [];
+    for (let categoriaId in selectedProcedimientosPorCategoria.value) {
+        allProcedimientos = allProcedimientos.concat(selectedProcedimientosPorCategoria.value[categoriaId]);
+    }
+    return allProcedimientos;
+});
+
+
+watchEffect(() => {
+    const allProcedimientos = allSelectedProcedimientos.value.map(id => parseInt(id));
+    const currentProcedimientosDetails = Object.keys(procedimientoDetails.value).map(id => parseInt(id));
+    allProcedimientos.forEach(procedimientoId => {
+        if (!currentProcedimientosDetails.includes(procedimientoId)) {
+            procedimientoDetails.value[procedimientoId] = {
+                feedback: '',
+                score: null,
+                nombre: getProcedimientoNameById(procedimientoId),
+            };
+        }
+    });
+    currentProcedimientosDetails.forEach(procedimientoId => {
+        if (!allProcedimientos.includes(procedimientoId)) {
+            delete procedimientoDetails.value[procedimientoId];
+        }
+    });
+});
 
 const cargarPuntajeSubespecialidad = async (id_historia_clinica) => {
     try {
@@ -1049,240 +1400,6 @@ const guardarSubespecialidades = async () => {
     }
 };
 
-const cargarExamenFisicoOrina = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerExamenFisicoOrina(id_historia_clinica);
-        labOrina.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-
-const cargarSedimentoUrinario = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerSedimentoUrinario(id_historia_clinica);
-        labSed.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarExamenQuimicoUrinario = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerExamenQuimicoUrinario(id_historia_clinica);
-        labQuimico.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarExamenEspecialOrina = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerExamenEspecialOrina(id_historia_clinica);
-        labEspecial.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarExamenHematologico = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerExamenHematologico(id_historia_clinica);
-        labHematologico.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarIndicesEritrocitarios = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerIndicesEritrocitarios(id_historia_clinica);
-        labIndice.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarRecuentoDiferencialHematico = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerRecuentoDiferencialHematico(id_historia_clinica);
-        labRecuento.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarHemostasiaSanguinea = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerHemostasiaSanguinea(id_historia_clinica);
-        labHemostasea.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarSerologiaSanguinea = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerSerologiaSanguinea(id_historia_clinica);
-        labSerologia.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarElectrolitosSanguineos = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerElectrolitosSanguineos(id_historia_clinica);
-        labElectrolitos.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarQuimicaSanguinea = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerQuimicaSanguinea(id_historia_clinica);
-        labQuimicoSanguineo.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-const cargarBiometriaHematica = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerBiometriaHematica(id_historia_clinica);
-        labBiometriaHematica.value = response.data[0];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener el examen fisico general', life: 3000 });
-    }
-};
-
-
-
-const guardarTodosLosCambiosLaboratorio = async () => {
-    try {
-        await actualizarExamenFisicoOrina(paciente.value.id_historia_clinica, labOrina.value);
-        await actualizarSedimentoUrinario(paciente.value.id_historia_clinica, labSed.value);
-        await actualizarExamenQuimicoUrinario(paciente.value.id_historia_clinica, labQuimico.value);
-        await actualizarExamenEspecialOrina(paciente.value.id_historia_clinica, labEspecial.value);
-        await actualizarExamenHematologico(paciente.value.id_historia_clinica, labHematologico.value);
-        await actualizarIndicesEritrocitarios(paciente.value.id_historia_clinica, labIndice.value);
-        await actualizarRecuentoDiferencialHematico(paciente.value.id_historia_clinica, labRecuento.value);
-        await actualizarHemostasiaSanguinea(paciente.value.id_historia_clinica, labHemostasea.value);
-        await actualizarSerologiaSanguinea(paciente.value.id_historia_clinica, labSerologia.value);
-        await actualizarElectrolitosSanguineos(paciente.value.id_historia_clinica, labElectrolitos.value);
-        await actualizarQuimicaSanguinea(paciente.value.id_historia_clinica, labQuimicoSanguineo.value);
-        await actualizarBiometriaHematica(paciente.value.id_historia_clinica, labBiometriaHematica.value);
-        await actualizarImagenes(casoSeleccionado.value.id_historia_clinica, imagenesData.value);
-
-        let ia = contarYPrepararPuntajesImagenologia(imagenesData.value)
-        let ii = reunirPuntajes(labOrina.value, labSed.value, labQuimico.value, labEspecial.value, labHematologico.value, labIndice.value, labRecuento.value, labHemostasea.value, labSerologia.value, labElectrolitos.value, labQuimicoSanguineo.value, labBiometriaHematica.value)
-        const datitos = {
-            puntaje_a: ia.puntaje_a + ii.puntaje_a,
-            puntaje_b: ia.puntaje_b + ii.puntaje_b,
-            puntaje_c: ia.puntaje_c + ii.puntaje_c,
-            puntaje_d: ia.puntaje_d + ii.puntaje_d,
-            puntaje_e: ia.puntaje_e + ii.puntaje_e
-        }
-        await actualizarPuntajeLaboratorio(paciente.value.id_historia_clinica, datitos)
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Examen físico general actualizado correctamente', life: 3000 });
-    } catch (error) {
-        console.log(error)
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar el examen físico general', life: 3000 });
-    }
-};
-
-const cargarPuntajeInvestigar = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerPuntaje(id_historia_clinica);
-        scoreLaboratorioOrina.value = response.data.map(item => ({
-            name: `${item.codigo}: ${item.valor}`, value: item.codigo
-        }));
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
-    }
-};
-
-const cargarPuntajeImagenologia = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerPuntaje(id_historia_clinica);
-        scoreImagenologia.value = response.data.map(item => ({
-            name: `${item.codigo}: ${item.valor}`, value: item.codigo
-        }));
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener puntajes', life: 3000 });
-    }
-};
-
-
-const cargarCategoriasImagenologia = async () => {
-    try {
-        const response = await obtenerCategoriasImagenologia();
-        categoriasImagenologia.value = response.data.map(cat => ({
-            id_categoria_imagenologia: cat.id_categoria_imagenologia,
-            nombre: cat.nombre,
-        }));
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener categorías de imagenología', life: 3000 });
-    }
-};
-
-const cargarImagenes = async (id_historia_clinica) => {
-    try {
-        const response = await obtenerImagenesPorHistoriaClinica(id_historia_clinica);
-        const imagenes = response.data;
-        const backendBaseUrl = '';
-        imagenes.forEach(img => {
-            if (img.path) {
-                img.path = backendBaseUrl + img.path;
-            }
-        });
-
-        imagenesData.value = imagenes;
-        categoriasSeleccionadas.value = [...new Set(imagenes.map(img => img.id_categoria_imagenologia))];
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al obtener imágenes', life: 3000 });
-    }
-};
-
-watch(categoriasSeleccionadas, (newVal, oldVal) => {
-    const addedCategorias = newVal.filter(id => !oldVal.includes(id));
-    const removedCategorias = oldVal.filter(id => !newVal.includes(id));
-
-    addedCategorias.forEach(id_categoria => {
-        const categoria = categoriasImagenologia.value.find(cat => cat.id_categoria_imagenologia === id_categoria);
-        if (categoria) {
-            const exists = imagenesData.value.some(img => img.id_categoria_imagenologia === id_categoria);
-            if (!exists) {
-                imagenesData.value.push({
-                    id_imagenologia: null,
-                    id_categoria_imagenologia: id_categoria,
-                    categoria_nombre: categoria.nombre,
-                    interpretacion: '',
-                    path: '',
-                    feed_imagenologia: '',
-                    puntaje_imagenologia: ''
-                });
-            }
-        }
-    });
-
-    removedCategorias.forEach(id_categoria => {
-        const index = imagenesData.value.findIndex(img => img.id_categoria_imagenologia === id_categoria);
-        if (index !== -1) {
-            imagenesData.value.splice(index, 1);
-        }
-    });
-});
-
-
-const onUpload = async (event, index) => {
-    const file = event.files[0];
-    const formData = new FormData();
-    formData.append('imagen', file);
-    formData.append('id_categoria_imagenologia', imagenesData.value[index].categoria_nombre);
-    //console.log(imagenesData.value[index])
-    try {
-        const response = await cargarImagenCategoria(formData);
-        const backendBaseUrl = 'http://localhost:3000';
-        imagenesData.value[index].path = backendBaseUrl + response.data.path;
-        imagenesData.value[index].path = response.data.path;
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Imagen cargada correctamente', life: 3000 });
-    } catch (error) {
-        console.log(error);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar la imagen', life: 3000 });
-    }
-};
 const cargarPuntajeTraspaso = async (id_historia_clinica) => {
     try {
         const response = await obtenerPuntaje(id_historia_clinica);
@@ -1665,6 +1782,59 @@ onMounted(() => {
 
 
                             <h5>Información relevante para la historia clínica</h5>
+                            <h5>Atecedentes Gineco Obstetricos</h5>
+                            <div class="grid p-fluid">
+                                <div class="col md:col-3 pt-3">
+                                    <FloatLabel>
+                                        <InputText v-model="antecedentesGinecoObstetricos.menarca" />
+                                        <label for="nombre">Menarca</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3 pt-3">
+                                    <FloatLabel>
+                                        <InputText v-model="antecedentesGinecoObstetricos.fum" />
+                                        <label for="nombre">FUM</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3 pt-3">
+                                    <FloatLabel>
+                                        <InputText v-model="antecedentesGinecoObstetricos.fpp" />
+                                        <label for="nombre">FPP</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3 pt-3">
+                                    <FloatLabel>
+                                        <InputText v-model="antecedentesGinecoObstetricos.gestaciones" />
+                                        <label for="nombre">Gestaciones</label>
+                                    </FloatLabel>
+                                </div>
+                            </div>
+                            <div class="grid p-fluid pt-2">
+                                <div class="col md:col-3 pt-3">
+                                    <FloatLabel>
+                                        <InputText v-model="antecedentesGinecoObstetricos.partos" />
+                                        <label for="nombre">Partos</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3 pt-3">
+                                    <FloatLabel>
+                                        <InputText v-model="antecedentesGinecoObstetricos.abortos" />
+                                        <label for="nombre">Abortos</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3 pt-3">
+                                    <FloatLabel>
+                                        <InputText v-model="antecedentesGinecoObstetricos.cesarias" />
+                                        <label for="nombre">Cesarias</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3 pt-3">
+                                    <FloatLabel>
+                                        <InputText v-model="antecedentesGinecoObstetricos.cpn" />
+                                        <label for="nombre">CPN</label>
+                                    </FloatLabel>
+                                </div>
+                            </div>
                             <div class="grid p-fluid">
                                 <div class="col-12 md:col-6">
                                     <h5>Antecedentes patologicos</h5>
@@ -3208,1288 +3378,144 @@ onMounted(() => {
 
                     <StepperPanel header="Investigar">
                         <template #content="{ prevCallback, nextCallback }">
-                            <div class="grid">
-                                <div class="col md:col-6">
-                                    <h5> Laboratorio de orina</h5>
-                                </div>
-                                <div class="col md:col-3">
-                                    <h5>Retroalimentación</h5>
-                                </div>
-                                <div class="col md:col-3">
-                                    <h5>Puntaje</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labOrinaColor" v-model="labOrina.color" />
-                                                <label for="labOrinaColor">Color</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labOrinaAspecto" v-model="labOrina.aspecto" />
-                                                <label for="labOrinaAspecto">Aspecto</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labOrinaVolumen" v-model="labOrina.volumen" />
-                                                <label for="labOrinaVolumen">Volumen</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <Textarea v-model="labOrina.feed_examen_fisico_orina" autoResize
-                                                    rows="3" cols="30" />
-                                                <label for="feed_examen_fisico_orina">Retroalimentación</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <Dropdown v-model="labOrina.puntaje_examen_fisico_orina"
-                                                    :options="scoreLaboratorioOrina" optionLabel="name"
-                                                    optionValue="value" placeholder="Elige una opción" checkmark
-                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
-                                                <label for="puntajeLaboratorioOrina">Puntaje Asignado</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="justify-content-center">
+                                <h5>Selecciona los análisis para el caso</h5>
 
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio de sedimento urinario</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSedHematies" v-model="labSed.hematies" />
-                                                <label for="labSedHematies">Hematies [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSedLeucocitos" v-model="labSed.leucocitos" />
-                                                <label for="labSedLeucocitos">Leucocitos [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSedPiocitos" v-model="labSed.piocitos" />
-                                                <label for="labSedPiocitos">Piocitos [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSedEpiteliales"
-                                                    v-model="labSed.celulas_epiteliales" />
-                                                <label for="labSedEpiteliales">Células Epiteliales [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
+                                <div v-for="categoria in categoriasAnalisis" :key="categoria.id_categoria_analisis"
+                                    class="pt-4">
+                                    <div class="grid">
+                                        <Divider align="center" type="solid">
+                                            <h5>{{ categoria.nombre_categoria }}</h5>
+                                        </Divider>
                                     </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSedRenales" v-model="labSed.celulas_renales" />
-                                                <label for="labSedRenales">Células Renales [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 ">
-                                            <FloatLabel>
-                                                <InputText id="labSedCereo" v-model="labSed.cilindro_cereo" />
-                                                <label for="labSedCereo">Cilindro Cereo [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSedHialianos" v-model="labSed.cilindros_hialianos" />
-                                                <label for="labSedHialianos">Cilindros Hialianos [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSedGranulosos"
-                                                    v-model="labSed.cilindros_granulosos" />
-                                                <label for="labSedGranulosos">Cilindors Granulosos [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
+                                    <div class="card flex justify-content-center">
+                                        <SelectButton
+                                            v-model="selectedSubcategoriasPorCategoria[categoria.id_categoria_analisis]"
+                                            :options="subcategoriasPorCategoria[categoria.id_categoria_analisis]"
+                                            optionLabel="name" optionValue="value" multiple
+                                            aria-labelledby="multiple" />
                                     </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSedLeucocitarios"
-                                                    v-model="labSed.cilindros_leucocitarios" />
-                                                <label for="labSedLeucocitarios">Cilindros Leucocitarios [cpm]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSedEritrocitarios"
-                                                    v-model="labSed.cilindros_eritrocitarios" />
-                                                <label for="labSedEritrocitarios">Cilindros Eritrocitarios
-                                                    [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSedFlora" v-model="labSed.flora_bacteriana" />
-                                                <label for="labSedFlora">Flora Bacteriana</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSedCristales" v-model="labSed.cristales" />
-                                                <label for="labSedCristales">Cristales</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSedFilamento" v-model="labSed.filamento_mucoso" />
-                                                <label for="labSedFilamento">Filamento Mucoso</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSedHifas" v-model="labSed.hifas" />
-                                                <label for="labSedHifas">Hifas</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSedLevaduras" v-model="labSed.levaduras" />
-                                                <label for="labSedLevaduras">Levaduras</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSedOtros" v-model="labSed.otros" />
-                                                <label for="labSedOtros">Otros</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labSed.feed_examen_sedimento_urinario" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabEspecial">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labSed.puntaje_examen_sedimento_urinario"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabEspecial">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio químico urinario</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicopH" v-model="labQuimico.ph" />
-                                                <label for="labQuimicopH">pH </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoDensidad" v-model="labQuimico.densidad" />
-                                                <label for="labQuimicoDensidad">Densidad </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoProteinas" v-model="labQuimico.proteinas" />
-                                                <label for="labQuimicoProteinas">Proteinas [mg/dl]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSangre" v-model="labQuimico.sangre" />
-                                                <label for="labQuimicoSangre">Sangre </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoGlucosa" v-model="labQuimico.glucosa" />
-                                                <label for="labQuimicoGlucosa">Células Glucosa </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 ">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoCetona" v-model="labQuimico.cetonas" />
-                                                <label for="labQuimicoCetona">Cilindro Cetonas </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoPigmentos"
-                                                    v-model="labQuimico.pigmentos_biliares" />
-                                                <label for="labQuimicoPigmentos">Pigmentos Biliares</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoNitritos" v-model="labQuimico.nitritos" />
-                                                <label for="labQuimicoNitritos">Nitritos</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoLeucocitos" v-model="labQuimico.leucocitos" />
-                                                <label for="labQuimicoLeucocitos">Leucocitos</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoBilirrubina"
-                                                    v-model="labQuimico.bilirrubina" />
-                                                <label for="labQuimicoBilirrubina">Bilirrubina </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoUrobilinogeno"
-                                                    v-model="labQuimico.urobilinogeno" />
-                                                <label for="labQuimicoUrobilinogeno">Urobilinogeno [mg/dl]</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labQuimico.feed_examen_quimico_urinario" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabQuimico">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labQuimico.puntaje_examen_quimico_urinario"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabQuimico">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
 
 
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio especial de orina</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labEspecialProteurinaria"
-                                                    v-model="labEspecial.proteurinaria" />
-                                                <label for="labEspecialProteurinaria">Proteurinaria </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labEspecialCreatinuria"
-                                                    v-model="labEspecial.creatinuria" />
-                                                <label for="labEspecialCreatinuria">Creatinuria </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labEspecialMicroalbuminuria"
-                                                    v-model="labEspecial.microalbuminuria" />
-                                                <label for="labEspecialMicroalbuminuria">Microalbuminuria </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labEspecialClearenceCreatinina"
-                                                    v-model="labEspecial.clearence_creatinina" />
-                                                <label for="labEspecialClearenceCreatinina">Clearence Creatinina</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labEspecial.feed_examen_especial_orina" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabSed">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labEspecial.puntaje_examen_especial_orina"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabSedimento">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio hematológico</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labHematologicoGrupo"
-                                                    v-model="labHematologico.grupo_sanguineo" />
-                                                <label for="labHematologicoGrupo">GrupoSanguineo </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labHematologicoFactor"
-                                                    v-model="labHematologico.factor_rh" />
-                                                <label for="labHematologicoFactor">Factor RH </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labHematologicoObservaciones"
-                                                    v-model="labHematologico.observaciones" />
-                                                <label for="labHematologicoObservaciones">Observaciones </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labHematologico.feed_examen_hematologico" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabBiometriaHematica">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labHematologico.puntaje_examen_hematologico"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabBiometriaHematica">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio de biometria hemática</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labBiometriaHematicaRojos"
-                                                    v-model="labBiometriaHematica.globulos_rojos" />
-                                                <label for="labBiometriaHematicaRojos">Globulos Rojos </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labBiometriaHematicaBlancos"
-                                                    v-model="labBiometriaHematica.globulos_blancos" />
-                                                <label for="labBiometriaHematicaBlancos">Globulos Blancos</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labBiometriaHematicaHemoglobina"
-                                                    v-model="labBiometriaHematica.hemoglobina" />
-                                                <label for="labBiometriaHematicaHemoglobina">Hemoglobina </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labBiometriaHematicaHematrocito"
-                                                    v-model="labBiometriaHematica.hematocrito" />
-                                                <label for="labBiometriaHematicaHematrocito">Hematrocito </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labBiometriaHematicaVes"
-                                                    v-model="labBiometriaHematica.ves" />
-                                                <label for="labBiometriaHematicaVes">VES</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labBiometriaHematica.feed_examen_biometria_hematica"
-                                                autoResize rows="3" cols="30" />
-                                            <label for="feedLabHematologico">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labBiometriaHematica.puntaje_examen_biometria_hematica"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabHematologico">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio índice eritrocitario hemático</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labIndiceVcm" v-model="labIndice.vcm" />
-                                                <label for="labIndiceVcm">VCM </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labIndiceHbcm" v-model="labIndice.hbcm" />
-                                                <label for="labIndiceHbcm">HBCM </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labIndiceChbcm" v-model="labIndice.chbcm" />
-                                                <label for="labIndiceChbcm">CHBCM </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labIndice.feed_indices_eritrocitarios" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabIndice">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labIndice.puntaje_indices_eritrocitarios"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabIndice">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio de recuento diferencial hemático</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoCayadosRelativo"
-                                                    v-model="labRecuento.cayados_relativo" />
-                                                <label for="labRecuentoCayadosRelativo">Cayados Relativo</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoCayadosAbsoluto"
-                                                    v-model="labRecuento.cayados_absoluto" />
-                                                <label for="labRecuentoCayadosAbsoluto">Cayados Absoluto [cpm.]</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoLinfocitosRelativo"
-                                                    v-model="labRecuento.linfocitos_relativo" />
-                                                <label for="labRecuentoLinfocitosRelativo">Linfocitos Relativo</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoLinfocitosAbsoluto"
-                                                    v-model="labRecuento.linfocitos_absoluto" />
-                                                <label for="labRecuentoLinfocitosAbsoluto">Linfocitos Absoluto</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoEosinofilosRelativo"
-                                                    v-model="labRecuento.eosinofilos_relativo" />
-                                                <label for="labRecuentoEosinofilosRelativo">Eosinofilos Relativo</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 ">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoEosinofilosAbsoluto"
-                                                    v-model="labRecuento.eosinofilos_absoluto" />
-                                                <label for="labRecuentoEosinofilosAbsoluto">Eosinofilos Absoluto</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoBasofilosRelativo"
-                                                    v-model="labRecuento.basofilos_relativo" />
-                                                <label for="labRecuentoBasofilosRelativo">Basofilos Relativo</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoBasofilosAbsoluto"
-                                                    v-model="labRecuento.basofilos_absoluto" />
-                                                <label for="labRecuentoBasofilosAbsoluto">Basofilos Absoluto</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoSegmentadosRelativo"
-                                                    v-model="labRecuento.segmentados_relativo" />
-                                                <label for="labRecuentoSegmentadosRelativo">Segmentados Relativo</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoSegmentadosAbsoluto"
-                                                    v-model="labRecuento.segmentados_absoluto" />
-                                                <label for="labRecuentoSegmentadosAbsoluto">Segmentados Absoluto</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoMonocitosRelativo"
-                                                    v-model="labRecuento.monocitos_relativo" />
-                                                <label for="labRecuentoMonocitosRelativo">Monocitos Relativo</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoMonocitosAbsoluto"
-                                                    v-model="labRecuento.monocitos_absoluto" />
-                                                <label for="labRecuentoMonocitosAbsoluto">Monocitos Absoluto</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoPlaquetas"
-                                                    v-model="labRecuento.recuento_plaquetas" />
-                                                <label for="labRecuentoPlaquetas">Recuento de Plaquetas</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labRecuentoReticulos"
-                                                    v-model="labRecuento.recuento_reticulos" />
-                                                <label for="labRecuentoReticulos">Recuento Reticulos</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labRecuento.feed_recuento_diferencial_hematico"
-                                                autoResize rows="3" cols="30" />
-                                            <label for="feedLabRecuento">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labRecuento.puntaje_recuento_diferencial_hematico"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabRecuento">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio hemostasea sanguinea</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaCoagulacion"
-                                                    v-model="labHemostasea.tiempo_coagulacion" />
-                                                <label for="labHemostaseaCoagulacion">Tiempo de Coagulación </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaSangria"
-                                                    v-model="labHemostasea.tiempo_sangria" />
-                                                <label for="labHemostaseaSangria">Tiempo de Sangria </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaProtrombina"
-                                                    v-model="labHemostasea.tiempo_protrombina" />
-                                                <label for="labHemostaseaProtrombina">Tiempo de Protrombina</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaInr" v-model="labHemostasea_inr" />
-                                                <label for="labHemostaseaInr">INR</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaActividad"
-                                                    v-model="labHemostasea.actividad_protrombinica" />
-                                                <label for="labHemostaseaActividad">Actividad Protrombinica </label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaDimeroD" v-model="labHemostasea.dimero_d" />
-                                                <label for="labHemostaseaDimeroD">Dimero D</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaFibrinogeno"
-                                                    v-model="labHemostasea.fibrinogeno" />
-                                                <label for="labHemostaseaFibrinogeno">Fibrinogeno</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaControl"
-                                                    v-model="labHemostasea.tiempo_control" />
-                                                <label for="labHemostaseaControl">Tiempo de Control </label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labHemostaseaTroboplastina"
-                                                    v-model="labHemostasea.tiempo_tromboplastina_parcial" />
-                                                <label for="labHemostaseaTroboplastina">Tiempo Troboplastina
-                                                    Parcial</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labHemostasea.feed_hemostasia_sanguinea" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabHemostasea">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labHemostasea.puntaje_hemostasia_sanguinea"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabHemostasea">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio serologia sanguinea</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSerologiaProteinaC"
-                                                    v-model="labSerologia.proteina_c" />
-                                                <label for="labSerologiaProteinaC">Proteina C</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSerologiaFactor"
-                                                    v-model="labSerologia.factor_reumatico" />
-                                                <label for="labSerologiaFactor">Factor Reumatico</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSerologiaRPR" v-model="labSerologia.rpr_sifilis" />
-                                                <label for="labSerologiaRPR">RPR Sifilis</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labSerologiaPrueba"
-                                                    v-model="labSerologia.prueba_sifilis" />
-                                                <label for="labSerologiaPrueba">Prueba SIfilis</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSerologiaVIH"
-                                                    v-model="labSerologia.prueba_vih_sida" />
-                                                <label for="labSerologiaVIH">Prueba VIH/SIDA</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labSerologiaHepatitis"
-                                                    v-model="labSerologia.prueba_hepatitis_b" />
-                                                <label for="labSerologiaHepatitis">Prueba Hepatitis B</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labSerologia.feed_serologia_sanguinea" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabSerologia">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labSerologia.puntaje_serologia_sanguinea"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabSerologia">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio electrolitos sanguineos</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labElectrolitosCalcio"
-                                                    v-model="labElectrolitos.calcio" />
-                                                <label for="labElectrolitosCalcio">Calcio</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labElectrolitosSodio" v-model="labElectrolitos.sodio" />
-                                                <label for="labElectrolitosSodio">Sodio</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labElectrolitosPotasio"
-                                                    v-model="labElectrolitos.potasio" />
-                                                <label for="labElectrolitosPotasio">Potasio</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labElectrolitosCloro" v-model="labElectrolitos.cloro" />
-                                                <label for="labElectrolitosCloro">Cloro</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labElectrolitosFoforo"
-                                                    v-model="labElectrolitos.fosforo" />
-                                                <label for="labElectrolitosFoforo">Foforo</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labElectrolitosMagnesio"
-                                                    v-model="labElectrolitos.magnesio" />
-                                                <label for="labElectrolitosMagnesio">Magnesio</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labElectrolitos.feed_electrolitos_sanguineos" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabElectrolitos">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labElectrolitos.puntaje_electrolitos_sanguineos"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabElectrolitos">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="grid">
-                                <div class="col md:col-12">
-                                    <h5> Laboratorio químico sanguineo</h5>
-                                </div>
-                            </div>
-                            <div class="grid p-fluid">
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoGlicemia"
-                                                    v-model="labQuimicoSanguineo.glicemia" />
-                                                <label for="labQuimicoSanguineoGlicemia">Glicemia</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoCreatinina"
-                                                    v-model="labQuimicoSanguineo.creatinina" />
-                                                <label for="labQuimicoSanguineoCreatinina">Creatinina</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoNitrogeno"
-                                                    v-model="labQuimicoSanguineo.nitrogeno_ureico" />
-                                                <label for="labQuimicoSanguineoNitrogeno">Nitrogeno Ureico</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoUrea"
-                                                    v-model="labQuimicoSanguineo.urea" />
-                                                <label for="labQuimicoSanguineoUrea">Urea</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoAcidoUrico"
-                                                    v-model="labQuimicoSanguineo.acido_urico" />
-                                                <label for="labQuimicoSanguineoAcidoUrico">Acido Urico</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 ">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoBilirrubinaTotal"
-                                                    v-model="labQuimicoSanguineo.bilirrubina_total" />
-                                                <label for="labQuimicoSanguineoBilirrubinaTotal">Bilirrubina
-                                                    Total</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoBilirrubinaDirecta"
-                                                    v-model="labQuimicoSanguineo.bilirrubina_directa" />
-                                                <label for="labQuimicoSanguineoBilirrubinaDirecta">Bilirrubina
-                                                    Directa</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoBilirrubinaIndirecta"
-                                                    v-model="labQuimicoSanguineo.bilirrubina_indirecta" />
-                                                <label for="labQuimicoSanguineoBilirrubinaIndirecta">Bilirrubina
-                                                    Indirecta</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoTransaminasaGPT"
-                                                    v-model="labQuimicoSanguineo.transaminasa_gpt" />
-                                                <label for="labQuimicoSanguineoTransaminasaGPT">Transaminasa GPT</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 ">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoTransaminasaGOT"
-                                                    v-model="labQuimicoSanguineo.transaminasa_got" />
-                                                <label for="labQuimicoSanguineoTransaminasaGOT">Transaminasa GOT</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoLactato"
-                                                    v-model="labQuimicoSanguineo.lactato_deshidrogenasa" />
-                                                <label for="labQuimicoSanguineoLactato">Lactato Deshidrogenasa</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoFosfatosa"
-                                                    v-model="labQuimicoSanguineo.fosfatasa_alcalina" />
-                                                <label for="labQuimicoSanguineoFosfatosa">Fosfatasa Alcalina</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12 md:col-6">
-                                    <div class="grid p-fluid pt-1">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoProteinas"
-                                                    v-model="labQuimicoSanguineo.proteinas_totales" />
-                                                <label for="labQuimicoSanguineoProteinas">Proteinas Totales</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoAlbumina"
-                                                    v-model="labQuimicoSanguineo.albumina" />
-                                                <label for="labQuimicoSanguineoAlbumina">Albumina</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoGlobulina"
-                                                    v-model="labQuimicoSanguineo.globulina" />
-                                                <label for="labQuimicoSanguineoGlobulina">Globulina</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoRelacion"
-                                                    v-model="labQuimicoSanguineo.relacion_alb_glo" />
-                                                <label for="labQuimicoSanguineoRelacion">Relación ALB-GLO</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoColesterol"
-                                                    v-model="labQuimicoSanguineo.colesterol_total" />
-                                                <label for="labQuimicoSanguineoColesterol">Colesterol Total</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoTrigliceridos"
-                                                    v-model="labQuimicoSanguineo.trigliceridos" />
-                                                <label for="labQuimicoSanguineoTrigliceridos">Trigliceridos</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoHemoglobina"
-                                                    v-model="labQuimicoSanguineo.hemoglobina_glicosilada" />
-                                                <label for="labQuimicoSanguineoHemoglobina">Hemoglobina
-                                                    Glicosilada</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoHdl"
-                                                    v-model="labQuimicoSanguineo.hdl_colesterol" />
-                                                <label for="labQuimicoSanguineoHdl">HDL Colesterol</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                    <div class="grid p-fluid pt-3">
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoLdl"
-                                                    v-model="labQuimicoSanguineo.ldl_colesterol" />
-                                                <label for="labQuimicoSanguineoLdl">LDL Colesterol</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoVldl"
-                                                    v-model="labQuimicoSanguineo.vldl_colesterol" />
-                                                <label for="labQuimicoSanguineoVldl">VLDL Colesterol</label>
-                                            </FloatLabel>
-                                        </div>
-                                        <div class="col md:col-6 pt-3">
-                                            <FloatLabel>
-                                                <InputText id="labQuimicoSanguineoGlicemia"
-                                                    v-model="labQuimicoSanguineo.glicemia_rn" />
-                                                <label for="labQuimicoSanguineoGlicemia">Glicemia RN</label>
-                                            </FloatLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 md:col-6">
-                                <div class="grid p-fluid">
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Retroalimentación</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <h5>Puntaje asignado</h5>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Textarea v-model="labQuimicoSanguineo.feed_quimica_sanguinea" autoResize
-                                                rows="3" cols="30" />
-                                            <label for="feedLabQuimicoSanguineo">Retroalimentación</label>
-                                        </FloatLabel>
-                                    </div>
-                                    <div class="col md:col-6 pt-1">
-                                        <FloatLabel>
-                                            <Dropdown v-model="labQuimicoSanguineo.puntaje_quimica_sanguinea"
-                                                :options="scoreLaboratorioOrina" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntajeLabQuimicoSanguineo">Puntaje Asignado</label>
-                                        </FloatLabel>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h5>Selecciona las categorías de imagenología para el caso</h5>
-                            <div class="card flex justify-content-center">
-                                <SelectButton v-model="categoriasSeleccionadas" :options="categoriasImagenologia"
-                                    optionLabel="nombre" optionValue="id_categoria_imagenologia" multiple
-                                    aria-labelledby="multiple" />
-                            </div>
-
-                            <!-- Mostrar imágenes por categoría seleccionada -->
-                            <div v-for="(imgData, index) in imagenesData" :key="imgData.id_categoria_imagenologia"
-                                class="mt-4">
-                                <h5>{{ imgData.categoria_nombre }}</h5>
-                                <div class="grid p-fluid    x">
-                                    <div class="col md:col-5">
-                                        <FileUpload name="imagen" accept="image/*" :auto="true" :customUpload="true"
-                                            :maxFileSize="1000000" chooseLabel="Elegir Imagen" :showCancelButton="false"
-                                            :showUploadButton="false" @select="(event) => onUpload(event, index)">
-                                            <template #content>
-                                                <div v-if="imgData.path">
-                                                    <img :src="imgData.path" alt="Imagen" width="200" />
-                                                </div>
-                                                <div v-else>
-                                                    <p>Elige y arrastra una imagen.</p>
-                                                </div>
-                                            </template>
-                                        </FileUpload>
-                                    </div>
-                                    <div class="col md:col-4">
-                                        <div class="grid">
-                                            <div class="col md:col-12">
+                                    <div
+                                        v-if="selectedSubcategoriasPorCategoria[categoria.id_categoria_analisis].length > 0">
+                                        <div class="grid pt-3">
+                                            <div class="col md:col-6">
                                                 <FloatLabel>
-                                                    <Textarea v-model="imgData.interpretacion" autoResize rows="3"
-                                                        cols="30" />
-                                                    <label for="interpretacion">Interpretación</label>
+                                                    <Textarea
+                                                        v-model="analisisDetails[categoria.id_categoria_analisis].feed_analisis"
+                                                        autoResize rows="3" cols="30" />
+                                                    <label for="feed_analisis">Retroalimentación</label>
                                                 </FloatLabel>
                                             </div>
-                                            <div class="col md:col-12 pt-3">
+                                            <div class="col md:col-3">
                                                 <FloatLabel>
-                                                    <Textarea v-model="imgData.feed_imagenologia" autoResize rows="3"
-                                                        cols="30" />
-                                                    <label for="interpretacion">Retroalimentación</label>
+                                                    <Dropdown
+                                                        v-model="analisisDetails[categoria.id_categoria_analisis].puntaje_analisis"
+                                                        :options="scoreAnalisis" optionLabel="name" optionValue="value"
+                                                        placeholder="Elige una opción" checkmark
+                                                        :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                    <label for="puntaje_analisis">Puntaje Asignado</label>
                                                 </FloatLabel>
                                             </div>
+                                            <div class="col md:col-3"></div>
                                         </div>
 
+                                        <!-- Mostrar campos para cada subcategoría seleccionada -->
+                                        <div v-for="subcatId in selectedSubcategoriasPorCategoria[categoria.id_categoria_analisis]"
+                                            :key="subcatId" class="grid pt-3">
+                                            <div class="col md:col-4">
+                                                <h6>{{
+                                                    analisisDetails[categoria.id_categoria_analisis].detalles[subcatId].nombre_subcategoria
+                                                }}</h6>
+                                            </div>
+                                            <div class="col md:col-4">
+                                                <FloatLabel>
+                                                    <InputText
+                                                        v-model="analisisDetails[categoria.id_categoria_analisis].detalles[subcatId].resultado" />
+                                                    <label for="resultado">Resultado</label>
+                                                </FloatLabel>
+                                            </div>
+                                            <div class="col md:col-4"></div>
+                                        </div>
                                     </div>
-                                    <div class="col md:col-3">
-                                        <FloatLabel>
-                                            <Dropdown v-model="imgData.puntaje_imagenologia"
-                                                :options="scoreImagenologia" optionLabel="name" optionValue="value"
-                                                placeholder="Elige una opción" checkmark :highlightOnSelect="false"
-                                                class="w-full md:w-14rem" />
-                                            <label for="puntaje_imagenologia">Puntaje Asignado</label>
-                                        </FloatLabel>
+                                </div>
+
+                            </div>
+
+                            <div class="justify-content-center pt-3">
+                                <h5>Selecciona las imagenologías para el caso</h5>
+                                <div v-for="category in categoriasImagenologia"
+                                    :key="category.id_categoria_imagenologia" class="mt-4">
+                                    <Divider align="center" type="solid">
+                                        <h5>{{ category.nombre }}</h5>
+                                    </Divider>
+                                    <div class="card text-center">
+                                        <SelectButton
+                                            v-model="selectedImagenologiasByCategory[category.id_categoria_imagenologia]"
+                                            :options="category.imagenologias" optionLabel="nombre"
+                                            optionValue="id_imagenologia" multiple
+                                            @change="onImagenologiaSelectionChange(category.id_categoria_imagenologia)" />
+                                    </div>
+                                </div>
+
+                                <Divider />
+                                <div v-for="(imgData, index) in imagenesData" :key="imgData.id_imagenologia"
+                                    class="mt-4">
+                                    <h5>{{ imgData.categoria_nombre }} - {{ imgData.nombre }}</h5>
+                                    <div class="grid p-fluid">
+                                        <div class="col md:col-5">
+                                            <FileUpload name="imagen" accept="image/*" :auto="true" :customUpload="true"
+                                                :maxFileSize="1000000" chooseLabel="Elegir Imagen"
+                                                :showCancelButton="false" :showUploadButton="false"
+                                                @select="(event) => onUpload(event, index)">
+                                                <template #content>
+                                                    <div v-if="imgData.path">
+                                                        <img :src="imgData.path" alt="Imagen" width="200" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Elige y arrastra una imagen.</p>
+                                                    </div>
+                                                </template>
+                                            </FileUpload>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <div class="grid">
+                                                <div class="col md:col-12">
+                                                    <FloatLabel>
+                                                        <Textarea v-model="imgData.interpretacion" autoResize rows="3"
+                                                            cols="30" />
+                                                        <label for="interpretacion">Interpretación</label>
+                                                    </FloatLabel>
+                                                </div>
+                                                <div class="col md:col-12 pt-3">
+                                                    <FloatLabel>
+                                                        <Textarea v-model="imgData.feed_estudios_imagenologia"
+                                                            autoResize rows="3" cols="30" />
+                                                        <label
+                                                            for="feed_estudios_imagenologia">Retroalimentación</label>
+                                                    </FloatLabel>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="imgData.puntaje_estudios_imagenologia"
+                                                    :options="scoreImagenologia" optionLabel="name" optionValue="value"
+                                                    placeholder="Elige una opción" checkmark :highlightOnSelect="false"
+                                                    class="w-full md:w-14rem" />
+                                                <label for="puntaje_estudios_imagenologia">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="flex py-4 gap-2">
-                                <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
+                                <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
-                                <Button label="Guardar" @click="guardarTodosLosCambiosLaboratorio" />
+                                <Button label="Guardar" @click="guardarTodosLosCambiosLaboratorio" severity="success"
+                                    icon="pi pi-save" />
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
                                     @click="nextCallback" />
                             </div>
@@ -4505,9 +3531,9 @@ onMounted(() => {
                             <div v-for="categoria in categoriasMedicamentos" :key="categoria.id_categoria_medicamento"
                                 class="pt-4">
                                 <div class="grid">
-                                    <div class="col-12">
+                                    <Divider align="center" type="solid">
                                         <h5>{{ categoria.categoria }}</h5>
-                                    </div>
+                                    </Divider>
                                 </div>
                                 <div class="card flex justify-content-center">
                                     <SelectButton
@@ -4542,12 +3568,58 @@ onMounted(() => {
                                     <div class="col md:col-1"></div>
                                 </div>
                             </div>
+                            <Divider />
+                            <div class="justify-content-center pt-3">
+                                <h5>Selecciona los procedimientos para el caso</h5>
+
+                                <div v-for="categoria in categoriasProcedimientos"
+                                    :key="categoria.id_categoria_procedimiento" class="pt-4">
+                                    <div class="grid">
+                                        <Divider align="center" type="solid">
+                                            <h5>{{ categoria.nombre }}</h5>
+                                        </Divider>
+                                    </div>
+                                    <div class="card flex justify-content-center">
+                                        <SelectButton
+                                            v-model="selectedProcedimientosPorCategoria[categoria.id_categoria_procedimiento]"
+                                            :options="procedimientosPorCategoria[categoria.id_categoria_procedimiento]"
+                                            optionLabel="name" optionValue="value" multiple
+                                            aria-labelledby="multiple" />
+                                    </div>
+
+                                    <div v-for="(procedimientoId, index) in selectedProcedimientosPorCategoria[categoria.id_categoria_procedimiento]"
+                                        :key="procedimientoId" class="grid pt-3">
+                                        <div class="col md:col-4">
+                                            <h6>Procedimiento {{ index + 1 }}: {{
+                                                procedimientoDetails[procedimientoId]?.nombre }}
+                                            </h6>
+                                        </div>
+                                        <div class="col md:col-4">
+                                            <FloatLabel>
+                                                <Textarea v-model="procedimientoDetails[procedimientoId].feedback"
+                                                    autoResize rows="3" cols="30" />
+                                                <label for="feedback">Retroalimentación</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-3">
+                                            <FloatLabel>
+                                                <Dropdown v-model="procedimientoDetails[procedimientoId].score"
+                                                    :options="scoreProcedimientos" optionLabel="name"
+                                                    optionValue="value" placeholder="Elige una opción" checkmark
+                                                    :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                                <label for="score">Puntaje Asignado</label>
+                                            </FloatLabel>
+                                        </div>
+                                        <div class="col md:col-1"></div>
+                                    </div>
+                                </div>
+                            </div>
 
 
                             <div class="flex py-4 gap-2">
                                 <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     @click="prevCallback" />
-                                <Button label="Guardar" @click="guardarMedicamentosSuministrados" severity="success"
+                                <Button label="Guardar" @click="guardarSeccionIntervenir" severity="success"
                                     icon="pi pi-save" />
                                 <Button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
                                     @click="nextCallback" />
@@ -4566,7 +3638,7 @@ onMounted(() => {
                             </div>
 
                             <div v-for="(subData) in subsData" :key="subData.id_subespecialidad" class="pt-3">
-                                <div class="grid">
+                                <div class="grid p-fluid">
                                     <div class="col md:col-3">
                                         <h6>{{ subData.nombre }}</h6>
                                     </div>
@@ -4611,7 +3683,7 @@ onMounted(() => {
                             <h5>{{ traspaso.opcion_uno }}</h5>
                             <div class="grid pt-3">
                                 <div class="col md:col-4">
-                                    <h5>Ingresar al paciente a una unidade de cuidados intensivos</h5>
+                                    <h5>Ingresar al paciente a una unidad de cuidados intensivos</h5>
                                 </div>
                                 <div class="col md:col-4">
                                     <FloatLabel>
@@ -4664,6 +3736,27 @@ onMounted(() => {
                                 <div class="col md:col-3">
                                     <FloatLabel>
                                         <Dropdown v-model="traspaso.puntaje_opcion_tres" :options="scoreTraspaso"
+                                            optionLabel="name" optionValue="value" placeholder="Elige una opción"
+                                            checkmark :highlightOnSelect="false" class="w-full md:w-14rem" />
+                                        <label for="puntajeTraspasoCirugia">Puntaje Asignado</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-1">
+                                    <h5></h5>
+                                </div>
+
+                                <div class="col md:col-4">
+                                    <h5>{{ traspaso.opcion_cuatro }}</h5>
+                                </div>
+                                <div class="col md:col-4">
+                                    <FloatLabel>
+                                        <Textarea v-model="traspaso.feed_opcion_cuatro" autoResize rows="3" cols="30" />
+                                        <label for="feedTraspasoCirugia">Retroalimentación</label>
+                                    </FloatLabel>
+                                </div>
+                                <div class="col md:col-3">
+                                    <FloatLabel>
+                                        <Dropdown v-model="traspaso.puntaje_opcion_cuatro" :options="scoreTraspaso"
                                             optionLabel="name" optionValue="value" placeholder="Elige una opción"
                                             checkmark :highlightOnSelect="false" class="w-full md:w-14rem" />
                                         <label for="puntajeTraspasoCirugia">Puntaje Asignado</label>

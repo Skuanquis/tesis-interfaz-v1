@@ -216,6 +216,38 @@ export const actualizarMedicamentosSuministrados = (id_historia_clinica, data) =
   return api.put(`/medicamentos_suministrados/${id_historia_clinica}`, data)
 }
 
+export const obtenerCategoriasProcedimientos = () => {
+  return api.get('/categoria_procedimiento')
+}
+
+export const obtenerProcedimientosPorCategoria = (id_categoria_procedimiento) => {
+  return api.get(`/procedimiento/${id_categoria_procedimiento}`)
+}
+
+export const obtenerProcedimientosAsignadosPorHistoriaClinica = (id_historia_clinica) => {
+  return api.get(`/procedimientos_asignados/${id_historia_clinica}`)
+}
+
+export const actualizarProcedimientosAsignados = (id_historia_clinica, data) => {
+  return api.put(`/procedimientos_asignados/${id_historia_clinica}`, data)
+}
+
+export const obtenerCategoriasAnalisis = () => {
+  return api.get('/categoria_analisis')
+}
+
+export const obtenerSubcategoriasPorCategoria = (id_categoria_analisis) => {
+  return api.get(`/subcategoria_analisis/${id_categoria_analisis}`)
+}
+
+export const obtenerSolicitudesAnalisisPorHistoriaClinica = (id_historia_clinica) => {
+  return api.get(`/solicitudes_analisis/${id_historia_clinica}`)
+}
+
+export const actualizarSolicitudesAnalisis = (id_historia_clinica, data) => {
+  return api.post(`/solicitudes_analisis/${id_historia_clinica}`, data)
+}
+
 export const obtenerSubespecialidades = () => {
   return api.get('/subespecialidades')
 }
@@ -228,124 +260,28 @@ export const actualizarSubespecialidades = (id_historia_clinica, subsData) => {
   return api.post(`/consulta_externa/historia_clinica/${id_historia_clinica}`, subsData)
 }
 
-export const obtenerExamenFisicoOrina = (id_historia_clinica) => {
-  return api.get(`/examen_fisico_orina/${id_historia_clinica}`)
+export const obtenerCategoriasConImagenologias = () => {
+  return api.get(`/categorias_con_imagenologias`)
 }
 
-export const actualizarExamenFisicoOrina = (id_historia_clinica, data) => {
-  return api.put(`/examen_fisico_orina/${id_historia_clinica}`, data)
+export const obtenerEstudiosImagenologiaPorHistoriaClinica = (id_historia_clinica) => {
+  return api.get(`/estudios_imagenologia/${id_historia_clinica}`)
 }
 
-export const obtenerSedimentoUrinario = (id_historia_clinica) => {
-  return api.get(`/sedimento_urinario/${id_historia_clinica}`)
+export const actualizarEstudiosImagenologia = (id_historia_clinica, estudiosData) => {
+  return api.post(`/estudios_imagenologia/${id_historia_clinica}`, { estudiosData })
 }
 
-export const actualizarSedimentoUrinario = (id_historia_clinica, data) => {
-  return api.put(`/sedimento_urinario/${id_historia_clinica}`, data)
-}
-
-export const obtenerExamenQuimicoUrinario = (id_historia_clinica) => {
-  return api.get(`/examen_quimico_urinario/${id_historia_clinica}`)
-}
-
-export const actualizarExamenQuimicoUrinario = (id_historia_clinica, data) => {
-  return api.put(`/examen_quimico_urinario/${id_historia_clinica}`, data)
-}
-
-export const obtenerExamenEspecialOrina = (id_historia_clinica) => {
-  return api.get(`/examen_especial_orina/${id_historia_clinica}`)
-}
-
-export const actualizarExamenEspecialOrina = (id_historia_clinica, data) => {
-  return api.put(`/examen_especial_orina/${id_historia_clinica}`, data)
-}
-
-export const obtenerExamenHematologico = (id_historia_clinica) => {
-  return api.get(`/examen_hematologico/${id_historia_clinica}`)
-}
-
-export const actualizarExamenHematologico = (id_historia_clinica, data) => {
-  return api.put(`/examen_hematologico/${id_historia_clinica}`, data)
-}
-
-export const obtenerBiometriaHematica = (id_examen_hematologico) => {
-  return api.get(`/biometria_hematica/${id_examen_hematologico}`)
-}
-
-export const actualizarBiometriaHematica = (id_examen_hematologico, data) => {
-  return api.put(`/biometria_hematica/${id_examen_hematologico}`, data)
-}
-
-export const obtenerIndicesEritrocitarios = (id_examen_hematologico) => {
-  return api.get(`/indices_eritrocitarios/${id_examen_hematologico}`)
-}
-
-export const actualizarIndicesEritrocitarios = (id_examen_hematologico, data) => {
-  return api.put(`/indices_eritrocitarios/${id_examen_hematologico}`, data)
-}
-
-export const obtenerRecuentoDiferencialHematico = (id_examen_hematologico) => {
-  return api.get(`/recuento_diferencial_hematico/${id_examen_hematologico}`)
-}
-
-export const actualizarRecuentoDiferencialHematico = (id_examen_hematologico, data) => {
-  return api.put(`/recuento_diferencial_hematico/${id_examen_hematologico}`, data)
-}
-
-export const obtenerHemostasiaSanguinea = (id_examen_sanguineo) => {
-  return api.get(`/hemostasia_sanguinea/${id_examen_sanguineo}`)
-}
-
-export const actualizarHemostasiaSanguinea = (id_examen_sanguineo, data) => {
-  return api.put(`/hemostasia_sanguinea/${id_examen_sanguineo}`, data)
-}
-
-export const obtenerSerologiaSanguinea = (id_examen_sanguineo) => {
-  return api.get(`/serologia_sanguinea/${id_examen_sanguineo}`)
-}
-
-export const actualizarSerologiaSanguinea = (id_examen_sanguineo, data) => {
-  return api.put(`/serologia_sanguinea/${id_examen_sanguineo}`, data)
-}
-
-export const obtenerElectrolitosSanguineos = (id_examen_sanguineo) => {
-  return api.get(`/electrolitos_sanguineos/${id_examen_sanguineo}`)
-}
-
-export const actualizarElectrolitosSanguineos = (id_examen_sanguineo, data) => {
-  return api.put(`/electrolitos_sanguineos/${id_examen_sanguineo}`, data)
-}
-
-export const obtenerQuimicaSanguinea = (id_examen_sanguineo) => {
-  return api.get(`/quimica_sanguinea/${id_examen_sanguineo}`)
-}
-
-export const actualizarQuimicaSanguinea = (id_examen_sanguineo, data) => {
-  return api.put(`/quimica_sanguinea/${id_examen_sanguineo}`, data)
-}
-
-export const obtenerCategoriasImagenologia = () => {
-  return api.get(`/categorias_imagenologia`)
-}
-
-export const obtenerImagenesPorHistoriaClinica = (id_historia_clinica) => {
-  return api.get(`/imagenes/${id_historia_clinica}`)
-}
-
-export const actualizarImagenes = (id_historia_clinica, imagenesData) => {
-  return api.post(`/imagenes/${id_historia_clinica}`, { imagenesData })
-}
-
-export const cargarImagen = (formData) => {
-  return api.post(`/upload_imagen`, formData, {
+export const cargarImagenCategoria = (formData) => {
+  return api.post(`/upload_imagen_categoria`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   })
 }
 
-export const cargarImagenCategoria = (formData) => {
-  return api.post(`/upload_imagen_categoria`, formData, {
+export const cargarImagen = (formData) => {
+  return api.post(`/upload_imagen`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }

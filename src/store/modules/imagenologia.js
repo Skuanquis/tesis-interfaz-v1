@@ -1,49 +1,34 @@
-import { obtenerImagenologia } from '@/services/historiaService'
-
-const imagenologiaModule = {
+export default {
   namespaced: true,
   state: {
     imagenologias: {},
-    selectedCategories: []
+    displayedImages: {}
   },
   mutations: {
-    SET_IMAGENOLOGIAS(state, imagenologias) {
+    setImagenologias(state, imagenologias) {
       state.imagenologias = imagenologias
     },
-    ADD_SELECTED_CATEGORY(state, categoryName) {
-      if (!state.selectedCategories.includes(categoryName)) {
-        state.selectedCategories.push(categoryName)
-      }
+    showImage(state, nombre) {
+      state.displayedImages[nombre] = true
     },
-    CLEAR_IMAGENOLOGIA(state) {
+    limpiarImagenologias(state) {
       state.imagenologias = {}
-      state.selectedCategories = []
+      state.displayedImages = {}
     }
   },
   actions: {
-    async fetchImagenologias({ commit }, id_historia_clinica) {
-      try {
-        const response = await obtenerImagenologia(id_historia_clinica)
-        commit('SET_IMAGENOLOGIAS', response.data)
-      } catch (error) {
-        console.error('Error fetching imagenologías:', error)
-      }
+    saveImagenologias({ commit }, imagenologias) {
+      commit('setImagenologias', imagenologias)
     },
-    realizarCategoria({ commit }, categoryName) {
-      commit('ADD_SELECTED_CATEGORY', categoryName)
+    realizarImagenologia({ commit }, nombre) {
+      commit('showImage', nombre)
     },
-    limpiarImagenologia({ commit }) {
-      commit('CLEAR_IMAGENOLOGIA')
+    limpiarImagenologias({ commit }) {
+      commit('limpiarImagenologias')
     }
   },
   getters: {
-    imagenologias(state) {
-      return state.imagenologias
-    },
-    selectedCategories(state) {
-      return state.selectedCategories
-    }
+    imagenologias: (state) => state.imagenologias,
+    displayedImages: (state) => state.displayedImages
   }
 }
-
-export default imagenologiaModule

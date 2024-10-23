@@ -78,9 +78,10 @@ function onDockItemClick(item) {
                 store.dispatch('examenes/limpiarExamenes');
                 store.dispatch('anamnesis/limpiarAnamnesis');
                 store.dispatch('diferencial/limpiarDiferencial');
-                store.dispatch('imagenologia/limpiarImagenologia');
+                store.dispatch('imagenologia/limpiarImagenologias');
                 store.dispatch('laboratorios/limpiarLaboratorios');
                 store.dispatch('medicamentos/limpiarMedicamentos');
+                store.dispatch('procedimientos/limpiarProcedimientos');
                 store.dispatch('diferencial/limpiarDiferencial');
                 store.dispatch('subespecialidades/limpiarSubespecialidades');
             },

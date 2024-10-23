@@ -144,7 +144,8 @@ function onDialogHide() {
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
-                <Button label="Ok" @click="closeDialog" />
+                <Button style="background-color: #BAC8D9; border: 0px" icon="pi pi-check" label="Ok"
+                    @click="closeDialog" />
             </div>
         </div>
     </Dialog>

@@ -170,6 +170,14 @@ export const obtenerMedicamentos = (id_historia_clinica) => {
   return api.get(`/medicamentos/${id_historia_clinica}`)
 }
 
+export const obtenerProcedimientos = (id_historia_clinica) => {
+  return api.get(`/procedimientos/${id_historia_clinica}`)
+}
+
+export const obtenerAnalisis = (id_historia_clinica) => {
+  return api.get(`/analisis/${id_historia_clinica}`)
+}
+
 export const obtenerSubespecialidades = (id_historia_clinica) => {
   return api.get(`/consulta-externa/${id_historia_clinica}`)
 }

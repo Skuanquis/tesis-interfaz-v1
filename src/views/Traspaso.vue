@@ -26,6 +26,14 @@ const diagnosticosDiferenciales = computed(() => store.getters['diferencial/sele
 const id_historia_clinica = localStorage.getItem('id_historia_clinica');
 const id_simulacion = localStorage.getItem('id_simulacion');
 
+const isActive = computed(() => store.state.timer.isActive);
+function stop() {
+    if (isActive.value) {
+        store.dispatch('timer/stopTimer');
+        store.dispatch('timer/resetTimer');
+    }
+}
+
 const registrarAccionSimulacion = async (descripcion, rubrica, puntaje, retroalimentacion) => {
     try {
         const accionData = {
@@ -70,6 +78,11 @@ const finalizarAccion = () => {
                     puntaje = opcionesTraspaso.value.puntaje_opcion_tres;
                     retroalimentacion = opcionesTraspaso.value.feed_opcion_tres;
                 }
+                else if (traspaso.value === opcionesTraspaso.value.opcion_cuatro) {
+                    rubrica = opcionesTraspaso.value.rubrica_opcion_cuatro;
+                    puntaje = opcionesTraspaso.value.puntaje_opcion_cuatro;
+                    retroalimentacion = opcionesTraspaso.value.feed_opcion_cuatro;
+                }
 
                 await registrarAccionSimulacion(descripcion, rubrica, puntaje, retroalimentacion);
 
@@ -93,9 +106,11 @@ const finalizarAccion = () => {
                         store.dispatch('examenes/limpiarExamenes');
                         store.dispatch('anamnesis/limpiarAnamnesis');
                         store.dispatch('diferencial/limpiarDiferencial');
-                        store.dispatch('imagenologia/limpiarImagenologia');
+                        store.dispatch('imagenologia/limpiarImagenologias');
                         store.dispatch('laboratorios/limpiarLaboratorios');
                         store.dispatch('medicamentos/limpiarMedicamentos');
+                        store.dispatch('procedimientos/limpiarProcedimientos');
+                        store.dispatch('diferencial/limpiarDiferencial');
                         store.dispatch('subespecialidades/limpiarSubespecialidades');
 
                     } catch (error) {
@@ -170,6 +185,11 @@ onMounted(() => {
                         :value="opcionesTraspaso.opcion_tres" />
                     <label for="traspaso3" class="ml-2 pl-2 text-lg">{{ opcionesTraspaso.opcion_tres }}</label>
                 </div>
+                <div class="flex items-center pt-3" v-if="opcionesTraspaso.opcion_cuatro">
+                    <RadioButton v-model="traspaso" inputId="traspaso3" name="diagnostico"
+                        :value="opcionesTraspaso.opcion_cuatro" />
+                    <label for="traspaso3" class="ml-2 pl-2 text-lg">{{ opcionesTraspaso.opcion_cuatro }}</label>
+                </div>
             </div>
         </div>
 
@@ -192,7 +212,8 @@ onMounted(() => {
         <div class="grid pt-5">
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button label="Finalizar" @click="finalizarAccion" />
+                <Button style="background-color: #7ABF5A; border: 0px" label="Finalizar" @click="finalizarAccion"
+                    icon="pi pi-power-off" />
             </div>
             <div class="col md:col-4"></div>
         </div>
@@ -200,7 +221,8 @@ onMounted(() => {
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
-                <Button label="Ok" @click="closeDialog" />
+                <Button style="background-color: #BAC8D9; border: 0px" label="Ok" @click="closeDialog"
+                    icon="pi pi-check" />
             </div>
         </div>
     </Dialog>
@@ -252,7 +274,7 @@ onMounted(() => {
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 
@@ -283,7 +305,7 @@ h5 {
 }
 
 .examen-titulo {
-    color: #bb86fc;
+    color: #7abf5a;
 }
 
 .data-section-main {

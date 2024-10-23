@@ -143,14 +143,12 @@ function onDialogHide() {
 <template>
     <Dialog header="Historial de la simulación" v-model:visible="display" :style="{ width: '40rem', height: '100%' }"
         :modal="true" @hide="onDialogHide" class="p-fluid" :position="position" :draggable="false">
+        <h5 class="text-center datos-paciente">Tiempo Transcurrido</h5>
         <div>
-            <h4 class="text-center"> Tiempo Transcurrido </h4>
+            <h1 class="text-center" style="color: #a8dce7;"> {{ formattedTime }} </h1>
         </div>
         <div>
-            <h1 class="text-center"> {{ formattedTime }} </h1>
-        </div>
-        <div>
-            <h4 class="text-center"> Historial de eventos </h4>
+            <h4 class="text-center datos-historias"> Historial de eventos </h4>
         </div>
 
         <div class="grid">
@@ -252,7 +250,7 @@ function onDialogHide() {
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 
@@ -285,51 +283,44 @@ h5 {
 .progress-container {
     width: 100%;
     max-width: 400px;
-    /* Ancho máximo para la barra */
     background-color: #e0e0e0;
     border-radius: 12px;
     overflow: hidden;
-    /* Para evitar que el contenido se salga del borde */
     margin: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar-a {
     height: 20px;
-    /* Ajusta la altura */
     background-color: #4caf50;
-    /* Color verde */
     border-radius: 12px 0 0 12px;
-    /* Bordes redondeados solo en la izquierda */
     display: flex;
     align-items: center;
     justify-content: center;
     transition: width 0.4s ease;
     color: white;
-    /* Texto blanco dentro de la barra */
     font-weight: bold;
     font-size: 14px;
 }
 
 .progress-bar-b {
     height: 20px;
-    /* Ajusta la altura */
     background-color: #1f4de6;
-    /* Color verde */
     border-radius: 12px 0 0 12px;
-    /* Bordes redondeados solo en la izquierda */
     display: flex;
     align-items: center;
     justify-content: center;
     transition: width 0.4s ease;
     color: white;
-    /* Texto blanco dentro de la barra */
     font-weight: bold;
     font-size: 14px;
 }
 
 .progress-text {
     padding: 0 10px;
-    /* Espacio interno para el texto */
+}
+
+.datos-historias {
+    color: #7ABF5A;
 }
 </style>

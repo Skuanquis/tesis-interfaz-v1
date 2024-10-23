@@ -66,18 +66,77 @@ export const eliminarSubespecialidad = (id_subespecialidad) => {
   return api.delete(`/subespecialidades/${id_subespecialidad}`)
 }
 
-export const obtenerCategoriasImagenologia = () => {
-  return api.get('/categorias-imagenologia')
+export const obtenerCategoriasConImagenologias = () => {
+  return api.get(`/configuracion-imagenologias`)
 }
 
-export const agregarCategoriaImagenologia = (data) => {
-  return api.post('/categorias-imagenologia', data)
+export const eliminarImagenologia = (id_imagenologia) => {
+  return api.delete(`/configuracion-imagenologias/${id_imagenologia}`)
 }
 
-export const actualizarCategoriaImagenologia = (id_categoria_imagenologia, data) => {
-  return api.put(`/categorias-imagenologia/${id_categoria_imagenologia}`, data)
+export const actualizarImagenologia = (id_imagenologia, data) => {
+  return api.put(`/configuracion-imagenologias/${id_imagenologia}`, {
+    nombre: data.nombre
+  })
 }
 
-export const eliminarCategoriaImagenologia = (id_categoria_imagenologia) => {
-  return api.delete(`/categorias-imagenologia/${id_categoria_imagenologia}`)
+export const agregarImagenologia = (data) => {
+  return api.post(`/configuracion-imagenologias`, {
+    id_categoria_imagenologia: data.id_categoria_imagenologia,
+    nombre: data.nombre
+  })
+}
+
+export const agregarCategoriaConImagenologias = (data) => {
+  return api.post(`/configuracion-imagenologias-con-categoria`, data)
+}
+
+export const obtenerCategoriasConProcedimientos = () => {
+  return api.get(`/configuracion-procedimientos`)
+}
+
+export const eliminarProcedimiento = (id_procedimiento) => {
+  return api.delete(`/configuracion-procedimientos/${id_procedimiento}`)
+}
+
+export const actualizarProcedimiento = (id_procedimiento, data) => {
+  return api.put(`/configuracion-procedimientos/${id_procedimiento}`, {
+    nombre: data.nombre
+  })
+}
+
+export const agregarProcedimiento = (data) => {
+  return api.post(`/configuracion-procedimientos`, {
+    id_categoria_procedimiento: data.id_categoria_procedimiento,
+    nombre: data.nombre
+  })
+}
+
+export const agregarCategoriaConProcedimientos = (data) => {
+  return api.post(`/configuracion-procedimientos-con-categoria`, data)
+}
+
+export const obtenerCategoriasConSubcategorias = () => {
+  return api.get(`/configuracion-analisis`)
+}
+
+export const eliminarSubcategoria = (id_subcategoria_analisis) => {
+  return api.delete(`/configuracion-analisis/${id_subcategoria_analisis}`)
+}
+
+export const actualizarSubcategoria = (id_subcategoria_analisis, data) => {
+  return api.put(`/configuracion-analisis/${id_subcategoria_analisis}`, {
+    nombre_subcategoria: data.nombre_subcategoria
+  })
+}
+
+export const agregarSubcategoria = (data) => {
+  return api.post(`/configuracion-analisis`, {
+    id_categoria_analisis: data.id_categoria_analisis,
+    nombre_subcategoria: data.nombre_subcategoria
+  })
+}
+
+export const agregarCategoriaConSubcategorias = (data) => {
+  return api.post(`/configuracion-analisis-con-categoria`, data)
 }

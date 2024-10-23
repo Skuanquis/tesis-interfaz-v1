@@ -31,12 +31,14 @@ function onDialogHide() {
             <div class="col md:col-8 pt-1">
                 <h5>Monitor de Signos Vitales</h5>
             </div>
-            <div class="col md:col-4"><Button label="Habilitar"></Button></div>
+            <div class="col md:col-4"><Button style="background-color: #7ABF5A; border: 0px" label="Habilitar"></Button>
+            </div>
         </div>
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
-                <Button label="Ok" @click="closeDialog" />
+                <Button style="background-color: #BAC8D9; border: 0px" label="Ok" @click="closeDialog"
+                    icon="pi pi-check" />
             </div>
         </div>
     </Dialog>
@@ -88,7 +90,7 @@ function onDialogHide() {
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 

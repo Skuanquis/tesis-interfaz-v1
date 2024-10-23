@@ -7,7 +7,10 @@ import {
     actualizarDiagnostico, agregarCategoriaConDiagnosticos,
     obtenerMedicamentosPorCategoria, eliminarMedicamento, agregarMedicamento, actualizarMedicamento, agregarCategoriaConMedicamentos,
     obtenerSubespecialidades, agregarSubespecialidad, actualizarSubespecialidad, eliminarSubespecialidad,
-    obtenerCategoriasImagenologia, agregarCategoriaImagenologia, actualizarCategoriaImagenologia, eliminarCategoriaImagenologia
+    obtenerCategoriasConImagenologias, eliminarImagenologia, agregarImagenologia,
+    actualizarImagenologia, agregarCategoriaConImagenologias,
+    obtenerCategoriasConProcedimientos, eliminarProcedimiento, actualizarProcedimiento, agregarProcedimiento, agregarCategoriaConProcedimientos,
+    obtenerCategoriasConSubcategorias, eliminarSubcategoria, agregarSubcategoria, actualizarSubcategoria, agregarCategoriaConSubcategorias
 } from '@/services/configuracionService';
 import { useToast } from 'primevue/usetoast';
 import FloatLabel from 'primevue/floatlabel';
@@ -350,86 +353,378 @@ onMounted(() => {
     obtenerListaSubespecialidades();
 });
 
-const categoriasImagenologia = ref([]);
-const mostrarDialogoImagenologia = ref(false);
-const esEditarImagenologia = ref(false);
-const categoriaActualImagenologia = ref({
-    id_categoria_imagenologia: null,
-    nombre: ''
+// Variable para almacenar las categorías con sus imagenologías
+const imagenologiasPorCategoria = ref({});
+
+// Diálogo para agregar nueva categoría
+const dialogoImagenologia = ref(false);
+const nuevaCategoriaImagenologia = ref({
+    nombre: '',
+    imagenologias: [{ nombre: '' }]
 });
 
-const obtenerListaCategorias = async () => {
+// Función para obtener las categorías con sus imagenologías desde la API
+const obtenerImagenologias = async () => {
     try {
-        const response = await obtenerCategoriasImagenologia();
-        categoriasImagenologia.value = response.data;
+        const response = await obtenerCategoriasConImagenologias();
+        imagenologiasPorCategoria.value = response.data; // Asigna la respuesta de la API a la variable
     } catch (error) {
-        console.error("Error al obtener categorías de imagenología", error);
-        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudo cargar la lista de categorías', life: 3000 });
+        console.error("Error al obtener imagenologías por categoría", error);
+        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudieron cargar las imagenologías', life: 3000 });
     }
 };
 
-const abrirDialogoAgregarImagenologia = () => {
-    esEditarImagenologia.value = false;
-    categoriaActualImagenologia.value = {
-        id_categoria_imagenologia: null,
-        nombre: ''
-    };
-    mostrarDialogoImagenologia.value = true;
-};
-
-const abrirDialogoEditarImagenologia = (categoria) => {
-    esEditarImagenologia.value = true;
-    categoriaActualImagenologia.value = { ...categoria };
-    mostrarDialogoImagenologia.value = true;
-};
-
-const guardarCategoriaImagenologia = async () => {
+// Función para eliminar una imagenología
+const eliminarRegistroImagenologia = async (id_imagenologia) => {
     try {
-        if (!categoriaActualImagenologia.value.nombre.trim()) {
+        await eliminarImagenologia(id_imagenologia);
+        for (const categoria in imagenologiasPorCategoria.value) {
+            const categoriaData = imagenologiasPorCategoria.value[categoria];
+            categoriaData.imagenologias = categoriaData.imagenologias.filter(i => i.id_imagenologia !== id_imagenologia);
+        }
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Imagenología eliminada correctamente', life: 3000 });
+    } catch (error) {
+        console.error("Error al eliminar imagenología", error);
+        const errorMsg = error.response?.data?.error || 'No se pudo eliminar la imagenología';
+        toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
+    }
+};
+
+// Función para agregar un nuevo campo de imagenología
+const agregarNuevoCampoImagenologia = (categoria) => {
+    const categoriaData = imagenologiasPorCategoria.value[categoria];
+    if (!categoriaData.imagenologias) {
+        categoriaData.imagenologias = [];
+    }
+    categoriaData.imagenologias.push({ id_imagenologia: null, imagenologia: '' });
+    toast.add({ severity: "info", summary: 'Nuevo', detail: `Campo agregado para nueva imagenología en ${categoria}`, life: 3000 });
+};
+
+// Guardar cambios en las imagenologías
+const guardarCambiosImagenologia = async () => {
+    try {
+        for (const categoria in imagenologiasPorCategoria.value) {
+            const categoriaData = imagenologiasPorCategoria.value[categoria];
+            const id_categoria_imagenologia = categoriaData.id_categoria_imagenologia;
+            const imagenologias = categoriaData.imagenologias;
+
+            for (const imagenologia of imagenologias) {
+                if (!imagenologia.imagenologia || imagenologia.imagenologia.trim() === "") {
+                    console.warn("El nombre de la imagenología está vacío, no se procesará.");
+                    continue;
+                }
+
+                if (imagenologia.id_imagenologia) {
+                    await actualizarImagenologia(imagenologia.id_imagenologia, { nombre: imagenologia.imagenologia });
+                } else {
+                    const response = await agregarImagenologia({ id_categoria_imagenologia, nombre: imagenologia.imagenologia });
+                    imagenologia.id_imagenologia = response.data.id;
+                }
+            }
+        }
+
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Se guardaron los cambios correctamente', life: 3000 });
+    } catch (error) {
+        console.error("Error al guardar cambios", error);
+        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudieron guardar los cambios', life: 3000 });
+    }
+};
+
+// Abrir diálogo para agregar nueva categoría de imagenología
+const abrirDialogoCategoriaImagenologia = () => {
+    nuevaCategoriaImagenologia.value = {
+        nombre: '',
+        imagenologias: [{ nombre: '' }]
+    };
+    dialogoImagenologia.value = true;
+};
+
+// Agregar nueva imagenología en el diálogo
+const agregarImagenologiaEnDialogo = () => {
+    nuevaCategoriaImagenologia.value.imagenologias.push({ nombre: '' });
+};
+
+// Eliminar imagenología en el diálogo
+const eliminarImagenologiaEnDialogo = (index) => {
+    if (nuevaCategoriaImagenologia.value.imagenologias.length > 1) {
+        nuevaCategoriaImagenologia.value.imagenologias.splice(index, 1);
+    } else {
+        toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe tener al menos una imagenología', life: 3000 });
+    }
+};
+
+// Guardar nueva categoría con imagenologías
+const guardarNuevaCategoriaImagenologia = async () => {
+    try {
+        const imagenologiasNombres = nuevaCategoriaImagenologia.value.imagenologias.map(i => i.nombre.trim()).filter(n => n !== '');
+        if (!nuevaCategoriaImagenologia.value.nombre.trim()) {
             toast.add({ severity: "warn", summary: 'Advertencia', detail: 'El nombre de la categoría es requerido', life: 3000 });
             return;
         }
-        if (esEditarImagenologia.value) {
-            // Actualizar categoría
-            await actualizarCategoriaImagenologia(categoriaActualImagenologia.value.id_categoria_imagenologia, { nombre: categoriaActualImagenologia.value.nombre });
-            const index = categoriasImagenologia.value.findIndex(c => c.id_categoria_imagenologia === categoriaActualImagenologia.value.id_categoria_imagenologia);
-            if (index !== -1) {
-                categoriasImagenologia.value[index].nombre = categoriaActualImagenologia.value.nombre;
-            }
-            toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría actualizada correctamente', life: 3000 });
-        } else {
-            // Agregar nueva categoría
-            const response = await agregarCategoriaImagenologia({ nombre: categoriaActualImagenologia.value.nombre });
-            categoriasImagenologia.value.push({
-                id_categoria_imagenologia: response.data.id_categoria_imagenologia,
-                nombre: categoriaActualImagenologia.value.nombre
-            });
-            toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría agregada correctamente', life: 3000 });
+        if (imagenologiasNombres.length === 0) {
+            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe proporcionar al menos una imagenología válida', life: 3000 });
+            return;
         }
-        mostrarDialogoImagenologia.value = false;
+
+        const data = {
+            nombre: nuevaCategoriaImagenologia.value.nombre.trim(),
+            imagenologias: imagenologiasNombres
+        };
+        const response = await agregarCategoriaConImagenologias(data);
+        const id_categoria_imagenologia = response.data.id_categoria_imagenologia;
+        imagenologiasPorCategoria.value[nuevaCategoriaImagenologia.value.nombre.trim()] = {
+            id_categoria_imagenologia,
+            imagenologias: imagenologiasNombres.map((nombre, index) => ({
+                id_imagenologia: response.data.ids_imagenologias[index],
+                imagenologia: nombre
+            }))
+        };
+
+        dialogoImagenologia.value = false;
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría e imagenologías agregadas correctamente', life: 3000 });
     } catch (error) {
-        console.error("Error al guardar categoría", error);
-        const errorMsg = error.response?.data?.error || 'No se pudo guardar la categoría';
+        console.error("Error al agregar categoría e imagenologías", error);
+        const errorMsg = error.response?.data?.error || 'No se pudo agregar la categoría e imagenologías';
         toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
     }
 };
 
-const eliminarRegistroImagenologia = async (id_categoria_imagenologia) => {
-    try {
-        await eliminarCategoriaImagenologia(id_categoria_imagenologia);
-        categoriasImagenologia.value = categoriasImagenologia.value.filter(c => c.id_categoria_imagenologia !== id_categoria_imagenologia);
-        toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría eliminada correctamente', life: 3000 });
-    } catch (error) {
-        console.error("Error al eliminar categoría", error);
-        const errorMsg = error.response?.data?.error || 'No se pudo eliminar la categoría';
-        toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
-    }
-};
+onMounted(obtenerImagenologias);
 
-onMounted(() => {
-    obtenerListaCategorias();
+const procedimientosPorCategoria = ref({});
+const dialogoProcedimiento = ref(false);
+const nuevaCategoriaProcedimiento = ref({
+    categoria: '',
+    procedimientos: [{ nombre: '' }]
 });
 
+const eliminarRegistroProcedimiento = async (id_procedimiento) => {
+    try {
+        await eliminarProcedimiento(id_procedimiento);
+        for (const categoria in procedimientosPorCategoria.value) {
+            const categoriaData = procedimientosPorCategoria.value[categoria];
+            categoriaData.procedimientos = categoriaData.procedimientos.filter(p => p.id_procedimiento !== id_procedimiento);
+        }
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Se eliminó el procedimiento', life: 3000 });
+    } catch (error) {
+        console.error("Error al eliminar procedimiento", error);
+        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudo eliminar el procedimiento', life: 3000 });
+    }
+};
+
+const agregarNuevoCampoProcedimiento = (categoria) => {
+    const categoriaData = procedimientosPorCategoria.value[categoria];
+    categoriaData.procedimientos.push({ id_procedimiento: null, nombre: '' });
+};
+
+const guardarCambiosProcedimiento = async () => {
+    try {
+        for (const categoria in procedimientosPorCategoria.value) {
+            const categoriaData = procedimientosPorCategoria.value[categoria];
+            const id_categoria_procedimiento = categoriaData.id_categoria_procedimiento;
+
+            for (const procedimiento of categoriaData.procedimientos) {
+                if (procedimiento.id_procedimiento) {
+                    await actualizarProcedimiento(procedimiento.id_procedimiento, { nombre: procedimiento.nombre });
+                } else {
+                    const response = await agregarProcedimiento({ id_categoria_procedimiento, nombre: procedimiento.nombre });
+                    procedimiento.id_procedimiento = response.data.id;
+                }
+            }
+        }
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Se guardaron los cambios correctamente', life: 3000 });
+    } catch (error) {
+        console.error("Error al guardar cambios", error);
+        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudieron guardar los cambios', life: 3000 });
+    }
+};
+
+const abrirDialogoCategoriaProcedimiento = () => {
+    nuevaCategoriaProcedimiento.value = {
+        categoria: '',
+        procedimientos: [{ nombre: '' }]
+    };
+    dialogoProcedimiento.value = true;
+};
+
+const agregarProcedimientoEnDialogo = () => {
+    nuevaCategoriaProcedimiento.value.procedimientos.push({ nombre: '' });
+};
+
+const eliminarProcedimientoEnDialogo = (index) => {
+    if (nuevaCategoriaProcedimiento.value.procedimientos.length > 1) {
+        nuevaCategoriaProcedimiento.value.procedimientos.splice(index, 1);
+    } else {
+        toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe haber al menos un procedimiento', life: 3000 });
+    }
+};
+
+const guardarNuevaCategoriaProcedimiento = async () => {
+    try {
+        const procedimientosNombres = nuevaCategoriaProcedimiento.value.procedimientos.map(p => p.nombre.trim()).filter(n => n !== '');
+        if (!nuevaCategoriaProcedimiento.value.categoria.trim()) {
+            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'El nombre de la categoría es requerido', life: 3000 });
+            return;
+        }
+        if (procedimientosNombres.length === 0) {
+            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe proporcionar al menos un procedimiento válido', life: 3000 });
+            return;
+        }
+        const data = {
+            categoria: nuevaCategoriaProcedimiento.value.categoria.trim(),
+            procedimientos: procedimientosNombres
+        };
+        const response = await agregarCategoriaConProcedimientos(data);
+        const id_categoria_procedimiento = response.data.id_categoria_procedimiento;
+        procedimientosPorCategoria.value[nuevaCategoriaProcedimiento.value.categoria.trim()] = {
+            id_categoria_procedimiento,
+            procedimientos: procedimientosNombres.map((nombre, index) => ({
+                id_procedimiento: response.data.result.insertId + index,
+                nombre
+            }))
+        };
+
+        dialogoProcedimiento.value = false;
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría y procedimientos agregados correctamente', life: 3000 });
+    } catch (error) {
+        console.error("Error al agregar categoría y procedimientos", error);
+        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudo agregar la categoría y procedimientos', life: 3000 });
+    }
+};
+
+onMounted(async () => {
+    try {
+        const response = await obtenerCategoriasConProcedimientos();
+        procedimientosPorCategoria.value = response.data;
+    } catch (error) {
+        console.error("Error al obtener los procedimientos por categoría", error);
+        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudo cargar los procedimientos', life: 3000 });
+    }
+});
+
+const categoriasConSubcategorias = ref({});
+const dialogoAnalisis = ref(false);
+const nuevaCategoriaAnalisis = ref({
+    categoria: '',
+    subcategorias: [{ nombre: '' }]
+});
+
+const eliminarRegistroSubcategoria = async (id_subcategoria_analisis) => {
+    try {
+        await eliminarSubcategoria(id_subcategoria_analisis);
+        for (const categoria in categoriasConSubcategorias.value) {
+            const categoriaData = categoriasConSubcategorias.value[categoria];
+            categoriaData.subcategorias = categoriaData.subcategorias.filter(s => s.id_subcategoria_analisis !== id_subcategoria_analisis);
+        }
+        toast.add({ severity: "success", summary: 'Éxito', detail: `Se eliminó la subcategoría`, life: 3000 });
+    } catch (error) {
+        console.error("Error al eliminar subcategoría", error);
+        const errorMsg = error.response?.data?.error || 'No se pudo eliminar la subcategoría';
+        toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
+    }
+};
+
+const agregarNuevoCampoSubcategoria = (categoria) => {
+    const categoriaData = categoriasConSubcategorias.value[categoria];
+    if (!categoriaData.subcategorias) {
+        categoriaData.subcategorias = [];
+    }
+    categoriaData.subcategorias.push({ id_subcategoria_analisis: null, nombre_subcategoria: '' });
+    toast.add({ severity: "info", summary: 'Nuevo', detail: `Campo agregado para nueva subcategoría en ${categoria}`, life: 3000 });
+};
+
+const guardarCambiosAnalisis = async () => {
+    try {
+        for (const categoria in categoriasConSubcategorias.value) {
+            const categoriaData = categoriasConSubcategorias.value[categoria];
+            const id_categoria_analisis = categoriaData.id_categoria_analisis;
+            const subcategorias = categoriaData.subcategorias;
+
+            for (const subcategoria of subcategorias) {
+                if (!subcategoria.nombre_subcategoria || subcategoria.nombre_subcategoria.trim() === "") {
+                    console.warn("El nombre de la subcategoría está vacío, no se procesará.");
+                    continue;
+                }
+
+                if (subcategoria.id_subcategoria_analisis) {
+                    await actualizarSubcategoria(subcategoria.id_subcategoria_analisis, { nombre_subcategoria: subcategoria.nombre_subcategoria });
+                } else {
+                    const response = await agregarSubcategoria({ id_categoria_analisis, nombre_subcategoria: subcategoria.nombre_subcategoria });
+                    subcategoria.id_subcategoria_analisis = response.data.id_subcategoria_analisis;
+                }
+            }
+        }
+
+        toast.add({ severity: "success", summary: 'Éxito', detail: `Se guardaron los cambios correctamente`, life: 3000 });
+    } catch (error) {
+        console.error("Error al guardar cambios", error);
+        toast.add({ severity: "error", summary: 'Error', detail: `No se pudieron guardar los cambios`, life: 3000 });
+    }
+};
+
+const abrirDialogoCategoriaAnalisis = () => {
+    nuevaCategoriaAnalisis.value = {
+        categoria: '',
+        subcategorias: [{ nombre: '' }]
+    };
+    dialogoAnalisis.value = true;
+};
+
+const agregarSubcategoriaEnDialogo = () => {
+    nuevaCategoriaAnalisis.value.subcategorias.push({ nombre: '' });
+};
+
+const eliminarSubcategoriaEnDialogo = (index) => {
+    if (nuevaCategoriaAnalisis.value.subcategorias.length > 1) {
+        nuevaCategoriaAnalisis.value.subcategorias.splice(index, 1);
+    } else {
+        toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe tener al menos una subcategoría', life: 3000 });
+    }
+};
+
+const guardarNuevaCategoriaAnalisis = async () => {
+    try {
+        const subcategoriasNombres = nuevaCategoriaAnalisis.value.subcategorias.map(s => s.nombre.trim()).filter(n => n !== '');
+        if (!nuevaCategoriaAnalisis.value.categoria.trim()) {
+            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'El nombre de la categoría es requerido', life: 3000 });
+            return;
+        }
+        if (subcategoriasNombres.length === 0) {
+            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe proporcionar al menos una subcategoría válida', life: 3000 });
+            return;
+        }
+        const data = {
+            categoria: nuevaCategoriaAnalisis.value.categoria.trim(),
+            subcategorias: subcategoriasNombres
+        };
+        const response = await agregarCategoriaConSubcategorias(data);
+        const id_categoria_analisis = response.data.id_categoria_analisis;
+        categoriasConSubcategorias.value[nuevaCategoriaAnalisis.value.categoria.trim()] = {
+            id_categoria_analisis,
+            subcategorias: subcategoriasNombres.map((nombre, index) => ({
+                id_subcategoria_analisis: response.data.ids_subcategorias[index],
+                nombre_subcategoria: nombre
+            }))
+        };
+
+        dialogoAnalisis.value = false;
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría y subcategorías agregadas correctamente', life: 3000 });
+    } catch (error) {
+        console.error("Error al agregar categoría y subcategorías", error);
+        const errorMsg = error.response?.data?.error || 'No se pudo agregar la categoría y subcategorías';
+        toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
+    }
+};
+
+onMounted(async () => {
+    try {
+        const response = await obtenerCategoriasConSubcategorias();
+        categoriasConSubcategorias.value = response.data;
+    } catch (error) {
+        console.error("Error al obtener las categorías con subcategorías", error);
+        toast.add({ severity: "error", summary: 'Error', detail: `No se pudo cargar las categorías`, life: 3000 });
+    }
+});
 
 </script>
 
@@ -644,47 +939,246 @@ onMounted(() => {
             </StepperPanel>
 
 
-            <StepperPanel header="Imagenologia Disponible">
-                <template #content="{ prevCallback }">
-                    <div v-for="(categoria, index) in categoriasImagenologia" :key="index" class="col-12">
-                        <div class="grid align-items-center">
-                            <div class="col md:col-8">
-                                <span>{{ categoria.nombre }}</span>
-                            </div>
-                            <div class="col md:col-4 text-right">
-                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-text" aria-label="Editar"
-                                    @click="abrirDialogoEditarImagenologia(categoria)" />
-                                <Button icon="pi pi-times" class="p-button-rounded p-button-text p-button-danger"
-                                    aria-label="Eliminar"
-                                    @click="eliminarRegistroImagenologia(categoria.id_categoria_imagenologia)" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 text-center" style="margin-top: 1rem;">
-                        <Button label="Añadir Categoría" icon="pi pi-plus" severity="help" raised
-                            @click="abrirDialogoAgregarImagenologia" />
-                    </div>
+            <StepperPanel header="Imagenologías Disponibles">
+                <template #content="{ prevCallback, nextCallback }">
+                    <Accordion>
+                        <AccordionTab v-for="(categoriaData, categoria) in imagenologiasPorCategoria" :key="categoria"
+                            :header="categoria">
+                            <div class="grid p-fluid">
 
-                    <Dialog v-model:visible="mostrarDialogoImagenologia" modal
-                        :header="esEditarImagenologia ? 'Editar Categoría' : 'Añadir Categoría'"
+                                <div v-for="(imagenologia, index) in categoriaData.imagenologias" :key="index"
+                                    class="col-12">
+                                    <div class="grid">
+                                        <div class="col md:col-10">
+                                            <InputText v-model="imagenologia.imagenologia" />
+                                        </div>
+                                        <div class="col md:col-2 text-center">
+                                            <Button icon="pi pi-times" severity="danger" text raised rounded
+                                                aria-label="Eliminar"
+                                                @click="eliminarRegistroImagenologia(imagenologia.id_imagenologia)" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 text-center">
+                                    <Button icon="pi pi-plus" text raised rounded aria-label="Agregar"
+                                        @click="agregarNuevoCampoImagenologia(categoria)" />
+                                </div>
+                            </div>
+                        </AccordionTab>
+                    </Accordion>
+
+                    <Dialog v-model:visible="dialogoImagenologia" modal header="Añadir Categoría"
                         :style="{ width: '25rem' }" class="p-fluid">
                         <div>
                             <FloatLabel>
-                                <InputText id="nombre" v-model="categoriaActualImagenologia.nombre"
+                                <InputText id="categoria" v-model="nuevaCategoriaImagenologia.nombre"
                                     autocomplete="off" />
-                                <Label for="nombre">Nombre</Label>
+                                <Label for="categoria">Categoría</Label>
                             </FloatLabel>
+                        </div>
+                        <h6>Imagenologías</h6>
+                        <div v-for="(imagenologia, index) in nuevaCategoriaImagenologia.imagenologias" :key="index"
+                            class="grid align-items-center">
+                            <div class="col md:col-10">
+                                <InputText v-model="imagenologia.nombre" autocomplete="off" />
+                            </div>
+                            <div class="col md:col-2">
+                                <Button icon="pi pi-times" severity="danger" text raised rounded aria-label="Eliminar"
+                                    @click="eliminarImagenologiaEnDialogo(index)" />
+                            </div>
+                        </div>
+                        <div class="col-12 text-center">
+                            <Button icon="pi pi-plus" text raised rounded aria-label="Agregar Imagenología"
+                                @click="agregarImagenologiaEnDialogo" />
                         </div>
                         <div class="col-12 text-center" style="margin-top: 1rem;">
                             <Button label="Guardar" icon="pi pi-save" text raised
-                                @click="guardarCategoriaImagenologia" />
+                                @click="guardarNuevaCategoriaImagenologia" />
                         </div>
                     </Dialog>
 
-
+                    <div class="col-12 p-3" style="margin-top: 2rem;">
+                        <div class="grid  align-items-center justify-content-center">
+                            <div class="px-2 w-15rem m-3 border-round">
+                                <Button label="Guardar Cambios" icon="pi pi-save" severity="success" raised
+                                    @click="guardarCambiosImagenologia" />
+                            </div>
+                            <div class="px-2 w-15rem m-3 border-round">
+                                <Button label="Añadir Categoría" icon="pi pi-plus" severity="help" raised
+                                    @click="abrirDialogoCategoriaImagenologia" />
+                            </div>
+                        </div>
+                    </div>
                     <div class="flex py-4 gap-2">
                         <Button label="Atras" severity="secondary" icon="pi pi-arrow-left" iconPos="left"
                             @click="prevCallback" />
+                        <Button label="Siguiente" severity="info" icon="pi pi-arrow-right" iconPos="right"
+                            @click="nextCallback" />
+                    </div>
+                </template>
+            </StepperPanel>
+
+            <StepperPanel header="Procedimientos Disponibles">
+                <template #content="{ prevCallback, nextCallback }">
+                    <Accordion>
+                        <AccordionTab v-for="(categoriaData, categoria) in procedimientosPorCategoria" :key="categoria"
+                            :header="categoria">
+                            <div class="grid p-fluid">
+                                <!-- Iterar sobre los procedimientos dentro de cada categoría -->
+                                <div v-for="(procedimiento, index) in categoriaData.procedimientos" :key="index"
+                                    class="col-12">
+                                    <div class="grid">
+                                        <div class="col md:col-10">
+                                            <InputText v-model="procedimiento.nombre" />
+                                        </div>
+                                        <div class="col md:col-2 text-center">
+                                            <Button icon="pi pi-times" severity="danger" text raised rounded
+                                                aria-label="Eliminar"
+                                                @click="eliminarRegistroProcedimiento(procedimiento.id_procedimiento)" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Botón para agregar un nuevo procedimiento -->
+                                <div class="col-12 text-center">
+                                    <Button icon="pi pi-plus" text raised rounded aria-label="Agregar"
+                                        @click="agregarNuevoCampoProcedimiento(categoria)" />
+                                </div>
+                            </div>
+                        </AccordionTab>
+                    </Accordion>
+
+                    <!-- Diálogo para añadir nueva categoría -->
+                    <Dialog v-model:visible="dialogoProcedimiento" modal header="Añadir Categoría"
+                        :style="{ width: '25rem' }" class="p-fluid">
+                        <div>
+                            <FloatLabel>
+                                <InputText id="categoria" v-model="nuevaCategoriaProcedimiento.categoria"
+                                    autocomplete="off" />
+                                <Label for="categoria">Categoría</Label>
+                            </FloatLabel>
+                        </div>
+                        <h6>Procedimientos</h6>
+                        <div v-for="(procedimiento, index) in nuevaCategoriaProcedimiento.procedimientos" :key="index"
+                            class="grid align-items-center">
+                            <div class="col md:col-10">
+                                <InputText v-model="procedimiento.nombre" autocomplete="off" />
+                            </div>
+                            <div class="col md:col-2">
+                                <Button icon="pi pi-times" severity="danger" text raised rounded aria-label="Eliminar"
+                                    @click="eliminarProcedimientoEnDialogo(index)" />
+                            </div>
+                        </div>
+                        <div class="col-12 text-center">
+                            <Button icon="pi pi-plus" text raised rounded aria-label="Agregar Procedimiento"
+                                @click="agregarProcedimientoEnDialogo" />
+                        </div>
+                        <div class="col-12 text-center" style="margin-top: 1rem;">
+                            <Button label="Guardar" icon="pi pi-save" text raised
+                                @click="guardarNuevaCategoriaProcedimiento" />
+                        </div>
+                    </Dialog>
+
+                    <!-- Botones para Guardar cambios y Añadir categoría -->
+                    <div class="col-12 p-3" style="margin-top: 2rem;">
+                        <div class="grid align-items-center justify-content-center">
+                            <div class="px-2 w-15rem m-3 border-round">
+                                <Button label="Guardar Cambios" icon="pi pi-save" severity="success" raised
+                                    @click="guardarCambiosProcedimiento" />
+                            </div>
+                            <div class="px-2 w-15rem m-3 border-round">
+                                <Button label="Añadir Categoría" icon="pi pi-plus" severity="help" raised
+                                    @click="abrirDialogoCategoriaProcedimiento" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex py-4 gap-2">
+                        <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left" iconPos="left"
+                            @click="prevCallback" />
+                        <Button label="Siguiente" severity="info" icon="pi pi-arrow-right" iconPos="right"
+                            @click="nextCallback" />
+                    </div>
+                </template>
+            </StepperPanel>
+
+            <StepperPanel header="Análisis Disponibles">
+                <template #content="{ prevCallback, nextCallback }">
+                    <Accordion>
+                        <AccordionTab v-for="(categoriaData, categoria) in categoriasConSubcategorias" :key="categoria"
+                            :header="categoria">
+                            <div class="grid p-fluid">
+                                <!-- Iterar sobre las subcategorías dentro de cada categoría -->
+                                <div v-for="(subcategoria, index) in categoriaData.subcategorias" :key="index"
+                                    class="col-12">
+                                    <div class="grid">
+                                        <div class="col md:col-10">
+                                            <InputText v-model="subcategoria.nombre_subcategoria" />
+                                        </div>
+                                        <div class="col md:col-2 text-center">
+                                            <Button icon="pi pi-times" severity="danger" text raised rounded
+                                                aria-label="Eliminar"
+                                                @click="eliminarRegistroSubcategoria(subcategoria.id_subcategoria_analisis)" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Botón para agregar una nueva subcategoría -->
+                                <div class="col-12 text-center">
+                                    <Button icon="pi pi-plus" text raised rounded aria-label="Agregar"
+                                        @click="agregarNuevoCampoSubcategoria(categoria)" />
+                                </div>
+                            </div>
+                        </AccordionTab>
+                    </Accordion>
+
+                    <!-- Dialog para añadir nueva categoría con subcategorías -->
+                    <Dialog v-model:visible="dialogoAnalisis" modal header="Añadir Categoría"
+                        :style="{ width: '25rem' }" class="p-fluid">
+                        <div>
+                            <FloatLabel>
+                                <InputText id="categoria" v-model="nuevaCategoriaAnalisis.categoria"
+                                    autocomplete="off" />
+                                <Label for="categoria">Categoría</Label>
+                            </FloatLabel>
+                        </div>
+                        <h6>Subcategorías</h6>
+                        <div v-for="(subcategoria, index) in nuevaCategoriaAnalisis.subcategorias" :key="index"
+                            class="grid align-items-center">
+                            <div class="col md:col-10">
+                                <InputText v-model="subcategoria.nombre" autocomplete="off" />
+                            </div>
+                            <div class="col md:col-2">
+                                <Button icon="pi pi-times" severity="danger" text raised rounded aria-label="Eliminar"
+                                    @click="eliminarSubcategoriaEnDialogo(index)" />
+                            </div>
+                        </div>
+                        <div class="col-12 text-center">
+                            <Button icon="pi pi-plus" text raised rounded aria-label="Agregar Subcategoría"
+                                @click="agregarSubcategoriaEnDialogo" />
+                        </div>
+                        <div class="col-12 text-center" style="margin-top: 1rem;">
+                            <Button label="Guardar" icon="pi pi-save" text raised
+                                @click="guardarNuevaCategoriaAnalisis" />
+                        </div>
+                    </Dialog>
+
+                    <!-- Botones para Guardar cambios y Añadir categoría -->
+                    <div class="col-12 p-3" style="margin-top: 2rem;">
+                        <div class="grid align-items-center justify-content-center">
+                            <div class="px-2 w-15rem m-3 border-round">
+                                <Button label="Guardar Cambios" icon="pi pi-save" severity="success" raised
+                                    @click="guardarCambiosAnalisis" />
+                            </div>
+                            <div class="px-2 w-15rem m-3 border-round">
+                                <Button label="Añadir Categoría" icon="pi pi-plus" severity="help" raised
+                                    @click="abrirDialogoCategoriaAnalisis" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex py-4 gap-2">
+                        <Button label="Atras" severity="secondary" icon="pi pi-arrow-left" iconPos="left"
+                            @click="prevCallback" />
+                        <Button label="Siguiente" severity="info" icon="pi pi-arrow-right" iconPos="right"
+                            @click="nextCallback" />
                     </div>
                 </template>
             </StepperPanel>

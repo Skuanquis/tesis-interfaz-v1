@@ -310,9 +310,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Cardiovascular:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisCardiovascular && !loadingCardiovascular" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisCardiovascular && !loadingCardiovascular" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'cardiovascular')" />
-                    <Button v-if="loadingCardiovascular" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingCardiovascular"
+                        label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisCardiovascular">{{
@@ -322,9 +324,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Endocrino:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisEndocrino && !loadingEndocrino" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisEndocrino && !loadingEndocrino" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'endocrino')" />
-                    <Button v-if="loadingEndocrino" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingEndocrino" label="Obteniendo..."
+                        icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisEndocrino">{{ anamnesisEndocrino?.endocrino || '' }}
@@ -334,10 +338,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Gastrointestinal:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisGastrointestinal && !loadingGastrointestinal" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisGastrointestinal && !loadingGastrointestinal" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'gastrointestinal')" />
-                    <Button v-if="loadingGastrointestinal" label="Obteniendo..." icon="pi pi-spin pi-spinner"
-                        disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingGastrointestinal"
+                        label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisGastrointestinal">{{
@@ -347,9 +352,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Genitourinario:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisGenitourinario && !loadingGenitourinario" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisGenitourinario && !loadingGenitourinario" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'genitourinario')" />
-                    <Button v-if="loadingGenitourinario" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingGenitourinario"
+                        label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisGenitourinario">{{
@@ -359,9 +366,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Respiratorio:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisRespiratorio && !loadingRespiratorio" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisRespiratorio && !loadingRespiratorio" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'respiratorio')" />
-                    <Button v-if="loadingRespiratorio" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingRespiratorio"
+                        label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisRespiratorio">{{ anamnesisRespiratorio?.respiratorio
@@ -371,9 +380,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Neurologico:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisNeurologico && !loadingNeurologico" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisNeurologico && !loadingNeurologico" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'neurologico')" />
-                    <Button v-if="loadingNeurologico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingNeurologico"
+                        label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisNeurologico">{{ anamnesisNeurologico?.neurologico ||
@@ -383,9 +394,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Locomotor:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisLocomotor && !loadingLocomotor" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisLocomotor && !loadingLocomotor" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'locomotor')" />
-                    <Button v-if="loadingLocomotor" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingLocomotor" label="Obteniendo..."
+                        icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisLocomotor">{{ anamnesisLocomotor?.locomotor || '' }}
@@ -395,9 +408,10 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Hematico:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisHematico && !loadingHematico" label="Realizar"
-                        @click="() => fetchPacienteData('anamnesis', 'hematico')" />
-                    <Button v-if="loadingHematico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="!anamnesisHematico && !loadingHematico"
+                        label="Realizar" @click="() => fetchPacienteData('anamnesis', 'hematico')" />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingHematico" label="Obteniendo..."
+                        icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisHematico">{{ anamnesisHematico?.hematico || '' }}</p>
@@ -406,9 +420,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Psiquiatrico:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisPsiquiatrico && !loadingPsiquiatrico" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisPsiquiatrico && !loadingPsiquiatrico" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'psiquiatrico')" />
-                    <Button v-if="loadingPsiquiatrico" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingPsiquiatrico"
+                        label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisPsiquiatrico">{{ anamnesisPsiquiatrico?.psiquiatrico
@@ -418,9 +434,11 @@ function onDialogHide() {
             <div class="grid">
                 <div class="col md:col-8 pt-3 text-lg"><strong>Sistema Tegumentario:</strong></div>
                 <div class="col md:col-4">
-                    <Button v-if="!anamnesisTegumentario && !loadingTegumentario" label="Realizar"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="!anamnesisTegumentario && !loadingTegumentario" label="Realizar"
                         @click="() => fetchPacienteData('anamnesis', 'tegumentario')" />
-                    <Button v-if="loadingTegumentario" label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="loadingTegumentario"
+                        label="Obteniendo..." icon="pi pi-spin pi-spinner" disabled />
                 </div>
                 <div class="col">
                     <p class="text-justify text-lg" v-if="anamnesisTegumentario">{{ anamnesisTegumentario?.tegumentario
@@ -432,7 +450,8 @@ function onDialogHide() {
                 <div class="col md:col-3"></div>
                 <div class="col md:col-3"></div>
                 <div class="col md:col-3">
-                    <Button label="Ok" @click="closeDialog" icon="pi pi-check" />
+                    <Button style="background-color: #BAC8D9; border: 0px" label="Ok" @click="closeDialog"
+                        icon="pi pi-check" />
                 </div>
             </div>
         </template>
@@ -447,7 +466,7 @@ function onDialogHide() {
 .gestion-title {
     font-size: 2em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
 }
 
 .total-casos {
@@ -464,7 +483,7 @@ function onDialogHide() {
 
 .info-data-dialog {
     font-size: 1.2em;
-    color: #cfcfcf;
+    color: #A8DCE7;
 }
 
 .case-data {
@@ -480,14 +499,14 @@ function onDialogHide() {
 .month-name {
     font-size: 1.1em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 

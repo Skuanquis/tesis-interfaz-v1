@@ -4,7 +4,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { obtenerSimulacion, obtenerAccionesSimulacion, actualizarPuntajePorcentaje } from '@/services/simulacionService';
-import { obtenerPuntajes, obtenerPuntajeTotal, obtenerPuntajeAccionSimulacion } from '@/services/casoService'
+import { obtenerPuntajes, obtenerPuntajeTotal, obtenerPuntajeAccionSimulacion, obtenerPuntaje } from '@/services/casoService'
 const store = useStore();
 const router = useRouter();
 const display = ref(false);
@@ -78,7 +78,7 @@ const fetchPuntaje = async () => {
         if (response.data && response.data.length > 0) {
             puntajes.value = response.data;
         } else {
-            puntajes.value = [{}]; // En caso de que no haya datos
+            puntajes.value = [{}];
         }
     } catch (error) {
         console.error('Error al obtener el puntaje', error);
@@ -92,43 +92,100 @@ const fetchPuntajeAccion = async () => {
             puntajeAccion.value = response.data;
             console.log("Accion: ", puntajeAccion.value[0].cantidad)
         } else {
-            puntajeAccion.value = [{}]; // En caso de que no haya datos
+            puntajeAccion.value = [{}];
         }
     } catch (error) {
         console.error('Error al obtener el puntaje', error);
     }
 };
 
+
 const calcularYActualizarPuntaje = async () => {
     try {
+        const valoresPuntajeResponse = await obtenerPuntaje(id_historia_clinica);
+        const valoresPuntaje = valoresPuntajeResponse.data;
+
+        const codigos = ['A', 'B', 'C', 'D', 'E'];
+        const mapaValoresPuntaje = {};
+        codigos.forEach(codigo => {
+            const item = valoresPuntaje.find(v => v.codigo === codigo);
+            mapaValoresPuntaje[codigo] = item ? parseInt(item.valor) : 0;
+        });
         const totalPuntajesResponse = await obtenerPuntajeTotal(id_historia_clinica);
         const totalPuntajes = totalPuntajesResponse.data[0];
 
         const puntajesAccionResponse = await obtenerPuntajeAccionSimulacion(id_simulacion);
         const puntajesAccion = puntajesAccionResponse.data;
 
-        const totalA = totalPuntajes.total_puntaje_a || 1;
-        const totalB = totalPuntajes.total_puntaje_b || 1;
-        const totalC = totalPuntajes.total_puntaje_c || 1;
+        const accionesObtenidasPorCodigo = {};
+        codigos.forEach(codigo => {
+            const obtenido = puntajesAccion.find(p => p.puntaje === codigo)?.cantidad || 0;
+            accionesObtenidasPorCodigo[codigo] = parseInt(obtenido);
+        });
 
-        const obtenidosA = puntajesAccion.find(p => p.puntaje === 'A')?.cantidad || 0;
-        const obtenidosB = puntajesAccion.find(p => p.puntaje === 'B')?.cantidad || 0;
-        const obtenidosC = puntajesAccion.find(p => p.puntaje === 'C')?.cantidad || 0;
+        const tieneA = accionesObtenidasPorCodigo['A'] > 0;
+        const tieneB = accionesObtenidasPorCodigo['B'] > 0;
+        const tieneC = accionesObtenidasPorCodigo['C'] > 0;
+        const tieneD = accionesObtenidasPorCodigo['D'] > 0;
+        const tieneE = accionesObtenidasPorCodigo['E'] > 0;
 
-        const porcentajeA = (obtenidosA / totalA) * 100;
-        const porcentajeB = (obtenidosB / totalB) * 100;
-        const porcentajeC = (obtenidosC / totalC) * 100;
+        const totalAccionesA = parseInt(totalPuntajes.total_puntaje_a) || 0;
+        const valorA = mapaValoresPuntaje['A'] || 0;
+        let puntajeTotalPosible = totalAccionesA * valorA;
 
-        // Calcular el porcentaje total
-        puntajePorcentaje.value = ((porcentajeA + porcentajeB + porcentajeC) / 3).toFixed(2);
+        const accionesARealizadas = accionesObtenidasPorCodigo['A'];
+        let puntajeObtenidoA = accionesARealizadas * valorA;
 
-        // Actualizar el porcentaje en el backend
+        if (puntajeTotalPosible === 0) puntajeTotalPosible = 1;
+
+        let maxPercentageCap = 100;
+        if (tieneA && !tieneB && !tieneC && !tieneD && !tieneE) {
+            maxPercentageCap = 100;
+        } else if ((tieneA || tieneB) && !tieneC && !tieneD && !tieneE) {
+            maxPercentageCap = 90;
+        } else if ((tieneA || tieneB || tieneC) && !tieneD && !tieneE) {
+            maxPercentageCap = 50;
+        } else {
+            maxPercentageCap = 50;
+        }
+
+        let porcentajeInicial = (puntajeObtenidoA / puntajeTotalPosible) * maxPercentageCap;
+
+        let totalPenalizacion = 0;
+        if (tieneD || tieneE) {
+            const penalizacionPorD = 5;
+            const penalizacionPorE = 10;
+
+            totalPenalizacion += accionesObtenidasPorCodigo['D'] * penalizacionPorD;
+            totalPenalizacion += accionesObtenidasPorCodigo['E'] * penalizacionPorE;
+        }
+
+        let porcentajeFinal = porcentajeInicial - totalPenalizacion;
+
+        let puntosExtra = 0;
+        ['B', 'C'].forEach(codigo => {
+            const accionesObtenidas = accionesObtenidasPorCodigo[codigo];
+            const valorPorAccion = mapaValoresPuntaje[codigo] || 0;
+            puntosExtra += accionesObtenidas * valorPorAccion;
+        });
+
+        let porcentajeExtra = (puntosExtra / puntajeTotalPosible) * 100;
+
+        porcentajeFinal += porcentajeExtra;
+
+        if (porcentajeFinal > 100) porcentajeFinal = 100;
+        if (porcentajeFinal < 0) porcentajeFinal = 0;
+
+        puntajePorcentaje.value = porcentajeFinal.toFixed(2);
+
         await actualizarPuntajePorcentaje(id_simulacion, puntajePorcentaje.value);
         console.log('Puntaje porcentaje actualizado exitosamente:', puntajePorcentaje.value);
     } catch (error) {
         console.error('Error al calcular o actualizar el puntaje porcentaje:', error);
     }
 };
+
+
 
 onMounted(() => {
     fetchSimulacionData();
@@ -172,8 +229,8 @@ function onDialogHide() {
     <Dialog header="Resultados de la simulación" v-model:visible="display" :style="{ width: '40rem', height: '100%' }"
         :modal="true" @hide="onDialogHide" class="p-fluid" :position="position" :draggable="false">
         <div>
-            <h4 class="text-center"> Tiempo Transcurrido </h4>
-            <h4 class="text-center"> {{ tiempoEmpleado }}</h4>
+            <h3 class="text-center datos-paciente">Tiempo Transcurrido</h3>
+            <h4 class="text-center" style="color: #a8dce7;"> {{ tiempoEmpleado }}</h4>
         </div>
         <div class="text-center">
             <Knob v-model="puntajePorcentaje" :valueTemplate="puntajePorcentaje !== null ? '{value}%' : 'Calculando...'"
@@ -181,7 +238,7 @@ function onDialogHide() {
 
         </div>
         <div>
-            <h4 class="text-center"> Historial de eventos </h4>
+            <h4 class="text-center datos-historias"> Historial de eventos </h4>
         </div>
 
         <div class="grid">
@@ -228,7 +285,8 @@ function onDialogHide() {
         </DataTable>
         <div class="grid ">
             <div class="col md:col-4"></div>
-            <div class="col md:col-4"><Button label="Finalizar" @click="closeDialog" icon="pi pi-check" /></div>
+            <div class="col md:col-4"><Button style="background-color: #7ABF5A; border: 0px" label="Finalizar"
+                    @click="closeDialog" icon="pi pi-power-off" /></div>
             <div class="col md:col-4"></div>
         </div>
     </Dialog>
@@ -279,7 +337,7 @@ function onDialogHide() {
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 
@@ -312,51 +370,44 @@ h5 {
 .progress-container {
     width: 100%;
     max-width: 400px;
-    /* Ancho máximo para la barra */
     background-color: #e0e0e0;
     border-radius: 12px;
     overflow: hidden;
-    /* Para evitar que el contenido se salga del borde */
     margin: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar-a {
     height: 20px;
-    /* Ajusta la altura */
     background-color: #4caf50;
-    /* Color verde */
     border-radius: 12px 0 0 12px;
-    /* Bordes redondeados solo en la izquierda */
     display: flex;
     align-items: center;
     justify-content: center;
     transition: width 0.4s ease;
     color: white;
-    /* Texto blanco dentro de la barra */
     font-weight: bold;
     font-size: 14px;
 }
 
 .progress-bar-b {
     height: 20px;
-    /* Ajusta la altura */
     background-color: #1f4de6;
-    /* Color verde */
     border-radius: 12px 0 0 12px;
-    /* Bordes redondeados solo en la izquierda */
     display: flex;
     align-items: center;
     justify-content: center;
     transition: width 0.4s ease;
     color: white;
-    /* Texto blanco dentro de la barra */
     font-weight: bold;
     font-size: 14px;
 }
 
 .progress-text {
     padding: 0 10px;
-    /* Espacio interno para el texto */
+}
+
+.datos-historias {
+    color: #7ABF5A;
 }
 </style>

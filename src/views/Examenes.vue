@@ -329,8 +329,9 @@ function onDialogHide() {
                 <strong>Examen Físico General</strong>
             </div>
             <div class="col md:col-4 pt-2">
-                <Button type="button" v-if="!examenFisico" :label="buttonsState.general.label"
-                    @click="() => fetchData('general')" icon="pi pi-search" :loading="buttonsState.general.loading" />
+                <Button style="background-color: #7ABF5A; border: 0px" type="button" v-if="!examenFisico"
+                    :label="buttonsState.general.label" @click="() => fetchData('general')" icon="pi pi-search"
+                    :loading="buttonsState.general.loading" />
             </div>
         </div>
         <template v-if="examenFisico">
@@ -385,16 +386,17 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Cabeza:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioCabeza" :label="buttonsState.cabeza.label"
-                    @click="() => fetchData('segmentario', 'cabeza')" icon="pi pi-search"
-                    :loading="buttonsState.cabeza.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioCabeza"
+                    :label="buttonsState.cabeza.label" @click="() => fetchData('segmentario', 'cabeza')"
+                    icon="pi pi-search" :loading="buttonsState.cabeza.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingCabeza"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioCabeza?.cabeza || '' }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioCabeza?.img_cabeza && !mostrarImagenCabeza" icon="pi pi-image"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioCabeza?.img_cabeza && !mostrarImagenCabeza" icon="pi pi-image"
                         severity="warning" rounded @click="mostrarImagenCabeza = true" />
                 </div>
 
@@ -408,16 +410,17 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Cuello:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioCuello" :label="buttonsState.cuello.label"
-                    @click="() => fetchData('segmentario', 'cuello')" icon="pi pi-search"
-                    :loading="buttonsState.cuello.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioCuello"
+                    :label="buttonsState.cuello.label" @click="() => fetchData('segmentario', 'cuello')"
+                    icon="pi pi-search" :loading="buttonsState.cuello.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingCuello"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioCuello?.cuello || '' }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioCuello?.img_cuello && !mostrarImagenCuello" icon="pi pi-image"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioCuello?.img_cuello && !mostrarImagenCuello" icon="pi pi-image"
                         severity="warning" rounded @click="mostrarImagenCuello = true" />
                 </div>
 
@@ -431,16 +434,17 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Torax:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioTorax" :label="buttonsState.torax.label"
-                    @click="() => fetchData('segmentario', 'torax')" icon="pi pi-search"
-                    :loading="buttonsState.torax.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioTorax"
+                    :label="buttonsState.torax.label" @click="() => fetchData('segmentario', 'torax')"
+                    icon="pi pi-search" :loading="buttonsState.torax.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingTorax"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioTorax?.torax || '' }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioTorax?.img_torax && !mostrarImagenTorax" icon="pi pi-image"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioTorax?.img_torax && !mostrarImagenTorax" icon="pi pi-image"
                         severity="warning" rounded @click="mostrarImagenTorax = true" />
                 </div>
 
@@ -454,16 +458,17 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Corazón:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioCorazon" :label="buttonsState.corazon.label"
-                    @click="() => fetchData('segmentario', 'corazon')" icon="pi pi-search"
-                    :loading="buttonsState.corazon.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioCorazon"
+                    :label="buttonsState.corazon.label" @click="() => fetchData('segmentario', 'corazon')"
+                    icon="pi pi-search" :loading="buttonsState.corazon.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingCorazon"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioCorazon?.corazon || '' }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioCorazon?.img_corazon && !mostrarImagenCorazon" icon="pi pi-image"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioCorazon?.img_corazon && !mostrarImagenCorazon" icon="pi pi-image"
                         severity="warning" rounded @click="mostrarImagenCorazon = true" />
                 </div>
 
@@ -477,16 +482,17 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Mamas:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioMamas" :label="buttonsState.mamas.label"
-                    @click="() => fetchData('segmentario', 'mamas')" icon="pi pi-search"
-                    :loading="buttonsState.mamas.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioMamas"
+                    :label="buttonsState.mamas.label" @click="() => fetchData('segmentario', 'mamas')"
+                    icon="pi pi-search" :loading="buttonsState.mamas.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingMamas"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioMamas?.mamas || '' }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioMamas?.img_mamas && !mostrarImagenMamas" icon="pi pi-image"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioMamas?.img_mamas && !mostrarImagenMamas" icon="pi pi-image"
                         severity="warning" rounded @click="mostrarImagenMamas = true" />
                 </div>
 
@@ -500,16 +506,17 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Abdomen:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioAbdomen" :label="buttonsState.abdomen.label"
-                    @click="() => fetchData('segmentario', 'abdomen')" icon="pi pi-search"
-                    :loading="buttonsState.abdomen.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioAbdomen"
+                    :label="buttonsState.abdomen.label" @click="() => fetchData('segmentario', 'abdomen')"
+                    icon="pi pi-search" :loading="buttonsState.abdomen.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingAbdomen"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioAbdomen?.abdomen || '' }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioAbdomen?.img_abdomen && !mostrarImagenAbdomen" icon="pi pi-image"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioAbdomen?.img_abdomen && !mostrarImagenAbdomen" icon="pi pi-image"
                         severity="warning" rounded @click="mostrarImagenAbdomen = true" />
                 </div>
 
@@ -523,9 +530,9 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Genitourinario:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioGenitourinario" :label="buttonsState.genitourinario.label"
-                    @click="() => fetchData('segmentario', 'genitourinario')" icon="pi pi-search"
-                    :loading="buttonsState.genitourinario.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioGenitourinario"
+                    :label="buttonsState.genitourinario.label" @click="() => fetchData('segmentario', 'genitourinario')"
+                    icon="pi pi-search" :loading="buttonsState.genitourinario.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingGenitourinario"></p>
@@ -533,7 +540,8 @@ function onDialogHide() {
                     }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioGenitourinario?.img_genitourinario && !mostrarImagenGenitourinario"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioGenitourinario?.img_genitourinario && !mostrarImagenGenitourinario"
                         icon="pi pi-image" severity="warning" rounded @click="mostrarImagenGenitourinario = true" />
                 </div>
 
@@ -548,9 +556,9 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Extremidades:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioExtremidades" :label="buttonsState.extremidades.label"
-                    @click="() => fetchData('segmentario', 'extremidades')" icon="pi pi-search"
-                    :loading="buttonsState.extremidades.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioExtremidades"
+                    :label="buttonsState.extremidades.label" @click="() => fetchData('segmentario', 'extremidades')"
+                    icon="pi pi-search" :loading="buttonsState.extremidades.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingExtremidades"></p>
@@ -558,7 +566,8 @@ function onDialogHide() {
                 </p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioExtremidades?.img_extremidades && !mostrarImagenExtremidades"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioExtremidades?.img_extremidades && !mostrarImagenExtremidades"
                         icon="pi pi-image" severity="warning" rounded @click="mostrarImagenExtremidades = true" />
                 </div>
 
@@ -573,16 +582,17 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Neurológico:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioNeurologico" :label="buttonsState.neurologico.label"
-                    @click="() => fetchData('segmentario', 'neurologico')" icon="pi pi-search"
-                    :loading="buttonsState.neurologico.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioNeurologico"
+                    :label="buttonsState.neurologico.label" @click="() => fetchData('segmentario', 'neurologico')"
+                    icon="pi pi-search" :loading="buttonsState.neurologico.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingNeurologico"></p>
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioNeurologico?.neurologico || '' }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioNeurologico?.img_neurologico && !mostrarImagenNeurologico"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioNeurologico?.img_neurologico && !mostrarImagenNeurologico"
                         icon="pi pi-image" severity="warning" rounded @click="mostrarImagenNeurologico = true" />
                 </div>
 
@@ -597,8 +607,8 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Piel:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioPiel" :label="buttonsState.piel.label"
-                    @click="() => fetchData('segmentario', 'piel')" icon="pi pi-search"
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioPiel"
+                    :label="buttonsState.piel.label" @click="() => fetchData('segmentario', 'piel')" icon="pi pi-search"
                     :loading="buttonsState.piel.loading" type="button" />
             </div>
             <div class="col">
@@ -606,7 +616,8 @@ function onDialogHide() {
                 <p class="text-justify text-lg" v-else>{{ examenSegmentarioPiel?.piel || '' }}</p>
 
                 <div class="text-center">
-                    <Button v-if="examenSegmentarioPiel?.img_piel && !mostrarImagenPiel" icon="pi pi-image"
+                    <Button style="background-color: #7ABF5A; border: 0px"
+                        v-if="examenSegmentarioPiel?.img_piel && !mostrarImagenPiel" icon="pi pi-image"
                         severity="warning" rounded @click="mostrarImagenPiel = true" />
                 </div>
 
@@ -629,8 +640,8 @@ function onDialogHide() {
                 <strong>Obstetrico:</strong>
             </div>
             <div class=" col md:col-4">
-                <Button v-if="!examenObstetrico" :label="buttonsState.obstetrico.label"
-                    @click="() => fetchData('obstetrico')" icon="pi pi-search"
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenObstetrico"
+                    :label="buttonsState.obstetrico.label" @click="() => fetchData('obstetrico')" icon="pi pi-search"
                     :loading="buttonsState.obstetrico.loading" type="button" />
             </div>
         </div>
@@ -697,9 +708,9 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Circulatorio:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioCirculatorio" :label="buttonsState.circulatorio.label"
-                    @click="() => fetchData('segmentario', 'circulatorio')" icon="pi pi-search"
-                    :loading="buttonsState.circulatorio.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioCirculatorio"
+                    :label="buttonsState.circulatorio.label" @click="() => fetchData('segmentario', 'circulatorio')"
+                    icon="pi pi-search" :loading="buttonsState.circulatorio.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingCirculatorio"></p>
@@ -711,9 +722,9 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Respiratorio:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioRespiratorio" :label="buttonsState.respiratorio.label"
-                    @click="() => fetchData('segmentario', 'respiratorio')" icon="pi pi-search"
-                    :loading="buttonsState.respiratorio.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioRespiratorio"
+                    :label="buttonsState.respiratorio.label" @click="() => fetchData('segmentario', 'respiratorio')"
+                    icon="pi pi-search" :loading="buttonsState.respiratorio.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingRespiratorio"></p>
@@ -725,9 +736,9 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Via Aerea:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioViaAerea" :label="buttonsState.via.label"
-                    @click="() => fetchData('via')" icon="pi pi-search" :loading="buttonsState.via.loading"
-                    type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioViaAerea"
+                    :label="buttonsState.via.label" @click="() => fetchData('via')" icon="pi pi-search"
+                    :loading="buttonsState.via.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingViaAerea"></p>
@@ -739,9 +750,9 @@ function onDialogHide() {
             <div class="col md:col-4 pt-3 text-lg"><strong>Psicologico:</strong></div>
             <div class="col md:col-4"></div>
             <div class="col md:col-4">
-                <Button v-if="!examenSegmentarioPsicologico" :label="buttonsState.psicologico.label"
-                    @click="() => fetchData('segmentario', 'psicologico')" icon="pi pi-search"
-                    :loading="buttonsState.psicologico.loading" type="button" />
+                <Button style="background-color: #7ABF5A; border: 0px" v-if="!examenSegmentarioPsicologico"
+                    :label="buttonsState.psicologico.label" @click="() => fetchData('segmentario', 'psicologico')"
+                    icon="pi pi-search" :loading="buttonsState.psicologico.loading" type="button" />
             </div>
             <div class="col">
                 <p v-if="loadingPsicologico"></p>
@@ -753,7 +764,8 @@ function onDialogHide() {
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
-                <Button label="Ok" @click="closeDialog" />
+                <Button style="background-color: #BAC8D9; border: 0px" label="Ok" @click="closeDialog"
+                    icon="pi pi-check" />
             </div>
         </div>
     </Dialog>
@@ -763,7 +775,7 @@ function onDialogHide() {
 .gestion-title {
     font-size: 2em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
 }
 
 .total-casos {
@@ -803,7 +815,7 @@ function onDialogHide() {
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 
@@ -839,6 +851,6 @@ h5 {
 }
 
 .examen-titulo {
-    color: #bb86fc;
+    color: #7ABF5A;
 }
 </style>

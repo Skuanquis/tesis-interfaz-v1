@@ -105,7 +105,7 @@ onMounted(() => {
                     <p v-if="subespecialidad.mostrarDescripcion" class="mt-2">{{ subespecialidad.descripcion }}</p>
                 </div>
                 <div class="col md:col-4 pt-2">
-                    <Button v-if="!subespecialidad.seleccionado"
+                    <Button style="background-color: #7ABF5A; border: 0px" v-if="!subespecialidad.seleccionado"
                         :label="subespecialidad.loading ? 'Consultando...' : 'Consultar'" icon="pi pi-comment"
                         :class="{ 'p-button-loading': subespecialidad.loading }"
                         @click="selectSubespecialidad(subespecialidad)" :disabled="subespecialidad.loading" />
@@ -116,7 +116,8 @@ onMounted(() => {
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
-                <Button label="Ok" @click="closeDialog" />
+                <Button style="background-color: #BAC8D9; border: 0px" label="Ok" @click="closeDialog"
+                    icon="pi pi-check" />
             </div>
         </div>
     </Dialog>
@@ -168,7 +169,7 @@ onMounted(() => {
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 

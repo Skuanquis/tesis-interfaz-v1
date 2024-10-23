@@ -4,7 +4,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useStore } from 'vuex';
-import { obtenerMedicamentos } from '@/services/historiaService';
+import { obtenerMedicamentos, obtenerProcedimientos } from '@/services/historiaService';
 import { registrarAccion, eliminarAccion } from '@/services/simulacionService';
 
 const display = ref(true);
@@ -16,10 +16,84 @@ const store = useStore();
 const medicamentosData = ref({});
 const selectedMedicamentos = ref([]);
 
+const procedimientosData = ref({});
+const selectedProcedimientos = ref([]);
+
 const id_simulacion = localStorage.getItem('id_simulacion');
 const id_historia_clinica = localStorage.getItem('id_historia_clinica');
 
-// Helper function to find medicamento by nombre
+function findProcedimientoByNombre(nombre) {
+    for (const categoryName in procedimientosData.value) {
+        const category = procedimientosData.value[categoryName];
+        const procedimiento = category.procedimientos.find(p => p.nombre === nombre);
+        if (procedimiento) {
+            return procedimiento;
+        }
+    }
+    return null;
+}
+
+async function loadProcedimientos(id_historia_clinica) {
+    try {
+        const response = await obtenerProcedimientos(id_historia_clinica);
+        procedimientosData.value = response.data;
+    } catch (error) {
+        console.error("Error al cargar los procedimientos:", error);
+    }
+}
+
+let isInitialLoad = true;
+
+watch(selectedProcedimientos, (newSelected, oldSelected) => {
+    if (isInitialLoad) {
+        isInitialLoad = false;
+        return;
+    }
+
+    const added = newSelected.filter(p => !oldSelected.includes(p));
+    const removed = oldSelected.filter(p => !newSelected.includes(p));
+
+    added.forEach(procedimientoNombre => {
+        const procedimiento = findProcedimientoByNombre(procedimientoNombre);
+        if (procedimiento) {
+            const accionData = {
+                id_simulacion: id_simulacion,
+                descripcion: `Se realizo el procedimiento: ${procedimiento.nombre}`,
+                tipo_accion: procedimiento.rubrica,
+                puntaje: procedimiento.puntaje,
+                retroalimentacion: procedimiento.feed
+            };
+
+            registrarAccion(accionData).catch(err => {
+                console.error("Error al registrar la acción:", err);
+            });
+            console.log("Se registro la acción: ", accionData)
+
+            toast.add({
+                severity: 'info',
+                summary: `Procedimiento ${procedimiento.nombre} seleccionado`,
+                detail: `${procedimiento.feed}`,
+                life: 3000
+            });
+        }
+    });
+
+    removed.forEach(procedimientoNombre => {
+        const descripcion = `Se realizo el procedimiento: ${procedimientoNombre}`;
+
+        eliminarAccion(id_simulacion, descripcion).catch(err => {
+            console.error("Error al eliminar la acción:", err);
+        });
+
+        toast.add({
+            severity: 'warn',
+            summary: 'Procedimiento desmarcado',
+            detail: `Se desmarcó: ${procedimientoNombre}`,
+            life: 3000
+        });
+    });
+}, { deep: true });
+
 function findMedicamentoByNombre(nombre) {
     for (const categoryName in medicamentosData.value) {
         const category = medicamentosData.value[categoryName];
@@ -32,6 +106,7 @@ function findMedicamentoByNombre(nombre) {
 }
 
 function closeDialog() {
+    store.dispatch('procedimientos/saveSelectedProcedimientos', selectedProcedimientos.value);
     store.dispatch('medicamentos/saveSelectedMedicamentos', selectedMedicamentos.value);
     display.value = false;
     router.push('/app');
@@ -39,6 +114,7 @@ function closeDialog() {
 
 function onDialogHide() {
     if (!display.value) {
+        store.dispatch('procedimientos/saveSelectedProcedimientos', selectedProcedimientos.value);
         store.dispatch('medicamentos/saveSelectedMedicamentos', selectedMedicamentos.value);
         router.push('/app');
     }
@@ -53,12 +129,11 @@ async function loadMedicamentos(id_historia_clinica) {
     }
 }
 
-// Use a flag to skip the initial watch invocation
-let isInitialLoad = true;
+let isInitialLoadMedicamento = true;
 
 watch(selectedMedicamentos, (newSelected, oldSelected) => {
-    if (isInitialLoad) {
-        isInitialLoad = false;
+    if (isInitialLoadMedicamento) {
+        isInitialLoadMedicamento = false;
         return;
     }
 
@@ -70,7 +145,7 @@ watch(selectedMedicamentos, (newSelected, oldSelected) => {
         if (medicamento) {
             const accionData = {
                 id_simulacion: id_simulacion,
-                descripcion: `Se suministró el medicamento: ${medicamento.nombre}`,
+                descripcion: `Se suministro el medicamento: ${medicamento.nombre}`,
                 tipo_accion: medicamento.rubrica,
                 puntaje: medicamento.puntaje,
                 retroalimentacion: medicamento.feed
@@ -79,6 +154,7 @@ watch(selectedMedicamentos, (newSelected, oldSelected) => {
             registrarAccion(accionData).catch(err => {
                 console.error("Error al registrar la acción:", err);
             });
+            console.log("Se registro la acción: ", accionData)
 
             toast.add({
                 severity: 'info',
@@ -108,13 +184,15 @@ watch(selectedMedicamentos, (newSelected, oldSelected) => {
 onMounted(() => {
     selectedMedicamentos.value = store.getters['medicamentos/selectedMedicamentos'] || [];
     loadMedicamentos(id_historia_clinica);
+    selectedProcedimientos.value = store.getters['procedimientos/selectedProcedimientos'] || [];
+    loadProcedimientos(id_historia_clinica);
 });
 </script>
 
 <template>
     <Dialog header="Intervenir" v-model:visible="display" :style="{ width: '45vw', height: '100%' }" :modal="true"
         class="p-fluid" @hide="onDialogHide" :position="position" :draggable="false">
-
+        <h5 class="text-center datos-paciente">Procedimientos y Medicamentos</h5>
         <div class="grid p-fluid">
             <div class="col md:col-12">
                 <h5 class="examen-titulo">Procedimientos</h5>
@@ -122,6 +200,20 @@ onMounted(() => {
                 <div></div>
             </div>
         </div>
+
+        <Accordion>
+            <AccordionTab v-for="(category, categoryName) in procedimientosData" :key="categoryName"
+                :header="categoryName">
+                <div class="flex-col gap-4">
+                    <div v-for="procedimiento in category.procedimientos" :key="procedimiento.nombre"
+                        class="flex items-center pt-3">
+                        <Checkbox v-model="selectedProcedimientos" :inputId="procedimiento.nombre"
+                            :value="procedimiento.nombre" />
+                        <label class="pl-3 text-lg" :for="procedimiento.nombre">{{ procedimiento.nombre }}</label>
+                    </div>
+                </div>
+            </AccordionTab>
+        </Accordion>
 
         <div class="grid p-fluid">
             <div class="col md:col-12">
@@ -145,7 +237,6 @@ onMounted(() => {
             </AccordionTab>
         </Accordion>
 
-
         <h5>Medicamentos suministrados</h5>
         <div class="grid">
             <div v-if="selectedMedicamentos.length > 0" class="col-12">
@@ -160,10 +251,26 @@ onMounted(() => {
             </div>
         </div>
 
+        <h5>Procedimientos seleccionados</h5>
+        <div class="grid">
+            <div v-if="selectedProcedimientos.length > 0" class="col-12">
+                <div v-for="procedimientoNombre in selectedProcedimientos" :key="procedimientoNombre"
+                    class="flex items-center pt-3">
+                    <Checkbox v-model="selectedProcedimientos" :inputId="procedimientoNombre"
+                        :value="procedimientoNombre" />
+                    <label class="pl-3 text-lg" :for="procedimientoNombre">{{ procedimientoNombre }}</label>
+                </div>
+            </div>
+            <div v-else class="col-12">
+                <p>No hay procedimientos seleccionados.</p>
+            </div>
+        </div>
+
         <div class="grid pt-4">
             <div class="col md:col-9"></div>
             <div class="col md:col-3">
-                <Button label="Ok" @click="closeDialog" />
+                <Button style="background-color: #BAC8D9; border: 0px" label="Ok" @click="closeDialog"
+                    icon="pi pi-check" />
             </div>
         </div>
     </Dialog>
@@ -215,7 +322,7 @@ onMounted(() => {
 .datos-paciente {
     font-size: 1.4em;
     font-weight: bold;
-    color: #bb86fc;
+    color: #9BF272;
     margin-bottom: 0.3em;
 }
 
@@ -247,7 +354,7 @@ h5 {
 
 
 .examen-titulo {
-    color: #bb86fc;
+    color: #7abf5a;
 }
 
 .data-section-main {
