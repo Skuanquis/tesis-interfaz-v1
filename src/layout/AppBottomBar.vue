@@ -84,6 +84,7 @@ function onDockItemClick(item) {
                 store.dispatch('procedimientos/limpiarProcedimientos');
                 store.dispatch('diferencial/limpiarDiferencial');
                 store.dispatch('subespecialidades/limpiarSubespecialidades');
+                store.dispatch('signosVitales/stopMonitoring')
             },
             reject: () => {
                 toast.add({ severity: 'warn', summary: 'Cancelado', detail: 'Has cancelado la acción', life: 3000 });

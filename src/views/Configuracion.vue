@@ -491,47 +491,77 @@ const guardarNuevaCategoriaImagenologia = async () => {
 
 onMounted(obtenerImagenologias);
 
+// Variable para almacenar las categorías con sus procedimientos
 const procedimientosPorCategoria = ref({});
-const dialogoProcedimiento = ref(false);
-const nuevaCategoriaProcedimiento = ref({
-    categoria: '',
+
+// Diálogo para agregar nueva categoría
+const dialogoProcedimientos = ref(false);
+const nuevaCategoriaProcedimientos = ref({
+    nombre: '',
     procedimientos: [{ nombre: '' }]
 });
 
-const eliminarRegistroProcedimiento = async (id_procedimiento) => {
+
+// Función para obtener las categorías con sus procedimientos desde la API
+const obtenerProcedimientos = async () => {
+    try {
+        const response = await obtenerCategoriasConProcedimientos();
+        procedimientosPorCategoria.value = response.data; // Asigna la respuesta de la API a la variable
+    } catch (error) {
+        console.error("Error al obtener los procedimientos por categoría", error);
+        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudieron cargar los procedimientos', life: 3000 });
+    }
+};
+
+// Función para eliminar una imagenología
+const eliminarRegistroProcedimientos = async (id_procedimiento) => {
     try {
         await eliminarProcedimiento(id_procedimiento);
         for (const categoria in procedimientosPorCategoria.value) {
             const categoriaData = procedimientosPorCategoria.value[categoria];
-            categoriaData.procedimientos = categoriaData.procedimientos.filter(p => p.id_procedimiento !== id_procedimiento);
+            categoriaData.procedimientos = categoriaData.procedimientos.filter(i => i.id_procedimiento !== id_procedimiento);
         }
-        toast.add({ severity: "success", summary: 'Éxito', detail: 'Se eliminó el procedimiento', life: 3000 });
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Procedimiento eliminado correctamente', life: 3000 });
     } catch (error) {
         console.error("Error al eliminar procedimiento", error);
-        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudo eliminar el procedimiento', life: 3000 });
+        const errorMsg = error.response?.data?.error || 'No se pudo eliminar el procedimiento';
+        toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
     }
 };
 
+// Función para agregar un nuevo campo de imagenología
 const agregarNuevoCampoProcedimiento = (categoria) => {
     const categoriaData = procedimientosPorCategoria.value[categoria];
-    categoriaData.procedimientos.push({ id_procedimiento: null, nombre: '' });
+    if (!categoriaData.procedimientos) {
+        categoriaData.procedimientos = [];
+    }
+    categoriaData.procedimientos.push({ id_procedimiento: null, procedimiento: '' });
+    toast.add({ severity: "info", summary: 'Nuevo', detail: `Campo agregado para nuevo procedimiento en ${categoria}`, life: 3000 });
 };
 
+// Guardar cambios en las procedimientos
 const guardarCambiosProcedimiento = async () => {
     try {
         for (const categoria in procedimientosPorCategoria.value) {
             const categoriaData = procedimientosPorCategoria.value[categoria];
             const id_categoria_procedimiento = categoriaData.id_categoria_procedimiento;
+            const procedimientos = categoriaData.procedimientos;
 
-            for (const procedimiento of categoriaData.procedimientos) {
+            for (const procedimiento of procedimientos) {
+                if (!procedimiento.procedimiento || procedimiento.procedimiento.trim() === "") {
+                    console.warn("El nombre del procedimiento está vacío, no se procesará.");
+                    continue;
+                }
+
                 if (procedimiento.id_procedimiento) {
-                    await actualizarProcedimiento(procedimiento.id_procedimiento, { nombre: procedimiento.nombre });
+                    await actualizarProcedimiento(procedimiento.id_procedimiento, { nombre: procedimiento.procedimiento });
                 } else {
-                    const response = await agregarProcedimiento({ id_categoria_procedimiento, nombre: procedimiento.nombre });
+                    const response = await agregarProcedimiento({ id_categoria_procedimiento, nombre: procedimiento.procedimiento });
                     procedimiento.id_procedimiento = response.data.id;
                 }
             }
         }
+
         toast.add({ severity: "success", summary: 'Éxito', detail: 'Se guardaron los cambios correctamente', life: 3000 });
     } catch (error) {
         console.error("Error al guardar cambios", error);
@@ -539,68 +569,66 @@ const guardarCambiosProcedimiento = async () => {
     }
 };
 
+// Abrir diálogo para agregar nueva categoría de imagenología
 const abrirDialogoCategoriaProcedimiento = () => {
-    nuevaCategoriaProcedimiento.value = {
-        categoria: '',
+    nuevaCategoriaProcedimientos.value = {
+        nombre: '',
         procedimientos: [{ nombre: '' }]
     };
-    dialogoProcedimiento.value = true;
+    dialogoProcedimientos.value = true;
 };
 
-const agregarProcedimientoEnDialogo = () => {
-    nuevaCategoriaProcedimiento.value.procedimientos.push({ nombre: '' });
+// Agregar nueva imagenología en el diálogo
+const agregarProcedimientosEnDialogo = () => {
+    nuevaCategoriaProcedimientos.value.procedimientos.push({ nombre: '' });
 };
 
+// Eliminar imagenología en el diálogo
 const eliminarProcedimientoEnDialogo = (index) => {
-    if (nuevaCategoriaProcedimiento.value.procedimientos.length > 1) {
-        nuevaCategoriaProcedimiento.value.procedimientos.splice(index, 1);
+    if (nuevaCategoriaProcedimientos.value.procedimientos.length > 1) {
+        nuevaCategoriaProcedimientos.value.procedimientos.splice(index, 1);
     } else {
-        toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe haber al menos un procedimiento', life: 3000 });
+        toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe tener al menos un procedimiento', life: 3000 });
     }
 };
 
+// Guardar nueva categoría con procedimientos
 const guardarNuevaCategoriaProcedimiento = async () => {
     try {
-        const procedimientosNombres = nuevaCategoriaProcedimiento.value.procedimientos.map(p => p.nombre.trim()).filter(n => n !== '');
-        if (!nuevaCategoriaProcedimiento.value.categoria.trim()) {
+        const procedimientosNombres = nuevaCategoriaProcedimientos.value.procedimientos.map(i => i.nombre.trim()).filter(n => n !== '');
+        if (!nuevaCategoriaProcedimientos.value.nombre.trim()) {
             toast.add({ severity: "warn", summary: 'Advertencia', detail: 'El nombre de la categoría es requerido', life: 3000 });
             return;
         }
         if (procedimientosNombres.length === 0) {
-            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe proporcionar al menos un procedimiento válido', life: 3000 });
+            toast.add({ severity: "warn", summary: 'Advertencia', detail: 'Debe proporcionar al menos una imagenología válida', life: 3000 });
             return;
         }
+
         const data = {
-            categoria: nuevaCategoriaProcedimiento.value.categoria.trim(),
+            nombre: nuevaCategoriaProcedimientos.value.nombre.trim(),
             procedimientos: procedimientosNombres
         };
         const response = await agregarCategoriaConProcedimientos(data);
         const id_categoria_procedimiento = response.data.id_categoria_procedimiento;
-        procedimientosPorCategoria.value[nuevaCategoriaProcedimiento.value.categoria.trim()] = {
+        procedimientosPorCategoria.value[nuevaCategoriaProcedimientos.value.nombre.trim()] = {
             id_categoria_procedimiento,
             procedimientos: procedimientosNombres.map((nombre, index) => ({
-                id_procedimiento: response.data.result.insertId + index,
-                nombre
+                id_procedimiento: response.data.ids_procedimientos[index],
+                procedimiento: nombre
             }))
         };
 
-        dialogoProcedimiento.value = false;
-        toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría y procedimientos agregados correctamente', life: 3000 });
+        dialogoProcedimientos.value = false;
+        toast.add({ severity: "success", summary: 'Éxito', detail: 'Categoría y procedimientos agregadas correctamente', life: 3000 });
     } catch (error) {
         console.error("Error al agregar categoría y procedimientos", error);
-        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudo agregar la categoría y procedimientos', life: 3000 });
+        const errorMsg = error.response?.data?.error || 'No se pudo agregar la categoría y procedimientos';
+        toast.add({ severity: "error", summary: 'Error', detail: errorMsg, life: 3000 });
     }
 };
 
-onMounted(async () => {
-    try {
-        const response = await obtenerCategoriasConProcedimientos();
-        procedimientosPorCategoria.value = response.data;
-    } catch (error) {
-        console.error("Error al obtener los procedimientos por categoría", error);
-        toast.add({ severity: "error", summary: 'Error', detail: 'No se pudo cargar los procedimientos', life: 3000 });
-    }
-});
+onMounted(obtenerProcedimientos);
 
 const categoriasConSubcategorias = ref({});
 const dialogoAnalisis = ref(false);
@@ -1019,27 +1047,28 @@ onMounted(async () => {
                 </template>
             </StepperPanel>
 
+
             <StepperPanel header="Procedimientos Disponibles">
                 <template #content="{ prevCallback, nextCallback }">
                     <Accordion>
                         <AccordionTab v-for="(categoriaData, categoria) in procedimientosPorCategoria" :key="categoria"
                             :header="categoria">
                             <div class="grid p-fluid">
-                                <!-- Iterar sobre los procedimientos dentro de cada categoría -->
+
                                 <div v-for="(procedimiento, index) in categoriaData.procedimientos" :key="index"
                                     class="col-12">
                                     <div class="grid">
                                         <div class="col md:col-10">
-                                            <InputText v-model="procedimiento.nombre" />
+                                            <InputText v-model="procedimiento.procedimiento" />
                                         </div>
                                         <div class="col md:col-2 text-center">
                                             <Button icon="pi pi-times" severity="danger" text raised rounded
                                                 aria-label="Eliminar"
-                                                @click="eliminarRegistroProcedimiento(procedimiento.id_procedimiento)" />
+                                                @click="eliminarRegistroProcedimientos(procedimiento.id_procedimiento)" />
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Botón para agregar un nuevo procedimiento -->
+
                                 <div class="col-12 text-center">
                                     <Button icon="pi pi-plus" text raised rounded aria-label="Agregar"
                                         @click="agregarNuevoCampoProcedimiento(categoria)" />
@@ -1048,18 +1077,17 @@ onMounted(async () => {
                         </AccordionTab>
                     </Accordion>
 
-                    <!-- Diálogo para añadir nueva categoría -->
-                    <Dialog v-model:visible="dialogoProcedimiento" modal header="Añadir Categoría"
+                    <Dialog v-model:visible="dialogoProcedimientos" modal header="Añadir Categoría"
                         :style="{ width: '25rem' }" class="p-fluid">
                         <div>
                             <FloatLabel>
-                                <InputText id="categoria" v-model="nuevaCategoriaProcedimiento.categoria"
+                                <InputText id="categoria" v-model="nuevaCategoriaProcedimientos.nombre"
                                     autocomplete="off" />
                                 <Label for="categoria">Categoría</Label>
                             </FloatLabel>
                         </div>
                         <h6>Procedimientos</h6>
-                        <div v-for="(procedimiento, index) in nuevaCategoriaProcedimiento.procedimientos" :key="index"
+                        <div v-for="(procedimiento, index) in nuevaCategoriaProcedimientos.procedimientos" :key="index"
                             class="grid align-items-center">
                             <div class="col md:col-10">
                                 <InputText v-model="procedimiento.nombre" autocomplete="off" />
@@ -1071,7 +1099,7 @@ onMounted(async () => {
                         </div>
                         <div class="col-12 text-center">
                             <Button icon="pi pi-plus" text raised rounded aria-label="Agregar Procedimiento"
-                                @click="agregarProcedimientoEnDialogo" />
+                                @click="agregarProcedimientosEnDialogo" />
                         </div>
                         <div class="col-12 text-center" style="margin-top: 1rem;">
                             <Button label="Guardar" icon="pi pi-save" text raised
@@ -1079,9 +1107,8 @@ onMounted(async () => {
                         </div>
                     </Dialog>
 
-                    <!-- Botones para Guardar cambios y Añadir categoría -->
                     <div class="col-12 p-3" style="margin-top: 2rem;">
-                        <div class="grid align-items-center justify-content-center">
+                        <div class="grid  align-items-center justify-content-center">
                             <div class="px-2 w-15rem m-3 border-round">
                                 <Button label="Guardar Cambios" icon="pi pi-save" severity="success" raised
                                     @click="guardarCambiosProcedimiento" />
@@ -1093,7 +1120,7 @@ onMounted(async () => {
                         </div>
                     </div>
                     <div class="flex py-4 gap-2">
-                        <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left" iconPos="left"
+                        <Button label="Atras" severity="secondary" icon="pi pi-arrow-left" iconPos="left"
                             @click="prevCallback" />
                         <Button label="Siguiente" severity="info" icon="pi pi-arrow-right" iconPos="right"
                             @click="nextCallback" />

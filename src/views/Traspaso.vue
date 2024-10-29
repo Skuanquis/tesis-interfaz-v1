@@ -112,6 +112,7 @@ const finalizarAccion = () => {
                         store.dispatch('procedimientos/limpiarProcedimientos');
                         store.dispatch('diferencial/limpiarDiferencial');
                         store.dispatch('subespecialidades/limpiarSubespecialidades');
+                        store.dispatch('signosVitales/stopMonitoring')
 
                     } catch (error) {
                         toast.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar el diagnóstico final', life: 3000 });

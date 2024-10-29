@@ -185,3 +185,7 @@ export const obtenerSubespecialidades = (id_historia_clinica) => {
 export const obtenerImagenologia = (id_historia_clinica) => {
   return api.get(`/imagenologia/${id_historia_clinica}`)
 }
+
+export const getSignosVitales = (id_historia_clinica) => {
+  return api.get(`/signos-vitales/${id_historia_clinica}`)
+}

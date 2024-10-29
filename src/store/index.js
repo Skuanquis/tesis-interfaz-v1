@@ -10,6 +10,7 @@ import subespecialidadesModule from './modules/subespecialidades'
 import imagenologiaModule from './modules/imagenologia'
 import laboratoriosModule from './modules/laboratorios'
 import procedimientosModule from './modules/procedimientos'
+import signosVitalesModule from './modules/signosVitales'
 const store = createStore({
   modules: {
     user: userModule,
@@ -22,7 +23,8 @@ const store = createStore({
     subespecialidades: subespecialidadesModule,
     imagenologia: imagenologiaModule,
     laboratorios: laboratoriosModule,
-    procedimientos: procedimientosModule
+    procedimientos: procedimientosModule,
+    signosVitales: signosVitalesModule
   }
 })
 

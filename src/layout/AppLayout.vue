@@ -6,6 +6,7 @@ import BottomBar from './AppBottomBar.vue';
 import { useStore } from 'vuex';
 import { useToast } from 'primevue/usetoast';
 import { obtenerMensaje } from '@/services/simulacionService';
+//import ThreeScene from './ThreeScene.vue';
 
 const store = useStore();
 const containerClass = computed(() => {
@@ -93,7 +94,7 @@ onUnmounted(() => {
         </div>
         <div class="layout-main-container-scene">
             <div class="layout-main">
-                <!--<ThreeScene />-->
+                <!-- <ThreeScene />-->
                 <router-view />
                 <BottomBar />
             </div>

@@ -13,7 +13,7 @@ const info = async () => {
     try {
         const response = await getUserInfo();
         usuario.value = response.data;
-        //console.log(usuario.value)
+        console.log(usuario.value)
     } catch (error) {
         console.error('Error fetching user info:', error);
         localStorage.removeItem('token');
@@ -82,8 +82,8 @@ const isOutsideClicked = (event) => {
         </button>
         <div class="layout-topbar-menu mt-2">
             <h5 v-if="usuario && usuario.nombre && usuario.paterno && usuario.materno">
-                {{ usuario.nombre.toUpperCase() + " " + usuario.paterno.toUpperCase() + " " +
-                    usuario.materno.toUpperCase() }}
+                {{ (usuario.nombre.toUpperCase() || '') + " " + (usuario.paterno.toUpperCase() || '') + " " +
+                    (usuario.materno.toUpperCase() || '') }}
             </h5>
         </div>
     </div>

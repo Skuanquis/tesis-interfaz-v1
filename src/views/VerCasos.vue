@@ -1778,6 +1778,17 @@ onMounted(() => {
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-12 md:col-6">
+                                    <div class="grid p-fluid pt-3">
+                                        <div class="col md:col-12">
+                                            <FloatLabel>
+                                                <Textarea v-model="paciente.historia_enfermedad_actual" autoResize
+                                                    rows="5" cols="30" />
+                                                <label for="descripcionHistoria">Historia enfermedad actual</label>
+                                            </FloatLabel>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
 
@@ -3427,7 +3438,7 @@ onMounted(() => {
                                             <div class="col md:col-4">
                                                 <h6>{{
                                                     analisisDetails[categoria.id_categoria_analisis].detalles[subcatId].nombre_subcategoria
-                                                }}</h6>
+                                                    }}</h6>
                                             </div>
                                             <div class="col md:col-4">
                                                 <FloatLabel>

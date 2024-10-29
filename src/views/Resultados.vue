@@ -54,6 +54,7 @@ const fetchAcciones = async () => {
             acciones.value = [];
         } else {
             acciones.value = response.data;
+            //console.log("Accionesss: ", acciones.value)
         }
         display.value = true;
     } catch (error) {
@@ -102,80 +103,127 @@ const fetchPuntajeAccion = async () => {
 
 const calcularYActualizarPuntaje = async () => {
     try {
+        // Obtener los valores de puntaje para cada código desde valor_puntaje
         const valoresPuntajeResponse = await obtenerPuntaje(id_historia_clinica);
-        const valoresPuntaje = valoresPuntajeResponse.data;
+        const valoresPuntaje = valoresPuntajeResponse.data; // Debería devolver un array de objetos con 'codigo' y 'valor'
 
+        // Crear un mapa para acceder fácilmente al valor por código
         const codigos = ['A', 'B', 'C', 'D', 'E'];
         const mapaValoresPuntaje = {};
         codigos.forEach(codigo => {
             const item = valoresPuntaje.find(v => v.codigo === codigo);
             mapaValoresPuntaje[codigo] = item ? parseInt(item.valor) : 0;
         });
+
+        // Obtener los puntajes totales posibles
         const totalPuntajesResponse = await obtenerPuntajeTotal(id_historia_clinica);
         const totalPuntajes = totalPuntajesResponse.data[0];
 
+        // Obtener los puntajes obtenidos por el participante
         const puntajesAccionResponse = await obtenerPuntajeAccionSimulacion(id_simulacion);
         const puntajesAccion = puntajesAccionResponse.data;
 
+        // Crear mapas de acciones obtenidas por código
         const accionesObtenidasPorCodigo = {};
         codigos.forEach(codigo => {
             const obtenido = puntajesAccion.find(p => p.puntaje === codigo)?.cantidad || 0;
             accionesObtenidasPorCodigo[codigo] = parseInt(obtenido);
         });
 
+        // Determinar los tipos de puntajes obtenidos
+        // eslint-disable-next-line no-unused-vars
         const tieneA = accionesObtenidasPorCodigo['A'] > 0;
+        // eslint-disable-next-line no-unused-vars
         const tieneB = accionesObtenidasPorCodigo['B'] > 0;
         const tieneC = accionesObtenidasPorCodigo['C'] > 0;
         const tieneD = accionesObtenidasPorCodigo['D'] > 0;
         const tieneE = accionesObtenidasPorCodigo['E'] > 0;
 
+        // Calcular el puntaje total posible basado únicamente en acciones de tipo 'A'
         const totalAccionesA = parseInt(totalPuntajes.total_puntaje_a) || 0;
         const valorA = mapaValoresPuntaje['A'] || 0;
-        let puntajeTotalPosible = totalAccionesA * valorA;
+        let puntajeTotalPosibleA = totalAccionesA * valorA;
 
+        // Calcular el puntaje obtenido de 'A' y 'B'
         const accionesARealizadas = accionesObtenidasPorCodigo['A'];
+        const accionesBRealizadas = accionesObtenidasPorCodigo['B'];
         let puntajeObtenidoA = accionesARealizadas * valorA;
+        let puntajeObtenidoB = accionesBRealizadas * mapaValoresPuntaje['B'];
 
-        if (puntajeTotalPosible === 0) puntajeTotalPosible = 1;
+        // Calcular el puntaje obtenido de 'C'
+        const accionesCRealizadas = accionesObtenidasPorCodigo['C'];
+        let puntajeObtenidoC = accionesCRealizadas * mapaValoresPuntaje['C'];
 
+        // Calcular el puntaje obtenido de 'D' y 'E'
+        const accionesDRealizadas = accionesObtenidasPorCodigo['D'];
+        const accionesERealizadas = accionesObtenidasPorCodigo['E'];
+        const puntajeObtenidoD = accionesDRealizadas * mapaValoresPuntaje['D'];
+        const puntajeObtenidoE = accionesERealizadas * mapaValoresPuntaje['E'];
+        // eslint-disable-next-line no-unused-vars
+        const puntajeNegativoDE = puntajeObtenidoD + puntajeObtenidoE;
+
+        // Evitar división por cero
+        if (puntajeTotalPosibleA === 0) puntajeTotalPosibleA = 1;
+
+        // Determinar el límite máximo de porcentaje basado en los tipos de puntajes obtenidos
         let maxPercentageCap = 100;
-        if (tieneA && !tieneB && !tieneC && !tieneD && !tieneE) {
-            maxPercentageCap = 100;
-        } else if ((tieneA || tieneB) && !tieneC && !tieneD && !tieneE) {
-            maxPercentageCap = 90;
-        } else if ((tieneA || tieneB || tieneC) && !tieneD && !tieneE) {
-            maxPercentageCap = 50;
+        if (tieneD || tieneE) {
+            if ((accionesObtenidasPorCodigo['D'] + accionesObtenidasPorCodigo['E']) > 4) {
+                maxPercentageCap = 50;//40  4
+            } else {
+                maxPercentageCap = 100;
+            }
+        } else if (tieneC) {
+            if (accionesObtenidasPorCodigo['C'] > 3) {
+                maxPercentageCap = 60;
+            } else {
+                maxPercentageCap = 100;
+            }
         } else {
-            maxPercentageCap = 50;
+            maxPercentageCap = 100;
         }
 
-        let porcentajeInicial = (puntajeObtenidoA / puntajeTotalPosible) * maxPercentageCap;
+        // Calcular el puntaje obtenido total de 'A' y 'B'
+        const puntajeObtenidoTotalAB = puntajeObtenidoA + puntajeObtenidoB;
 
+        // Calcular los puntos necesarios de 'B' para compensar las acciones 'A' faltantes
+        const puntosFaltantesA = puntajeTotalPosibleA - puntajeObtenidoA;
+        const requiredB = (puntosFaltantesA * valorA) / mapaValoresPuntaje['B'];
+
+        // Determinar el porcentaje inicial
+        let porcentajeInicial;
+        if (puntajeObtenidoB >= requiredB) {
+            porcentajeInicial = maxPercentageCap;
+        } else {
+            porcentajeInicial = (puntajeObtenidoTotalAB / puntajeTotalPosibleA) * maxPercentageCap;
+        }
+
+        // Calcular porcentaje extra por 'C', solo si tieneC y C <=3
+        let porcentajeExtra = 0;
+        if (tieneC && accionesObtenidasPorCodigo['C'] <= 3) {
+            porcentajeExtra = (puntajeObtenidoC / puntajeTotalPosibleA) * 100;
+        }
+
+        // Calcular porcentaje final
+        let porcentajeFinal = porcentajeInicial + porcentajeExtra;
+
+        // Aplicar penalizaciones por 'D' y 'E'
         let totalPenalizacion = 0;
         if (tieneD || tieneE) {
-            const penalizacionPorD = 5;
-            const penalizacionPorE = 10;
+            const penalizacionPorD = 1; // 0.5% por cada 'D'
+            const penalizacionPorE = 2;   // 1% por cada 'E'
 
             totalPenalizacion += accionesObtenidasPorCodigo['D'] * penalizacionPorD;
             totalPenalizacion += accionesObtenidasPorCodigo['E'] * penalizacionPorE;
         }
 
-        let porcentajeFinal = porcentajeInicial - totalPenalizacion;
+        porcentajeFinal -= totalPenalizacion;
 
-        let puntosExtra = 0;
-        ['B', 'C'].forEach(codigo => {
-            const accionesObtenidas = accionesObtenidasPorCodigo[codigo];
-            const valorPorAccion = mapaValoresPuntaje[codigo] || 0;
-            puntosExtra += accionesObtenidas * valorPorAccion;
-        });
-
-        let porcentajeExtra = (puntosExtra / puntajeTotalPosible) * 100;
-
-        porcentajeFinal += porcentajeExtra;
-
+        // Asegurar que el porcentaje final esté entre 0% y 100%
         if (porcentajeFinal > 100) porcentajeFinal = 100;
         if (porcentajeFinal < 0) porcentajeFinal = 0;
 
+        // Actualizar el porcentaje en el backend
         puntajePorcentaje.value = porcentajeFinal.toFixed(2);
 
         await actualizarPuntajePorcentaje(id_simulacion, puntajePorcentaje.value);

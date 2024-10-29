@@ -161,8 +161,9 @@ const obtenerDetalles = async (id_realiza_simulacion) => {
         puntajes.value = detalles.puntajes;
 
         console.log('Selected Simulation:', selectedSimulation.value);
-        console.log('Acciones:', acciones.value);
+        console.log('Accionesss:', acciones.value);
         console.log('Puntajes:', puntajes.value);
+        console.log('id: ', id_realiza_simulacion)
     } catch (error) {
         console.error('Error al obtener los detalles de la simulación:', error);
         toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los detalles de la simulación.', life: 3000 });
@@ -291,7 +292,8 @@ onMounted(() => {
                 <div class="col md:col-6 flex align-content-center flex-wrap text-2xl">Datos Importantes</div>
                 <div v-if="mostrarDropdown" class="col md:col-4">
                     <Dropdown v-model="selectedGroup" :options="grupos" optionLabel="nombre"
-                        placeholder="Seleccione un grupo" class="p-column-filter" showClear />
+                        placeholder="Seleccione un grupo" class="p-column-filter" showClear
+                        emptyMessage="No se encontraron grupos" />
                 </div>
                 <div class="col md:col-2">
                     <Button label="Aplicar" icon="pi pi-check" iconPos="right" @click="cargarSimulaciones" />
